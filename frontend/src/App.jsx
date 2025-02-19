@@ -4,18 +4,22 @@ import Logo from './assets/components/pane/Logo';
 import MenuList from './assets/components/pane/MenuList';
 import Profile from './assets/components/pane/Profile';
 
+{/* Navbar imports*/}
+import './App.css';
+import Navbar from "./assets/components/landingPage/Navbar";
+import React from "react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-const { Sider } = Layout;
+
+
 function App() {
   return (
-    <Layout>
-      <Sider className='sidebar' width={240}>
-        <Logo />
-        <MenuList />
-        <Profile />
-      </Sider>
-    </Layout>
-  )
+    <BrowserRouter>
+        <Navbar />
+        
+
+    </BrowserRouter>
+  );
 }
 
-export default App
+export default App;

@@ -1,11 +1,16 @@
 import { Menu } from 'antd';
-import { AppstoreOutlined, ProjectOutlined, BarsOutlined, DashboardOutlined, SettingOutlined, CheckSquareOutlined, GlobalOutlined, ToolOutlined, TeamOutlined, AimOutlined, HeartOutlined } from '@ant-design/icons';
+import { AppstoreOutlined, ProjectOutlined, BarsOutlined, HomeOutlined, SettingOutlined, CheckSquareOutlined, GlobalOutlined, ToolOutlined, TeamOutlined, AimOutlined, HeartOutlined } from '@ant-design/icons';
 const MenuList = () => {
     return (
         <Menu mode="inline" className='sideBar' >
-            <Menu.Item style={{marginTop:10, marginBottom: 15, }}key="home" icon={<BarsOutlined />}>
+            <Menu.Item style={{marginTop:10, marginBottom: 15, }}key="home" icon={<HomeOutlined />}>
+            Home
+            </Menu.Item>
+
+            <Menu.Item style={{marginBottom: 15, }}key="dashboard" icon={<BarsOutlined />}>
             Dashboard
             </Menu.Item>
+
             <Menu.Item style={{ marginBottom: 15 }} key="projects" icon={<ProjectOutlined />}>
             Projects
             </Menu.Item>
