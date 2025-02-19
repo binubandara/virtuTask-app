@@ -4,9 +4,8 @@ import { FireFilled } from '@ant-design/icons';
 const Logo = () => {
     return (
         <div className="logo">
-            <div className="logo-icon">
-                <FireFilled />
-            </div>
+            <img src="src/assets/logo.png" alt="VirtuTask Logo" className="logo-img" />
+            <span className="logo-text">VirtuTask</span>
         </div>
     );
 };

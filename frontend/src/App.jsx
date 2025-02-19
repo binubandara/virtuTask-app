@@ -7,7 +7,7 @@ const { Header, Sider } = Layout;
 function App() {
   return (
     <Layout>
-      <Sider className='sidebar'>
+      <Sider className='sidebar' width={240}>
         <Logo />
         <MenuList />
       </Sider>
