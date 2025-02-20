@@ -17,7 +17,7 @@ const Services = () => {
             {/* services cards */}
             <div style={{marginTop: "3rem", marginBottom:"4rem"}}className="mt-14 grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 md:w-11/12 mx-auto gap-12">
                 {
-                    Services.map(service => <div key={service.id} style={{marginLeft: "8rem"}} className="px-4 py-8 text-center md:w-[300px]
+                    Services.map(service => <div key={service.id} style={{ marginBottom:"3rem" ,marginLeft: "3rem"}} className="px-4 py-8 text-center md:w-[300px]
                     mx-auto md:h-80 rounded-md shadow cursor-pointer hover:-translate-y-5 hover:border-b-4
                     hover:border-indigo-700 transition-all duration-300 flex items-senter justify-center h-full">
                     <div>

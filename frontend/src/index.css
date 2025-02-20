@@ -2,17 +2,7 @@
 @import "tailwindcss";
 
 
-*{
 
-  margin: 0;
-  padding: 0;
-  border: none;
-  outline: none;
-  list-style: none;
-  box-sizing: border-box;
-  font-family: 'Poppins' , sans-serif;
-
-}
 
 h1 {
   border: none !important;
