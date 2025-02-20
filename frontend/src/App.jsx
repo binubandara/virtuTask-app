@@ -11,6 +11,7 @@ import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from './assets/components/landingPage/Home'; // Import your Home component
 import { Flowbite } from "flowbite-react";
+import Services from "./assets/components/landingPage/Services";
 
 
 
@@ -22,6 +23,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} /> {/* Route to Home component */}
         </Routes>
+        <Services/>
       </Flowbite>
     </BrowserRouter>
   );
