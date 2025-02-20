@@ -8,7 +8,7 @@ const Services = () => {
     
     ]
     return (
-        <div className="md:px-14 px-4 py-1 max-w-screen-2xl mx-auto" >
+        <div id="services" className="md:px-14 px-4 py-1 max-w-screen-2xl mx-auto" >
             <div className="text-center my-8">
                 <h2 style={{ marginTop:"6rem", marginBottom: "0.5rem"}}className="text-4xl text-[#4D4D4D] font-semibold mb-2">Unlock the Future of Remote Work!</h2>
                 <p className="text-[#717171]">Who is VirtuTask suitable for?</p>
