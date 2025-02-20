@@ -9,15 +9,20 @@ import './App.css';
 import Navbar from "./assets/components/landingPage/Navbar";
 import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Home from './assets/components/landingPage/Home'; // Import your Home component
+import { Flowbite } from "flowbite-react";
 
 
 
 function App() {
   return (
     <BrowserRouter>
+      <Flowbite>
         <Navbar />
-        
-
+        <Routes>
+          <Route path="/" element={<Home />} /> {/* Route to Home component */}
+        </Routes>
+      </Flowbite>
     </BrowserRouter>
   );
 }
