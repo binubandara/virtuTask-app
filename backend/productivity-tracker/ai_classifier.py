@@ -45,7 +45,7 @@ class AIClassifier:
         if app_name in self.productive_apps:
             return True 
         
-        if app_name in self.unproductive_apps:
+        if app_name in self.unproductive_apps:                                       
             return False  
         
         # Use Gemini for uncertain classifications

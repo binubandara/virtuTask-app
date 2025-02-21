@@ -3,6 +3,7 @@
 import os
 import time
 import pymongo
+from dotenv import load_dotenv
 from window_tracker import WindowTracker
 from ai_classifier import AIClassifier
 from datetime import datetime, timedelta
@@ -18,29 +19,33 @@ from reportlab.lib.pagesizes import letter
 import google.generativeai as genai
 from report_generator import ReportGenerator
 
+#load env
+load_dotenv()
+
 class ProductivityTracker:
     def __init__(self):
         # MongoDB Connection
-        self.client = pymongo.MongoClient('mongodb://localhost:27017/')
+        mongodb_uri = os.getenv('MONGODB_URI', 'mongodb://localhost:27017/')
+        self.client = pymongo.MongoClient(mongodb_uri)
         self.db = self.client['productivity_tracker']
+        
+        # Initialize collections
         self.sessions_collection = self.db['user_sessions']
         self.screenshots_collection = self.db['screenshots']
         self.reports_collection = self.db['reports']
         
-        # Setup indexes for performance and data cleanup
-        self._setup_indexes()
-        
-        # Trackers
-        self.window_tracker = WindowTracker()
-        self.ai_classifier = AIClassifier()
-
-        self._restore_active_session() 
-        
-        # Session state
+        # Initialize session state
         self.current_session = None
         self.session_active = False
         self.screenshot_thread = None
-
+        
+        # Setup indexes for performance
+        self._setup_indexes()
+        
+        # Initialize other components
+        self.window_tracker = WindowTracker()
+        self.ai_classifier = AIClassifier()
+        
         # Load Gemini API Key
         api_key = os.getenv('GEMINI_API_KEY')
         if not api_key:
@@ -57,22 +62,11 @@ class ProductivityTracker:
             expireAfterSeconds=14 * 24 * 60 * 60  # 14 days TTL
         )
         
-        # Index for screenshots with TTL
-        self.screenshots_collection.create_index(
-            [("timestamp", pymongo.ASCENDING)],
-            expireAfterSeconds=14 * 24 * 60 * 60  # 14 days TTL
-        )
-        
-        # Index for reports with TTL
-        self.reports_collection.create_index(
-            [("created_at", pymongo.ASCENDING)],
-            expireAfterSeconds=14 * 24 * 60 * 60  # 14 days TTL
-        )
-        
-        # Index for user_id (for future use)
+        # Add user_id index
         self.sessions_collection.create_index([("user_id", pymongo.ASCENDING)])
-        self.screenshots_collection.create_index([("session_id", pymongo.ASCENDING)])
-        self.reports_collection.create_index([("session_id", pymongo.ASCENDING)])
+        self.screenshots_collection.create_index([("user_id", pymongo.ASCENDING)])
+        self.reports_collection.create_index([("user_id", pymongo.ASCENDING)])
+
 
     def _restore_active_session(self):
         """Restore active session from MongoDB if exists"""
