@@ -17,10 +17,13 @@
     "axios": "^1.7.9",
     "bootstrap": "^5.3.3",
     "bootstrap-icons": "^1.11.3",
+    "chart.js": "^4.4.8",
     "electron-squirrel-startup": "^1.0.1",
     "lucide-react": "^0.474.0",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-chartjs-2": "^5.3.0",
+    "react-dom": "^18.2.0",
+    "recharts": "^2.15.1"
   },
   "devDependencies": {
     "@types/react": "^18.2.56",
@@ -48,17 +51,25 @@
       {
         "from": "backend/productivity-tracker/dist/app",
         "to": "backend",
-        "filter": ["**/*"]
+        "filter": [
+          "**/*"
+        ]
       }
     ],
     "win": {
-      "target": ["nsis"]
+      "target": [
+        "nsis"
+      ]
     },
     "mac": {
-      "target": ["dmg"]
+      "target": [
+        "dmg"
+      ]
     },
     "linux": {
-      "target": ["AppImage"]
+      "target": [
+        "AppImage"
+      ]
     }
   }
 }

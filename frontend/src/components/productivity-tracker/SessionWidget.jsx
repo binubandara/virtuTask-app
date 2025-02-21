@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { productivityService } from '../../services/api';
 
-const SessionWidget = () => {
+const SessionWidget = ({ onSessionStateChange }) => {
     const [expanded, setExpanded] = useState(false);
     const [sessionName, setSessionName] = useState('');
     const [sessionActive, setSessionActive] = useState(false);
@@ -9,6 +9,34 @@ const SessionWidget = () => {
     const [error, setError] = useState(null);
     const [sessionStartTime, setSessionStartTime] = useState(null);
     const [elapsedTime, setElapsedTime] = useState(0);
+
+    // Check if session is active on component mount
+    useEffect(() => {
+        const checkSessionStatus = async () => {
+            try {
+                const response = await productivityService.getCurrentSession();
+                const isActive = response.data.sessionActive;
+                setSessionActive(isActive);
+                
+                if (isActive) {
+                    // If a session is active, we need to estimate the start time
+                    // based on current productive + unproductive time
+                    const totalSeconds = response.data.totalProductiveTime + response.data.totalUnproductiveTime;
+                    const estimatedStartTime = Date.now() - (totalSeconds * 1000);
+                    setSessionStartTime(estimatedStartTime);
+                    
+                    // Call the parent's callback if provided
+                    if (onSessionStateChange) {
+                        onSessionStateChange(true);
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking session status:', error);
+            }
+        };
+        
+        checkSessionStatus();
+    }, [onSessionStateChange]);
 
     useEffect(() => {
         let timer;
@@ -42,6 +70,11 @@ const SessionWidget = () => {
                 setSessionStartTime(Date.now());
                 setError(null);
                 setReportId(null);
+                
+                // Notify parent component about session state change
+                if (onSessionStateChange) {
+                    onSessionStateChange(true);
+                }
             } else {
                 setError(response.data.message || 'Failed to start session');
             }
@@ -61,6 +94,11 @@ const SessionWidget = () => {
                 setSessionStartTime(null);
                 setElapsedTime(0);
                 setError(null);
+                
+                // Notify parent component about session state change
+                if (onSessionStateChange) {
+                    onSessionStateChange(false);
+                }
             } else {
                 setError(response.data.message || 'Failed to end session');
             }
@@ -126,7 +164,7 @@ const SessionWidget = () => {
                             <div className="d-flex justify-content-between align-items-center mb-3">
                                 <div>
                                     <div className="text-muted small">Current Session</div>
-                                    <h6 className="mb-0">{sessionName}</h6>
+                                    <h6 className="mb-0">{sessionName || "Active Session"}</h6>
                                 </div>
                                 <div className="text-end">
                                     <div className="text-muted small">Elapsed Time</div>

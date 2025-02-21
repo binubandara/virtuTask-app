@@ -27,34 +27,101 @@ class ProductivityTracker:
         self.screenshots_collection = self.db['screenshots']
         self.reports_collection = self.db['reports']
         
+        # Setup indexes for performance and data cleanup
+        self._setup_indexes()
+        
         # Trackers
         self.window_tracker = WindowTracker()
         self.ai_classifier = AIClassifier()
+
+        self._restore_active_session() 
         
         # Session state
         self.current_session = None
         self.session_active = False
         self.screenshot_thread = None
 
-        # Load Gemini API Key from environment
+        # Load Gemini API Key
         api_key = os.getenv('GEMINI_API_KEY')
         if not api_key:
-            # Provide a more informative error
-            raise ValueError("""
-            Gemini API Key not found! 
-            Please:
-            1. Create a .env file in the backend directory
-            2. Add GEMINI_API_KEY=your_actual_key
-            3. Get an API key from Google AI Studio (https://makersuite.google.com/app/apikey)
-            """)
+            raise ValueError("Gemini API Key not found!")
         
         genai.configure(api_key=api_key)
         self.model = genai.GenerativeModel('gemini-pro')
+
+    def _setup_indexes(self):
+        """Setup MongoDB indexes for performance and data cleanup"""
+        # Index for session start time with TTL
+        self.sessions_collection.create_index(
+            [("start_time", pymongo.ASCENDING)],
+            expireAfterSeconds=14 * 24 * 60 * 60  # 14 days TTL
+        )
         
-    def start_session(self, session_name):
+        # Index for screenshots with TTL
+        self.screenshots_collection.create_index(
+            [("timestamp", pymongo.ASCENDING)],
+            expireAfterSeconds=14 * 24 * 60 * 60  # 14 days TTL
+        )
+        
+        # Index for reports with TTL
+        self.reports_collection.create_index(
+            [("created_at", pymongo.ASCENDING)],
+            expireAfterSeconds=14 * 24 * 60 * 60  # 14 days TTL
+        )
+        
+        # Index for user_id (for future use)
+        self.sessions_collection.create_index([("user_id", pymongo.ASCENDING)])
+        self.screenshots_collection.create_index([("session_id", pymongo.ASCENDING)])
+        self.reports_collection.create_index([("session_id", pymongo.ASCENDING)])
+
+    def _restore_active_session(self):
+        """Restore active session from MongoDB if exists"""
+        try:
+            active_session = self.sessions_collection.find_one({
+                "end_time": None
+            }, sort=[("start_time", -1)])
+            
+            if active_session:
+                self.current_session = active_session
+                self.session_active = True
+                
+                # Restart screenshot thread if needed
+                if not self.screenshot_thread or not self.screenshot_thread.is_alive():
+                    self.screenshot_thread = threading.Thread(target=self._screenshot_loop)
+                    self.screenshot_thread.daemon = True
+                    self.screenshot_thread.start()
+        except Exception as e:
+            print(f"Error restoring session: {e}")    
+
+    def get_current_session_data(self):
+        """Get data for current active session only"""
+        if not self.current_session or not self.session_active:
+            return {
+                'productive_time': 0,
+                'unproductive_time': 0,
+                'window_details': {},
+                'session_active': False
+            }
+        
+        # Return current session data
+        return {
+            'productive_time': self.current_session.get('productive_time', 0),
+            'unproductive_time': self.current_session.get('unproductive_time', 0),
+            'window_details': self.current_session.get('window_details', {}),
+            'session_active': True
+        }        
+
+        
+    def start_session(self, session_name, user_id=None):
         """Start a new tracking session"""
+        # End any existing session
+        if self.session_active:
+            self.end_session()
+            
+        # Create new session document
         self.current_session = {
             'name': session_name,
+            'user_id': user_id,  # This will be used when user authentication is added
             'start_time': datetime.now(),
             'end_time': None,
             'productive_time': 0,
@@ -62,15 +129,20 @@ class ProductivityTracker:
             'window_details': {},
             'screenshots': []
         }
+        
+        # Insert new session and store its ID
+        result = self.sessions_collection.insert_one(self.current_session)
+        self.current_session['_id'] = result.inserted_id
+        
         self.session_active = True
-        self.sessions_collection.insert_one(self.current_session)
         
         # Start screenshot thread
         self.screenshot_thread = threading.Thread(target=self._screenshot_loop)
         self.screenshot_thread.daemon = True
         self.screenshot_thread.start()
         
-        return {"status": "success", "message": "Session started"}
+        return {"status": "success", "message": "Session started", "session_id": str(result.inserted_id)}
+    
 
     def end_session(self):
         if not self.current_session:
@@ -102,21 +174,21 @@ class ProductivityTracker:
                 "message": f"Failed to end session: {str(e)}"
             }
 
-    def _generate_ai_summary(self):                 
+    def _generate_ai_summary(self):
         """Generate AI summary from session screenshots"""
         try:
-            # Get all screenshots for this session
+            # Get screenshots only for current session
             screenshots = list(self.screenshots_collection.find({
                 "session_id": str(self.current_session['_id'])
-            }))
+            }).sort("timestamp", 1))  # Sort by timestamp
             
-            # Combine all extracted text
             all_text = "\n".join(doc.get('text', '') for doc in screenshots)
             
-            # Generate summary using Gemini
             prompt = f"""
             Please analyze this work session based on the following extracted text and create a brief summary:
             
+            Session Name: {self.current_session['name']}
+            Duration: {(datetime.now() - self.current_session['start_time']).total_seconds() / 3600:.2f} hours
             Text: {all_text}
             
             Focus on:
@@ -135,7 +207,7 @@ class ProductivityTracker:
 
     def _screenshot_loop(self):
         """Take screenshots every 15 minutes and extract text"""
-        while self.session_active:
+        while self.session_active and self.current_session:  # Add check for current_session
             try:
                 # Take screenshot
                 screenshot = pyautogui.screenshot()
@@ -148,22 +220,23 @@ class ProductivityTracker:
                 # Extract text
                 extracted_text = pytesseract.image_to_string(Image.open(temp_path))
                 
-                # Save to MongoDB
-                self.screenshots_collection.insert_one({
-                    "session_id": str(self.current_session['_id']),
+                # Save to MongoDB with session_id
+                screenshot_doc = {
+                    "session_id": str(self.current_session['_id']),  # Ensure session association
                     "timestamp": timestamp,
-                    "text": extracted_text
-                })
+                    "text": extracted_text,
+                    "user_id": self.current_session.get('user_id')  # Add user_id if present
+                }
+                self.screenshots_collection.insert_one(screenshot_doc)
                 
                 # Clean up temp file
                 os.remove(temp_path)
                 
-                # Wait 15 minutes
-                time.sleep(120)  # 15 minutes in seconds
+                time.sleep(120)  # 15 minutes (set to 2 minutes for testing)
                 
             except Exception as e:
                 print(f"Screenshot error: {e}")
-                time.sleep(60)  # Wait a minute before retrying
+                time.sleep(60)
 
     def _generate_and_store_report(self, summary):
         """Generate PDF report and store it in MongoDB"""
@@ -173,9 +246,10 @@ class ProductivityTracker:
             report_generator = ReportGenerator()
             report_generator.generate_report_to_buffer(self.current_session, summary, report_buffer)
             
-            # Store in MongoDB
+            # Store in MongoDB with session and user info
             report_doc = {
                 'session_id': self.current_session['_id'],
+                'user_id': self.current_session.get('user_id'),  # Add user_id if present
                 'created_at': datetime.now(),
                 'filename': f"{self.current_session['name']}_{self.current_session['start_time'].strftime('%Y%m%d_%H%M')}.pdf",
                 'data': Binary(report_buffer.getvalue())
@@ -188,10 +262,15 @@ class ProductivityTracker:
             print(f"Error generating/storing report: {e}")
             raise
 
+
     def get_report(self, report_id):
         """Retrieve a report from MongoDB"""
         try:
-            report = self.reports_collection.find_one({'_id': ObjectId(report_id)})
+            report = self.reports_collection.find_one({
+                '_id': ObjectId(report_id),
+                'user_id': self.current_session.get('user_id')  # Add user_id check if present
+            })
+            
             if not report:
                 return None
                 
@@ -203,6 +282,8 @@ class ProductivityTracker:
         except Exception as e:
             print(f"Error retrieving report: {e}")
             return None
+        
+
             
     def update_tracking(self):
         """Continuously track and update window information"""
@@ -215,7 +296,7 @@ class ProductivityTracker:
             try:
                 if not self.current_session or not self.session_active:
                     time.sleep(1)
-                    continue                                                                               
+                    continue
                     
                 current_time = time.time()
                 elapsed_seconds = int(current_time - last_update)
@@ -251,17 +332,17 @@ class ProductivityTracker:
                     
                     self.current_session['window_details'][active_window]['active_time'] += elapsed_seconds
                     
-                    # Update MongoDB
+                    # Update MongoDB for this specific session
                     try:
                         self.sessions_collection.update_one(
-                            {"_id": self.current_session['_id']},
+                            {"_id": self.current_session['_id']},  # Target specific session
                             {"$set": {
                                 "productive_time": self.current_session['productive_time'],
                                 "unproductive_time": self.current_session['unproductive_time'],
                                 "window_details": self.current_session['window_details']
                             }}
                         )
-                        consecutive_errors = 0  # Reset error counter on successful update
+                        consecutive_errors = 0
                     except Exception as e:
                         print(f"MongoDB update error: {e}")
                         consecutive_errors += 1
@@ -283,24 +364,28 @@ class ProductivityTracker:
                     break
                 time.sleep(1)
 
-    def get_daily_summary(self):
-        """
-        Retrieve daily productivity summary from MongoDB
-        Aggregates data for the current day's sessions
-        """
-        # Get today's date
+
+    def get_daily_summary(self, user_id=None):
+        """Retrieve daily productivity summary from MongoDB"""
         today_start = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
         today_end = today_start + timedelta(days=1)
 
-        # Aggregate sessions for today
-        today_sessions = list(self.sessions_collection.find({
+        # Query filter
+        query = {
             'start_time': {
                 '$gte': today_start,
                 '$lt': today_end
             }
-        }))
+        }
+        
+        # Add user_id filter if provided
+        if user_id:
+            query['user_id'] = user_id
 
-        # Calculate total times and window details
+        # Get today's sessions
+        today_sessions = list(self.sessions_collection.find(query))
+
+        # Calculate totals
         total_productive_time = 0
         total_unproductive_time = 0
         window_times = {}
@@ -309,7 +394,7 @@ class ProductivityTracker:
             total_productive_time += session.get('productive_time', 0)
             total_unproductive_time += session.get('unproductive_time', 0)
 
-            # Aggregate window times
+            # Aggregate window times per session
             for window, details in session.get('window_details', {}).items():
                 if window not in window_times:
                     window_times[window] = {
@@ -319,26 +404,15 @@ class ProductivityTracker:
                     }
                 window_times[window]['active_time'] += details.get('active_time', 0)
 
-        # Convert window times to list and sort by active time
-        productive_windows = sorted(
-            [
-                {
-                    'window': details['window'],
-                    'active_time': details['active_time'],
-                    'productive': details['productive']
-                } 
-                for details in window_times.values()
-            ],
-            key=lambda x: x['active_time'],
-            reverse=True
-        )
-
         return {
             'total_productive_time': total_productive_time,
             'total_unproductive_time': total_unproductive_time,
-            'productive_windows': productive_windows
+            'productive_windows': sorted(
+                list(window_times.values()),
+                key=lambda x: x['active_time'],
+                reverse=True
+            )
         }
-    
                                                                           
 
 

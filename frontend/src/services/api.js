@@ -13,6 +13,7 @@ const apiClient = axios.create({
 
 export const productivityService = {
     getDailySummary: () => apiClient.get('/daily-summary'),
+    getCurrentSession: () => apiClient.get('/current-session'),
     startSession: (sessionName) => apiClient.post('/start-session', { session_name: sessionName }),
     endSession: () => apiClient.post('/end-session'),
     downloadReport: (reportId) => apiClient.get(`/download-report/${reportId}`, {

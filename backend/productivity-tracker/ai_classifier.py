@@ -43,10 +43,10 @@ class AIClassifier:
         
         # Direct match against predefined lists
         if app_name in self.productive_apps:
-            return True
+            return True 
         
         if app_name in self.unproductive_apps:
-            return False
+            return False  
         
         # Use Gemini for uncertain classifications
         try:
