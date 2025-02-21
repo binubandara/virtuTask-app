@@ -1,13 +1,13 @@
 import React from "react";
 import { Footer } from "flowbite-react";
 import { BsDribbble, BsFacebook, BsGithub, BsInstagram, BsTwitter } from "react-icons/bs";
-import logo from '../../logo.png';
-import { MdEmail } from "react-icons/md"; // Import Email Icon
+import logo from "../../assets/logo.png";
+import { MdEmail } from "react-icons/md"; 
 
 const MyFooter = () => {
     return(
         <Footer container>
-            <div className="w-full text-white ">
+            <div id="contact" className="w-full text-white ">
                 <div className="grid w-full justify-between sm:flex sm:justify-between md:flex md:grid-cols-1">
                     <div className="space-y-4 mb-8">
                         <a href="/" className="text-2xl font-semibold flex items-center space-x-3">
@@ -23,27 +23,22 @@ const MyFooter = () => {
                         <div>
                             <Footer.Title title="about" />
                             <Footer.LinkGroup col>
-                                <Footer.Link href="#">Home</Footer.Link>
-                                <Footer.Link 
-                                    href="#"
-                                    onClick={(e) => {
-                                        e.preventDefault(); // Prevent default anchor behavior
-                                        const section = document.getElementById("services");
-                                        if (section) {
-                                            section.scrollIntoView({ behavior: "smooth" });
-                                        }
-                                    }}
-                                >
-                                    Services
-                                </Footer.Link>
+                                <a href="#home" className="text-white hover:underline"> Home</a>
+                                <a href="#services" className="text-white hover:underline">Services</a> {/* Use #services */}
+                                
                             </Footer.LinkGroup>
                         </div>
                         <div>
-                            <Footer.Title title="Follow us" />
-                            <Footer.LinkGroup col>
-                                <Footer.Link href="#">Github</Footer.Link>
-                                <Footer.Link href="#">Instagram</Footer.Link>
-                            </Footer.LinkGroup>
+                        <Footer.Title title="Follow us" />
+                        <Footer.LinkGroup col>
+                            <Footer.Link href="https://github.com" target="_blank" rel="noopener noreferrer">
+                                Github
+                            </Footer.Link>
+                            <Footer.Link href="https://www.instagram.com/virtutask_?igsh=enRldjVma2NhZGg0" target="_blank" rel="noopener noreferrer">
+                                Instagram
+                            </Footer.Link>
+                        </Footer.LinkGroup>
+
                         </div>
                         <div>
                             <Footer.Title title="Legal" />

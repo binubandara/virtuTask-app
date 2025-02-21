@@ -1,11 +1,11 @@
 import React from "react";
 import { Carousel } from "flowbite-react";
-import pic1 from "../../pic1.png"
-import img2 from "../../img2.png"
+import pic1 from "../../assets/pic1.png"
+import img2 from "../../assets/img2.png"
 
 const Home = () => {
     return (
-        <div className="bg-[#F5F7FA]">
+        <div id="home" className="bg-[#F5F7FA]">
             <div style={{ paddingLeft: "2.5rem", paddingRight: "2.5rem"}} className=" max-w-screen mx-auto min-h-screen h-screen">
 
             <Carousel className="w-full  mx-auto">
