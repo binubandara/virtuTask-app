@@ -169,18 +169,18 @@ const SessionWidget = ({ onSessionStateChange }) => {
                                 <div className="text-end">
                                     <div className="text-muted small">Elapsed Time</div>
                                     <h6 className="mb-0 font-monospace">
-                                        {formatElapsedTime(elapsedTime)}
+                                        {formatElapsedTime(elapsedTime)}            
                                     </h6>
                                 </div>
                             </div>
 
                             <button
-                                className="btn btn-danger w-100"
+                                className="btn btn-danger w-100"                  
                                 onClick={handleEndSession}
                             >
                                 End Session
                             </button>
-                        </div>
+                        </div>                            
                     ) : (
                         <div>
                             <div className="mb-3">
@@ -188,7 +188,7 @@ const SessionWidget = ({ onSessionStateChange }) => {
                                 <input
                                     type="text"
                                     className="form-control"
-                                    id="sessionName"
+                                    id="sessionName"                           
                                     value={sessionName}
                                     onChange={(e) => setSessionName(e.target.value)}
                                     placeholder="Enter session name"
@@ -196,10 +196,10 @@ const SessionWidget = ({ onSessionStateChange }) => {
                             </div>
                             <button
                                 className="btn btn-primary w-100"
-                                onClick={handleStartSession}
+                                onClick={handleStartSession}                         
                                 disabled={!sessionName.trim()}
                             >
-                                Start Session
+                                Start Session                                             
                             </button>
                         </div>
                     )}
@@ -214,7 +214,7 @@ const SessionWidget = ({ onSessionStateChange }) => {
                                 >
                                     <i className="bi bi-download me-1"></i>
                                     Download Report
-                                </button>
+                                </button>                                                                          
                             </div>
                         </div>
                     )}

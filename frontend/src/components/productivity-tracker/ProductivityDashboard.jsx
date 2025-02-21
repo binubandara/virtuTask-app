@@ -4,7 +4,6 @@ import SessionWidget from './SessionWidget';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title } from 'chart.js';
 import { Pie, Bar } from 'react-chartjs-2';
 
-// Register ChartJS components
 ChartJS.register(ArcElement, CategoryScale, LinearScale, BarElement, Tooltip, Legend, Title);
 
 const ProductivityDashboard = () => {
@@ -14,47 +13,101 @@ const ProductivityDashboard = () => {
         windowTimes: []
     });
     
-    const [viewMode, setViewMode] = useState('daily'); // 'daily' or 'session'
+    const [viewMode, setViewMode] = useState('daily');
     const [sessionActive, setSessionActive] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+
+    const fetchSessionData = async () => {
+        try {
+            const sessionResponse = await productivityService.getCurrentSession();
+            return {
+                totalProductiveTime: parseInt(sessionResponse.data.totalProductiveTime) || 0,
+                totalUnproductiveTime: parseInt(sessionResponse.data.totalUnproductiveTime) || 0,
+                windowTimes: sessionResponse.data.windowTimes || []
+            };
+        } catch (error) {
+            console.error('Error fetching session data:', error);
+            return null;
+        }
+    };
+
+    const fetchDailyData = async () => {
+        try {
+            const dailyResponse = await productivityService.getDailySummary();
+            return {
+                totalProductiveTime: parseInt(dailyResponse.data.totalProductiveTime) || 0,
+                totalUnproductiveTime: parseInt(dailyResponse.data.totalUnproductiveTime) || 0,
+                windowTimes: dailyResponse.data.windowTimes || []
+            };
+        } catch (error) {
+            console.error('Error fetching daily data:', error);
+            return null;
+        }
+    };
+
+    const checkSessionStatus = async () => {
+        try {
+            const sessionResponse = await productivityService.getCurrentSession();
+            return sessionResponse.data.sessionActive;
+        } catch (error) {
+            console.error('Error checking session status:', error);
+            return false;
+        }
+    };
 
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                // Always check current session status first
-                const sessionResponse = await productivityService.getCurrentSession();
-                const isSessionActive = sessionResponse.data.sessionActive;
-                setSessionActive(isSessionActive);
-                
-                // Auto-select appropriate view based on session state
-                if (!isSessionActive) {
-                    setViewMode('daily');
+        let intervalId;
+
+        const updateData = async () => {
+            setIsLoading(true);
+            
+            // First check session status
+            const isSessionActive = await checkSessionStatus();
+            setSessionActive(isSessionActive);
+
+            // If no active session, force daily view
+            if (!isSessionActive) {
+                setViewMode('daily');
+                const dailyData = await fetchDailyData();
+                if (dailyData) {
+                    setProductivityData(dailyData);
                 }
+            } else {
+                // If session is active, fetch appropriate data based on viewMode
+                const data = viewMode === 'session' ? 
+                    await fetchSessionData() : 
+                    await fetchDailyData();
                 
-                // If session is active and we're in session view, use session data
-                if (isSessionActive && viewMode === 'session') {
-                    setProductivityData({
-                        totalProductiveTime: parseInt(sessionResponse.data.totalProductiveTime) || 0,
-                        totalUnproductiveTime: parseInt(sessionResponse.data.totalUnproductiveTime) || 0,
-                        windowTimes: sessionResponse.data.windowTimes || []
-                    });
-                } else {
-                    // Otherwise use daily summary
-                    const dailyResponse = await productivityService.getDailySummary();
-                    setProductivityData({
-                        totalProductiveTime: parseInt(dailyResponse.data.totalProductiveTime) || 0,
-                        totalUnproductiveTime: parseInt(dailyResponse.data.totalUnproductiveTime) || 0,
-                        windowTimes: dailyResponse.data.windowTimes || []
-                    });
+                if (data) {
+                    setProductivityData(data);
                 }
-            } catch (error) {
-                console.error('Error fetching productivity data:', error);
             }
+            
+            setIsLoading(false);
         };
 
-        fetchData();
-        const interval = setInterval(fetchData, 5000); // Reduced polling frequency to 5 seconds
-        return () => clearInterval(interval);
-    }, [viewMode, sessionActive]);
+        updateData();
+        intervalId = setInterval(updateData, 5000);
+
+        return () => {
+            if (intervalId) {
+                clearInterval(intervalId);
+            }
+        };
+    }, [viewMode]);
+
+    const handleSessionStateChange = async (isActive) => {
+        setSessionActive(isActive);
+        if (isActive) {
+            setViewMode('session');
+        } else {
+            setViewMode('daily');
+        }
+    };
+
+    const handleViewModeChange = (newMode) => {
+        setViewMode(newMode);
+    };
 
     const formatTime = (seconds) => {
         const hours = Math.floor(seconds / 3600);
@@ -62,11 +115,8 @@ const ProductivityDashboard = () => {
         return `${hours}h ${minutes}m`;
     };
 
-    // Helper function to clean window titles
     const cleanWindowTitle = (title) => {
-        // Remove common patterns like app.exe:
         let cleaned = title.replace(/[^:]+\.exe:/, '');
-        // Remove trailing file extensions and paths
         cleaned = cleaned.replace(/\s-\s.*?\s-\s/, ' - ');
         return cleaned;
     };
@@ -75,7 +125,6 @@ const ProductivityDashboard = () => {
         .filter(([_, __, isProductive]) => isProductive)
         .map(([title, time, isProductive]) => [cleanWindowTitle(title), time, isProductive]);
 
-    // Prepare chart data
     const pieChartData = {
         labels: ['Productive', 'Unproductive'],
         datasets: [
@@ -88,7 +137,6 @@ const ProductivityDashboard = () => {
         ],
     };
 
-    // Bar chart for productive windows
     const topProductiveWindows = productiveWindows.slice(0, 5);
     const barChartData = {
         labels: topProductiveWindows.map(([title]) => title),
@@ -96,8 +144,8 @@ const ProductivityDashboard = () => {
             {
                 label: 'Time Spent (seconds)',
                 data: topProductiveWindows.map(([_, time]) => time),
-                backgroundColor: 'rgba(65, 105, 225, 0.8)',
-                borderColor: 'rgba(65, 105, 225, 1)',
+                backgroundColor: 'rgba(118, 189, 252, 0.8)',
+                borderColor: 'rgb(44, 163, 165)',
                 borderWidth: 1,
             },
         ],
