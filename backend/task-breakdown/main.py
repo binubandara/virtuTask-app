@@ -9,8 +9,9 @@ from dotenv import load_dotenv
 import asyncio
 import time
 import google.generativeai as genai
-from google.ai.generativelanguage import GenerateContentResponse  # Import the response type
+from google.ai.generativelanguage import GenerateContentResponse
 import json
+import re
 
 load_dotenv()
 
@@ -41,23 +42,22 @@ if not GEMINI_API_KEY:
 genai.configure(api_key=GEMINI_API_KEY)
 
 # Rate Limiting Configuration
-RATE_LIMIT_WINDOW = 60  # seconds
+RATE_LIMIT_WINDOW = 60
 MAX_REQUESTS_PER_WINDOW = 20
 request_counts = {}
 
 # Data Models
 class SubTask(BaseModel):
     step: str
-    timeEstimate: str
-    dependencies: List[str]
-    resources: List[str]
+    time_estimate: str
 
 class TaskAnalysis(BaseModel):
+    task_id: str
     task: str
     subtasks: List[SubTask]
 
 class TaskRequest(BaseModel):
-    task_id: str  # Changed to receive only task_id
+    task_id: str
 
 class TaskResponse(BaseModel):
     task_id: str
@@ -70,7 +70,6 @@ class TaskResponse(BaseModel):
 
 # Helper Functions
 def check_rate_limit(client_ip: str):
-    """Checks if the client has exceeded the rate limit."""
     now = time.time()
     if client_ip not in request_counts:
         request_counts[client_ip] = []
@@ -82,16 +81,20 @@ def check_rate_limit(client_ip: str):
 
     request_counts[client_ip].append(now)
 
-async def analyze_with_ai(task: str) -> str:
-    """Uses Gemini to analyze and break down the task."""
+async def analyze_with_ai(task_name: str, description: str, priority: str, due_date: str) -> str:  # Modified function signature
     try:
-        model = genai.GenerativeModel('gemini-pro')  # Specify the model
+        model = genai.GenerativeModel('gemini-pro')
 
-        prompt = f"""You are a project management expert.
-            Break down tasks into detailed steps with time estimates, dependencies,
-            and resource requirements. Be specific and practical. Provide the response in JSON format only.  Do not use markdown code fences. Analyze this task: {task}""" #Removed markdown and clarified the JSON
+        prompt = f"""You are a project management expert. Analyze the following task, considering its priority, due date, and description, and break it down into detailed steps with time estimates. Be specific and practical.
 
-        response: GenerateContentResponse = model.generate_content(prompt)  # Get the Gemini response
+        Task Name: {task_name}
+        Description: {description}
+        Priority: {priority}
+        Due Date: {due_date if due_date else "No Due Date"}
+
+        Provide the response in JSON format ONLY. The JSON should be a valid JSON object with a "task" field (string) and a "steps" field (array of objects). Each object in the "steps" array should have a "description" field (string) and a "time_estimate" field (string). Ensure that all strings in the JSON are properly escaped. Do not include any text outside of the JSON structure.  Do not use markdown code fences."""
+
+        response: GenerateContentResponse = model.generate_content(prompt)
 
         if response.prompt_feedback and response.prompt_feedback.block_reason:
            raise HTTPException(status_code=400, detail=f"Gemini API blocked the prompt: {response.prompt_feedback.block_reason}")
@@ -101,12 +104,11 @@ async def analyze_with_ai(task: str) -> str:
 
         return response.text
     except Exception as e:
-        print(f"Gemini API Error: {e}")  # Log the error
+        print(f"Gemini API Error: {e}")
         raise HTTPException(status_code=500, detail=f"Gemini API Error: {str(e)}")
 
 
 async def calculate_priority_score(task: str, deadline: Optional[datetime], priority: Optional[str]) -> int:
-    """Calculates priority score based on various factors."""
     base_score = 50
 
     if priority:
@@ -125,7 +127,6 @@ async def calculate_priority_score(task: str, deadline: Optional[datetime], prio
 # API Endpoints
 @app.post("/api/analyze-task")
 async def analyze_task(task_request: TaskRequest, request: Request):
-    """Analyzes a task using Gemini and stores the analysis in a separate collection."""
     client_ip = request.client.host
     check_rate_limit(client_ip)
 
@@ -135,50 +136,75 @@ async def analyze_task(task_request: TaskRequest, request: Request):
 
         print(f"Received task_id: {task_id_str}")
 
-        # Database and Collection Verification
-        print(f"Connected to database: {db.name}")
         tasks_collection = db["tasks"]
-
         task = await tasks_collection.find_one({"task_id": task_id_str})
 
         if not task:
             print(f"Task not found in database with task_id: {task_id_str}")
             raise HTTPException(status_code=404, detail="Task not found")
 
-        # Extract AI analysis from Gemini
-        ai_analysis_text = await analyze_with_ai(task["name"])
+        task_name = task["name"]
+        description = task.get("description", "")  # Get the description, default to empty string if missing
+        priority = task.get("priority", "Not specified")  # Get the priority, default to "Not specified"
+        due_date = task.get("dueDate")
+        due_date_str = ""
+
+        if due_date:
+            if isinstance(due_date, dict) and "$date" in due_date: # handles mongo date object
+                due_date_str = datetime.fromisoformat(due_date["$date"].replace('Z', '+00:00')).strftime("%Y-%m-%d")
+            else:
+                try: # maybe it is already a datetime object
+                    due_date_str = due_date.strftime("%Y-%m-%d")
+                except:
+                   print("Failed to parse due date")
+
+        ai_analysis_text = await analyze_with_ai(task_name, description, priority, due_date_str) # Modified call
         print(f"Raw AI Analysis: {ai_analysis_text}")
 
-        # Parse the AI analysis text
         try:
+            # 1. Remove code fences
             ai_analysis_text = ai_analysis_text.replace("```json", "").replace("```", "")
-            ai_analysis_json = json.loads(ai_analysis_text)
 
-            # Debugging: Print the parsed JSON to inspect its structure
+            # 2. Sanitize: Replace single quotes with double quotes (carefully)
+            ai_analysis_text = re.sub(r"(\S)'(\S)", r'\1"\2', ai_analysis_text)
+
+
+            # 3. Attempt to parse, catching common errors
+            try:
+                ai_analysis_json = json.loads(ai_analysis_text)
+            except json.JSONDecodeError as e:
+                print(f"JSONDecodeError after sanitization: {e}")
+                # Attempt more aggressive cleaning if needed
+                # Remove any characters that aren't valid in JSON
+                ai_analysis_text = re.sub(r'[^\x20-\x7F]+', '', ai_analysis_text)  # Remove non-ASCII characters
+                try:
+                    ai_analysis_json = json.loads(ai_analysis_text) # try again
+                except:
+                    raise HTTPException(status_code=500, detail=f"Failed to parse Gemini response as JSON even after aggressive cleaning: {e}. Raw response: {ai_analysis_text}")
+
+
+
             print(f"Parsed AI Analysis JSON: {ai_analysis_json}")
-           # Debugging: Print the parsed JSON to inspect its structure
-            print(f"Parsed AI Analysis JSON: {ai_analysis_json}")
+
             subtasks_data = ai_analysis_json.get("steps", [])
             steps = []
 
             for subtask_data in subtasks_data:
                 subtask = SubTask(
-                    step = subtask_data.get("description", "Unspecified"),
-                    timeEstimate = subtask_data.get("time_estimate", "Unknown"),
-                    dependencies = subtask_data.get("dependencies", []),
-                    resources = subtask_data.get("resources", [])
+                    step = subtask_data.get("description", "Unspecified"),  # Changed to use "description"
+                    time_estimate = subtask_data.get("time_estimate", "Unknown"),
                 )
                 steps.append(subtask)
 
             task_analysis = TaskAnalysis(
+                task_id = task_id_str,  # ADD THIS LINE
                 task = ai_analysis_json.get("task", "No Task"),
                 subtasks = steps
             )
-            # Store the analysis in the 'task_analyses' collection
             task_analyses_collection = db["task_analyses"]
             await task_analyses_collection.insert_one(task_analysis.dict())
 
-            return {"message": "Task analysis stored successfully."}  # Return a success message
+            return {"message": "Task analysis stored successfully."}
 
         except json.JSONDecodeError as e:
             raise HTTPException(status_code=500, detail=f"Failed to parse Gemini response as JSON: {e}. Raw response: {ai_analysis_text}")
@@ -189,14 +215,14 @@ async def analyze_task(task_request: TaskRequest, request: Request):
         print(f"Unexpected Error: {e}")
         raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
 
-@app.get("/api/task/{task_id}", response_model=TaskResponse)
-async def get_task(task_id: str):
-    """Retrieves a task from MongoDB by its task_id."""
-    task = await db["tasks"].find_one({"task_id": task_id})
-    if task is None:
-        raise HTTPException(status_code=404, detail="Task not found")
+# NEW ENDPOINT:  Retrieve TaskAnalysis by task_id
+@app.get("/api/analysis/{task_id}", response_model=TaskAnalysis)
+async def get_task_analysis(task_id: str):
+    task_analysis = await db["task_analyses"].find_one({"task_id": task_id})
+    if task_analysis is None:
+        raise HTTPException(status_code=404, detail="Task analysis not found")
+    return TaskAnalysis(**task_analysis)
 
-    return TaskResponse(**task)
 
 if __name__ == "__main__":
     import uvicorn
