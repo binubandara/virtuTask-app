@@ -42,34 +42,24 @@
   },
   "build": {
     "appId": "com.productivity.tracker",
+    "productName": "Productivity Tracker",
     "files": [
       "dist/**/*",
-      "electron/**/*",
-      "node_modules/**/*"
+      "electron/**/*"
     ],
     "extraResources": [
       {
-        "from": "backend/productivity-tracker/dist/app",
-        "to": "backend",
-        "filter": [
-          "**/*"
-        ]
+        "from": "../backend/productivity-tracker/dist/app.exe",
+        "to": "backend/app.exe"
       }
     ],
     "win": {
-      "target": [
-        "nsis"
-      ]
+      "target": ["nsis"],
+      "icon": "public/icon.ico"
     },
-    "mac": {
-      "target": [
-        "dmg"
-      ]
-    },
-    "linux": {
-      "target": [
-        "AppImage"
-      ]
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
     }
   }
 }
