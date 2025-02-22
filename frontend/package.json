@@ -51,6 +51,10 @@
       {
         "from": "../backend/productivity-tracker/dist/app.exe",
         "to": "backend/app.exe"
+      },
+      {
+        "from": "../backend/productivity-tracker/.env",
+        "to": "backend/.env"
       }
     ],
     "win": {

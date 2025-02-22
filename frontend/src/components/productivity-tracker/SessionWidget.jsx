@@ -9,6 +9,7 @@ const SessionWidget = ({ onSessionStateChange }) => {
     const [error, setError] = useState(null);
     const [sessionStartTime, setSessionStartTime] = useState(null);
     const [elapsedTime, setElapsedTime] = useState(0);
+    const [isLoading, setIsLoading] = useState(false);
 
     // Check if session is active on component mount
     useEffect(() => {
@@ -22,10 +23,10 @@ const SessionWidget = ({ onSessionStateChange }) => {
                     // If a session is active, we need to estimate the start time
                     // based on current productive + unproductive time
                     const totalSeconds = response.data.totalProductiveTime + response.data.totalUnproductiveTime;
-                    const estimatedStartTime = Date.now() - (totalSeconds * 1000);
+                    const estimatedStartTime = new Date().getTime() - (totalSeconds * 1000);
                     setSessionStartTime(estimatedStartTime);
+                    setElapsedTime(totalSeconds); // Set initial elapsed time
                     
-                    // Call the parent's callback if provided
                     if (onSessionStateChange) {
                         onSessionStateChange(true);
                     }
@@ -41,12 +42,20 @@ const SessionWidget = ({ onSessionStateChange }) => {
     useEffect(() => {
         let timer;
         if (sessionActive && sessionStartTime) {
+            // Initialize with current elapsed time
+            const initialElapsed = Math.floor((new Date().getTime() - sessionStartTime) / 1000);
+            setElapsedTime(initialElapsed);
+            
+            // Update every second
             timer = setInterval(() => {
-                const elapsed = Math.floor((Date.now() - sessionStartTime) / 1000);
-                setElapsedTime(elapsed);
+                setElapsedTime(prev => prev + 1);
             }, 1000);
         }
-        return () => clearInterval(timer);
+        return () => {
+            if (timer) {
+                clearInterval(timer);
+            }
+        };
     }, [sessionActive, sessionStartTime]);
 
     const formatElapsedTime = (seconds) => {
@@ -62,16 +71,19 @@ const SessionWidget = ({ onSessionStateChange }) => {
             return;
         }
 
+        setIsLoading(true);
+        setError(null);
+
         try {
             const response = await productivityService.startSession(sessionName.trim());
 
             if (response.data.status === 'success') {
                 setSessionActive(true);
-                setSessionStartTime(Date.now());
+                setSessionStartTime(new Date().getTime());
+                setElapsedTime(0);
                 setError(null);
                 setReportId(null);
                 
-                // Notify parent component about session state change
                 if (onSessionStateChange) {
                     onSessionStateChange(true);
                 }
@@ -79,15 +91,19 @@ const SessionWidget = ({ onSessionStateChange }) => {
                 setError(response.data.message || 'Failed to start session');
             }
         } catch (error) {
-            setError('Failed to connect to server. Please check if the backend is running.');
+            setError(error.userMessage || 'Failed to connect to server');
+        } finally {
+            setIsLoading(false);
         }
     };
 
     const handleEndSession = async () => {
+        setIsLoading(true);
+        setError(null);
+
         try {
             const response = await productivityService.endSession();
-            console.log('End session response:', response.data);
-
+            
             if (response.data.status === 'success') {
                 setSessionActive(false);
                 setReportId(response.data.report_id);
@@ -95,7 +111,6 @@ const SessionWidget = ({ onSessionStateChange }) => {
                 setElapsedTime(0);
                 setError(null);
                 
-                // Notify parent component about session state change
                 if (onSessionStateChange) {
                     onSessionStateChange(false);
                 }
@@ -104,7 +119,9 @@ const SessionWidget = ({ onSessionStateChange }) => {
             }
         } catch (error) {
             console.error('End session error:', error);
-            setError('Failed to end session. Please try again.');
+            setError(error.userMessage || 'Failed to end session. Please try again.');
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -113,6 +130,9 @@ const SessionWidget = ({ onSessionStateChange }) => {
             setError('No report available');
             return;
         }
+
+        setIsLoading(true);
+        setError(null);
 
         try {
             const response = await productivityService.downloadReport(reportId);
@@ -129,10 +149,9 @@ const SessionWidget = ({ onSessionStateChange }) => {
             window.URL.revokeObjectURL(url);
         } catch (error) {
             console.error('Download error:', error);
-            setError(
-                error.response?.data?.message ||
-                'Failed to download report. Please try again.'
-            );
+            setError(error.userMessage || 'Failed to download report. Please try again.');
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -156,6 +175,11 @@ const SessionWidget = ({ onSessionStateChange }) => {
                     {error && (
                         <div className="alert alert-danger mb-3" role="alert">
                             {error}
+                            <button 
+                                type="button" 
+                                className="btn-close float-end" 
+                                onClick={() => setError(null)}
+                            ></button>
                         </div>
                     )}
 
@@ -175,10 +199,18 @@ const SessionWidget = ({ onSessionStateChange }) => {
                             </div>
 
                             <button
-                                className="btn btn-danger w-100"                  
+                                className={`btn btn-danger w-100 ${isLoading ? 'disabled' : ''}`}
                                 onClick={handleEndSession}
+                                disabled={isLoading}
                             >
-                                End Session
+                                {isLoading ? (
+                                    <>
+                                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                        Ending Session...
+                                    </>
+                                ) : (
+                                    'End Session'
+                                )}
                             </button>
                         </div>                            
                     ) : (
@@ -195,11 +227,18 @@ const SessionWidget = ({ onSessionStateChange }) => {
                                 />
                             </div>
                             <button
-                                className="btn btn-primary w-100"
-                                onClick={handleStartSession}                         
-                                disabled={!sessionName.trim()}
+                                className={`btn btn-primary w-100 ${isLoading ? 'disabled' : ''}`}
+                                onClick={handleStartSession}
+                                disabled={!sessionName.trim() || isLoading}
                             >
-                                Start Session                                             
+                                {isLoading ? (
+                                    <>
+                                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                        Starting Session...
+                                    </>
+                                ) : (
+                                    'Start Session'
+                                )}
                             </button>
                         </div>
                     )}
@@ -209,12 +248,22 @@ const SessionWidget = ({ onSessionStateChange }) => {
                             <div className="d-flex justify-content-between align-items-center">
                                 <span className="text-muted">Session Report Ready</span>
                                 <button
-                                    className="btn btn-outline-primary btn-sm"
+                                    className={`btn btn-outline-primary btn-sm ${isLoading ? 'disabled' : ''}`}
                                     onClick={handleDownloadReport}
+                                    disabled={isLoading}
                                 >
-                                    <i className="bi bi-download me-1"></i>
-                                    Download Report
-                                </button>                                                                          
+                                    {isLoading ? (
+                                        <>
+                                            <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                            Downloading...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <i className="bi bi-download me-1"></i>
+                                            Download Report
+                                        </>
+                                    )}
+                                </button>
                             </div>
                         </div>
                     )}

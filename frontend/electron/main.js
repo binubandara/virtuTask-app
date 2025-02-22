@@ -1,115 +1,98 @@
+// electron/main.js
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const { spawn } = require('child_process');
-
-// Simple development check
-const isDev = !app.isPackaged;
-
-let pythonProcess = null;
-let mainWindow = null;
+const fs = require('fs');
 
 function startPythonBackend() {
-  const pythonExecutablePath = isDev 
-    ? 'python'
-    : path.join(process.resourcesPath, 'backend', 'app.exe');
-
-  if (!isDev) {
-    // Production: just run the exe
-    pythonProcess = spawn(pythonExecutablePath);
-    console.log('Starting production Python backend:', pythonExecutablePath);
-  } else {
-    // Development: run the Python script
+  let pythonProcess = null;
+  
+  if (!app.isPackaged) {
+    // Development
     const scriptPath = path.join(__dirname, '../../backend/productivity-tracker/app.py');
-    const env = {
-      ...process.env,
-      PYTHONPATH: path.join(__dirname, '../../backend/productivity-tracker')
-    };
-    pythonProcess = spawn('python', [scriptPath], { env });
-    console.log('Starting development Python backend:', scriptPath);
+    pythonProcess = spawn('python', [scriptPath], {
+      env: {
+        ...process.env,
+        PYTHONPATH: path.join(__dirname, '../../backend/productivity-tracker')
+      }
+    });
+  } else {
+    // Production
+    const exePath = path.join(process.resourcesPath, 'backend', 'app.exe');
+    console.log('Looking for Python executable at:', exePath);
+    
+    if (!fs.existsSync(exePath)) {
+      console.error('Python executable not found!');
+      throw new Error(`Python executable not found at: ${exePath}`);
+    }
+
+    // Start the process with working directory set to resources/backend
+    pythonProcess = spawn(exePath, [], {
+      cwd: path.join(process.resourcesPath, 'backend'),
+      stdio: 'pipe',
+      windowsHide: true
+    });
   }
 
+  // Enhanced logging
   pythonProcess.stdout.on('data', (data) => {
-    console.log(`Python stdout: ${data}`);
-    mainWindow?.webContents.send('python-log', data.toString());
+    console.log(`Python stdout: ${data.toString()}`);
+    global.mainWindow?.webContents.send('python-log', data.toString());
   });
 
   pythonProcess.stderr.on('data', (data) => {
-    console.error(`Python stderr: ${data}`);
-    mainWindow?.webContents.send('python-error', data.toString());
+    console.error(`Python stderr: ${data.toString()}`);
+    global.mainWindow?.webContents.send('python-error', data.toString());
   });
 
   pythonProcess.on('error', (error) => {
     console.error('Failed to start Python process:', error);
-    mainWindow?.webContents.send('python-error', error.message);
+    global.mainWindow?.webContents.send('python-error', error.message);
   });
 
-  // Give the Python process time to start
-  return new Promise((resolve) => {
-    setTimeout(resolve, 3000);
-  });
+  return pythonProcess;
 }
 
-function setupIPC() {
-  ipcMain.handle('get-server-status', async () => {
-    try {
-      const response = await fetch('http://localhost:5000/test');
-      return response.ok;
-    } catch (error) {
-      console.error('Server status check failed:', error);
-      return false;
-    }
-  });
-
-  ipcMain.handle('get-version', () => {
-    return app.getVersion();
-  });
-
-  ipcMain.handle('get-app-path', () => {
-    return app.getAppPath();
-  });
-}
-
+// Modified createWindow function
 async function createWindow() {
-  mainWindow = new BrowserWindow({
+  global.mainWindow = new BrowserWindow({
     width: 1024,
     height: 768,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.js')
-    },
-    icon: path.join(__dirname, '../public/icon.ico')
+    }
   });
 
-  setupIPC();
-
+  // Start Python backend first
   try {
-    // Start Python backend first
-    await startPythonBackend();
+    global.pythonProcess = startPythonBackend();
+    
+    // Wait for backend to initialize
+    await new Promise((resolve) => setTimeout(resolve, 3000));
 
-    // Then load the frontend
-    if (isDev) {
-      await mainWindow.loadURL('http://localhost:5173');
-      mainWindow.webContents.openDevTools();
+    // Load the frontend
+    if (!app.isPackaged) {
+      await global.mainWindow.loadURL('http://localhost:5173');
+      global.mainWindow.webContents.openDevTools();
     } else {
-      await mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
+      await global.mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
     }
   } catch (error) {
-    console.error('Error during window creation:', error);
-    mainWindow?.webContents.send('python-error', error.message);
+    console.error('Error during startup:', error);
+    global.mainWindow?.webContents.send('python-error', error.message);
   }
 }
 
-// App lifecycle handlers
+// Modified app lifecycle handlers
 app.whenReady().then(createWindow);
 
 app.on('window-all-closed', () => {
-  if (pythonProcess) {
-    pythonProcess.kill();
+  if (global.pythonProcess) {
+    global.pythonProcess.kill();
   }
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
+  app.quit();
 });
 
 app.on('activate', () => {
@@ -118,10 +101,8 @@ app.on('activate', () => {
   }
 });
 
-// Handle app errors
+// Global error handler
 process.on('uncaughtException', (error) => {
   console.error('Uncaught Exception:', error);
-  if (mainWindow) {
-    mainWindow.webContents.send('python-error', error.message);
-  }
+  global.mainWindow?.webContents.send('python-error', error.message);
 });
