@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, Dict
 import os
 from dotenv import load_dotenv
 import asyncio
@@ -12,6 +12,7 @@ import google.generativeai as genai
 from google.ai.generativelanguage import GenerateContentResponse
 import json
 import re
+import uuid
 
 load_dotenv()
 
@@ -67,6 +68,19 @@ class TaskResponse(BaseModel):
     priority_score: int
     critical_path: List[str]
     risk_factors: List[str]
+
+class ChatRequest(BaseModel):
+    user_message: str
+    conversation_id: Optional[str] = None  # Optional ID to track conversations
+
+class ChatResponse(BaseModel):
+    conversation_id: str
+    gemini_response: str
+
+class Conversation(BaseModel):
+    conversation_id: str
+    messages: List[Dict[str, str]] # List of messages in that conversation
+
 
 # Helper Functions
 def check_rate_limit(client_ip: str):
@@ -124,6 +138,43 @@ async def calculate_priority_score(task: str, deadline: Optional[datetime], prio
 
     return min(base_score, 100)
 
+async def chat_with_gemini(user_message: str, conversation_history_list: List[Dict[str, str]]):
+    try:
+        model = genai.GenerativeModel('gemini-pro')
+        context = "\n".join([f"{msg['user']}: {msg['message']}" for msg in conversation_history_list])
+
+        prompt = f"""You are a helpful chatbot.
+            Respond to the user's message based on the conversation history.  Do not include information that is not in the user's question.
+            Conversation History:\n{context}\n
+            User Message: {user_message}"""
+
+        response: GenerateContentResponse = model.generate_content(prompt)
+
+        if response.prompt_feedback and response.prompt_feedback.block_reason:
+           raise HTTPException(status_code=400, detail=f"Gemini API blocked the prompt: {response.prompt_feedback.block_reason}")
+
+        if not response.text:
+            raise HTTPException(status_code=500, detail="Gemini API returned an empty response.")
+
+        return response.text
+    except Exception as e:
+        print(f"Gemini API Error: {e}")
+        raise HTTPException(status_code=500, detail=f"Gemini API Error: {str(e)}")
+
+# Conversation Memory (Database)
+async def get_conversation_history(conversation_id: str) -> List[Dict[str, str]]:
+    conversation = await db["conversations"].find_one({"conversation_id": conversation_id})
+    if conversation:
+        return conversation["messages"]
+    else:
+        return []
+
+async def store_message(conversation_id: str, user: str, message: str):
+    await db["conversations"].update_one(
+        {"conversation_id": conversation_id},
+        {"$push": {"messages": {"user": user, "message": message}}},
+        upsert=True,  # Creates the conversation if it doesn't exist
+    )
 # API Endpoints
 @app.post("/api/analyze-task")
 async def analyze_task(task_request: TaskRequest, request: Request):
@@ -215,13 +266,34 @@ async def analyze_task(task_request: TaskRequest, request: Request):
         print(f"Unexpected Error: {e}")
         raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
 
-# NEW ENDPOINT:  Retrieve TaskAnalysis by task_id
+#Retrieve TaskAnalysis by task_id
 @app.get("/api/analysis/{task_id}", response_model=TaskAnalysis)
 async def get_task_analysis(task_id: str):
     task_analysis = await db["task_analyses"].find_one({"task_id": task_id})
     if task_analysis is None:
         raise HTTPException(status_code=404, detail="Task analysis not found")
     return TaskAnalysis(**task_analysis)
+
+@app.post("/api/chat", response_model=ChatResponse)
+async def chat(chat_request: ChatRequest):
+    user_message = chat_request.user_message.strip()
+    conversation_id = chat_request.conversation_id or str(uuid.uuid4())  # Generate a new ID if none
+    conversation_history_list = await get_conversation_history(conversation_id)
+
+    gemini_response = await chat_with_gemini(user_message, conversation_history_list)
+
+    await store_message(conversation_id, "user", user_message)
+    await store_message(conversation_id, "gemini", gemini_response)
+
+    return ChatResponse(conversation_id=conversation_id, gemini_response=gemini_response)
+
+#New GET route for conversations
+@app.get("/api/conversations/{conversation_id}", response_model=Conversation)
+async def get_conversation(conversation_id: str):
+    conversation = await db["conversations"].find_one({"conversation_id": conversation_id})
+    if conversation is None:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    return Conversation(**conversation)
 
 
 if __name__ == "__main__":
