@@ -6,28 +6,14 @@ function ProjectForm({ closeForm, addProject }) {
     projectname: '',
     department: '',
     description: '',
-    picture: ''
   });
 
   const handleChange = (e) => {
-    const { name, value, files } = e.target;
+    const { name, value } = e.target;
     setFormData({
       ...formData,
-      [name]: files ? URL.createObjectURL(files[0]) : value // Set image URL for preview
+      [name]: value
     });
-  };
-
-  // ImageUpload component inside ProjectForm
-  const ImageUpload = ({ onImageSelect }) => {
-    const handleImageChange = (event) => {
-      const file = event.target.files[0];
-      if (file) {
-        const imageUrl = URL.createObjectURL(file);
-        onImageSelect(imageUrl);
-      }
-    };
-
-    return <input type="file" name="picture" accept="image/*" onChange={handleImageChange} />;
   };
 
   const handleSubmit = (e) => {
@@ -38,7 +24,7 @@ function ProjectForm({ closeForm, addProject }) {
   return (
     <div className="form-modal" onClick={closeForm}>
       <div className="form-container" onClick={(e) => e.stopPropagation()}>
-        <h1>Form in React</h1>
+        <h1>Create New Project</h1>
         <form onSubmit={handleSubmit}>
           <label htmlFor="projectname">Project Name</label>
           <input type="text" placeholder="Enter Project Name" name="projectname" onChange={handleChange} />
@@ -64,12 +50,6 @@ function ProjectForm({ closeForm, addProject }) {
           <label htmlFor="files">Attachments</label>
           <input type="file" name="Attachments" />
 
-          <label htmlFor="picture">Picture</label>
-          {/* Use the ImageUpload component and update formData.picture */}
-          <ImageUpload onImageSelect={(imageUrl) => setFormData({ ...formData, picture: imageUrl })} />
-
-          {/* Display selected image */}
-          {formData.picture && <img src={formData.picture} alt="Preview" width="200" style={{ marginTop: '10px' }} />}
 
           <label htmlFor="description">Description</label>
           <textarea name="description" rows={3} placeholder="Enter description" onChange={handleChange}></textarea>
