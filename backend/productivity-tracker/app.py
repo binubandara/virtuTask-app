@@ -8,16 +8,7 @@ from bson.objectid import ObjectId
 
 app = Flask(__name__)
 
-# Configure CORS with specific origins
-CORS(app, resources={
-    r"/*": {
-        "origins": ["http://localhost:5173", "http://127.0.0.1:5173"],
-        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization"],
-        "supports_credentials": True,
-        "expose_headers": ["Content-Disposition"]
-    }
-})
+CORS(app, supports_credentials=True, origins=["http://localhost:5173"])
 
 tracker = ProductivityTracker()
 
@@ -81,55 +72,11 @@ def download_report(report_id):
             "status": "error",
             "message": "Failed to download report"
         }), 500
-    
-
-@app.route('/current-session')
-def get_current_session():
-    try:
-        session_data = tracker.get_current_session_data()
-        
-        # Format window data similar to daily summary
-        window_times = []
-        for window, details in session_data.get('window_details', {}).items():
-            window_times.append([
-                window,
-                details.get('active_time', 0),
-                details.get('productive', False)
-            ])             
-            
-        response_data = {
-            'totalProductiveTime': session_data['productive_time'],
-            'totalUnproductiveTime': session_data['unproductive_time'],
-            'windowTimes': window_times,
-            'sessionActive': session_data['session_active']
-        }
-        
-        return jsonify(response_data)
-    except Exception as e:
-        print(f"Error in current-session: {str(e)}")
-        return jsonify({"error": str(e)}), 500
 
 @app.route('/end-session', methods=['POST'])
 def end_session():
     try:
-        # Get current session from MongoDB instead of relying on in-memory state
-        current_session = tracker.sessions_collection.find_one({
-            "end_time": None  # Find the active session
-        }, sort=[("start_time", -1)])  # Get the most recent one
-        
-        if not current_session:
-            return jsonify({
-                "status": "error",
-                "message": "No active session found"
-            }), 404
-            
-        # Set the current session in tracker
-        tracker.current_session = current_session
-        tracker.session_active = True
-        
-        # Now end the session
         result = tracker.end_session()
-        
         if result["status"] == "success" and "report_id" in result:
             return jsonify({
                 "status": "success",
@@ -141,9 +88,39 @@ def end_session():
         print(f"End session error: {str(e)}")
         return jsonify({
             "status": "error",
-            "message": f"Failed to end session: {str(e)}"
+            "message": "Failed to end session"
         }), 500
 
+
+
+@app.route('/current-session')
+def get_current_session():
+    try:
+        if not tracker.current_session or not tracker.session_active:
+            return jsonify({
+                "status": "error",
+                "message": "No active session"
+            }), 404
+            
+        current_data = {
+            "session_name": tracker.current_session.get('name', ''),
+            "productive_time": tracker.current_session.get('productive_time', 0),
+            "unproductive_time": tracker.current_session.get('unproductive_time', 0),
+            "window_details": [
+                {
+                    "window": window,
+                    "active_time": details.get('active_time', 0),
+                    "productive": details.get('productive', False)
+                }
+                for window, details in tracker.current_session.get('window_details', {}).items()
+            ]
+        }
+        
+        return jsonify(current_data)
+    except Exception as e:
+        print(f"Error in current-session: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+    
 if __name__ == '__main__':
     print("Starting tracking thread...")
     tracking_thread = threading.Thread(target=tracker.update_tracking, daemon=True)

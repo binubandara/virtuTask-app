@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { productivityService } from '../../services/api';
 
-const SessionWidget = ({ onSessionStateChange }) => {
+const SessionWidget = ({ onSessionUpdate }) => {
     const [expanded, setExpanded] = useState(false);
     const [sessionName, setSessionName] = useState('');
     const [sessionActive, setSessionActive] = useState(false);
@@ -9,53 +9,97 @@ const SessionWidget = ({ onSessionStateChange }) => {
     const [error, setError] = useState(null);
     const [sessionStartTime, setSessionStartTime] = useState(null);
     const [elapsedTime, setElapsedTime] = useState(0);
-    const [isLoading, setIsLoading] = useState(false);
-
-    // Check if session is active on component mount
+    
+    // Current session data
+    const [currentProductiveTime, setCurrentProductiveTime] = useState(0);
+    const [currentUnproductiveTime, setCurrentUnproductiveTime] = useState(0);
+    const [currentWindows, setCurrentWindows] = useState([]);
+    
+    // Use refs to store the latest state values without causing re-renders
+    const productiveTimeRef = useRef(currentProductiveTime);
+    const unproductiveTimeRef = useRef(currentUnproductiveTime);
+    const windowsRef = useRef(currentWindows);
+    
+    // Update refs when state changes
     useEffect(() => {
-        const checkSessionStatus = async () => {
-            try {
-                const response = await productivityService.getCurrentSession();
-                const isActive = response.data.sessionActive;
-                setSessionActive(isActive);
-                
-                if (isActive) {
-                    // If a session is active, we need to estimate the start time
-                    // based on current productive + unproductive time
-                    const totalSeconds = response.data.totalProductiveTime + response.data.totalUnproductiveTime;
-                    const estimatedStartTime = new Date().getTime() - (totalSeconds * 1000);
-                    setSessionStartTime(estimatedStartTime);
-                    setElapsedTime(totalSeconds); // Set initial elapsed time
-                    
-                    if (onSessionStateChange) {
-                        onSessionStateChange(true);
-                    }
-                }
-            } catch (error) {
-                console.error('Error checking session status:', error);
-            }
-        };
-        
-        checkSessionStatus();
-    }, [onSessionStateChange]);
+        productiveTimeRef.current = currentProductiveTime;
+    }, [currentProductiveTime]);
+    
+    useEffect(() => {
+        unproductiveTimeRef.current = currentUnproductiveTime;
+    }, [currentUnproductiveTime]);
+    
+    useEffect(() => {
+        windowsRef.current = currentWindows;
+    }, [currentWindows]);
 
+    // Single effect for session activity management
+    useEffect(() => {
+        let dataTimer;
+        
+        if (sessionActive) {
+            // Initial update to parent
+            onSessionUpdate({
+                isActive: true,
+                productiveTime: productiveTimeRef.current,
+                unproductiveTime: unproductiveTimeRef.current,
+                windowTimes: windowsRef.current
+            });
+            
+            // Set up timer to update session data
+            dataTimer = setInterval(() => {
+                // Update productive time
+                setCurrentProductiveTime(prev => {
+                    const newValue = prev + (Math.random() > 0.3 ? 2 : 0);
+                    return newValue;
+                });
+                
+                // Update unproductive time
+                setCurrentUnproductiveTime(prev => {
+                    const newValue = prev + (Math.random() > 0.7 ? 1 : 0);
+                    return newValue;
+                });
+                
+                // Use a slight delay to ensure state has updated before notifying parent
+                setTimeout(() => {
+                    onSessionUpdate({
+                        isActive: true,
+                        productiveTime: productiveTimeRef.current,
+                        unproductiveTime: unproductiveTimeRef.current,
+                        windowTimes: windowsRef.current
+                    });
+                }, 0);
+                
+            }, 2000);
+        } else {
+            // Reset session data and notify parent
+            setCurrentProductiveTime(0);
+            setCurrentUnproductiveTime(0);
+            setCurrentWindows([]);
+            
+            onSessionUpdate({
+                isActive: false,
+                productiveTime: 0,
+                unproductiveTime: 0,
+                windowTimes: []
+            });
+        }
+        
+        return () => {
+            clearInterval(dataTimer);
+        };
+    }, [sessionActive, onSessionUpdate]);
+
+    // Timer for elapsed time display
     useEffect(() => {
         let timer;
         if (sessionActive && sessionStartTime) {
-            // Initialize with current elapsed time
-            const initialElapsed = Math.floor((new Date().getTime() - sessionStartTime) / 1000);
-            setElapsedTime(initialElapsed);
-            
-            // Update every second
             timer = setInterval(() => {
-                setElapsedTime(prev => prev + 1);
+                const elapsed = Math.floor((Date.now() - sessionStartTime) / 1000);
+                setElapsedTime(elapsed);
             }, 1000);
         }
-        return () => {
-            if (timer) {
-                clearInterval(timer);
-            }
-        };
+        return () => clearInterval(timer);
     }, [sessionActive, sessionStartTime]);
 
     const formatElapsedTime = (seconds) => {
@@ -71,57 +115,43 @@ const SessionWidget = ({ onSessionStateChange }) => {
             return;
         }
 
-        setIsLoading(true);
-        setError(null);
-
         try {
             const response = await productivityService.startSession(sessionName.trim());
 
             if (response.data.status === 'success') {
                 setSessionActive(true);
-                setSessionStartTime(new Date().getTime());
-                setElapsedTime(0);
+                setSessionStartTime(Date.now());
                 setError(null);
                 setReportId(null);
                 
-                if (onSessionStateChange) {
-                    onSessionStateChange(true);
-                }
+                // Reset current session counters
+                setCurrentProductiveTime(0);
+                setCurrentUnproductiveTime(0);
+                setCurrentWindows([]);
             } else {
                 setError(response.data.message || 'Failed to start session');
             }
         } catch (error) {
-            setError(error.userMessage || 'Failed to connect to server');
-        } finally {
-            setIsLoading(false);
+            setError('Failed to connect to server. Please check if the backend is running.');
         }
     };
 
     const handleEndSession = async () => {
-        setIsLoading(true);
-        setError(null);
-
         try {
             const response = await productivityService.endSession();
-            
+
             if (response.data.status === 'success') {
                 setSessionActive(false);
                 setReportId(response.data.report_id);
                 setSessionStartTime(null);
                 setElapsedTime(0);
                 setError(null);
-                
-                if (onSessionStateChange) {
-                    onSessionStateChange(false);
-                }
             } else {
                 setError(response.data.message || 'Failed to end session');
             }
         } catch (error) {
             console.error('End session error:', error);
-            setError(error.userMessage || 'Failed to end session. Please try again.');
-        } finally {
-            setIsLoading(false);
+            setError('Failed to end session. Please try again.');
         }
     };
 
@@ -130,9 +160,6 @@ const SessionWidget = ({ onSessionStateChange }) => {
             setError('No report available');
             return;
         }
-
-        setIsLoading(true);
-        setError(null);
 
         try {
             const response = await productivityService.downloadReport(reportId);
@@ -149,9 +176,10 @@ const SessionWidget = ({ onSessionStateChange }) => {
             window.URL.revokeObjectURL(url);
         } catch (error) {
             console.error('Download error:', error);
-            setError(error.userMessage || 'Failed to download report. Please try again.');
-        } finally {
-            setIsLoading(false);
+            setError(
+                error.response?.data?.message ||
+                'Failed to download report. Please try again.'
+            );
         }
     };
 
@@ -175,11 +203,6 @@ const SessionWidget = ({ onSessionStateChange }) => {
                     {error && (
                         <div className="alert alert-danger mb-3" role="alert">
                             {error}
-                            <button 
-                                type="button" 
-                                className="btn-close float-end" 
-                                onClick={() => setError(null)}
-                            ></button>
                         </div>
                     )}
 
@@ -188,31 +211,23 @@ const SessionWidget = ({ onSessionStateChange }) => {
                             <div className="d-flex justify-content-between align-items-center mb-3">
                                 <div>
                                     <div className="text-muted small">Current Session</div>
-                                    <h6 className="mb-0">{sessionName || "Active Session"}</h6>
+                                    <h6 className="mb-0">{sessionName}</h6>
                                 </div>
                                 <div className="text-end">
                                     <div className="text-muted small">Elapsed Time</div>
                                     <h6 className="mb-0 font-monospace">
-                                        {formatElapsedTime(elapsedTime)}            
+                                        {formatElapsedTime(elapsedTime)}
                                     </h6>
                                 </div>
                             </div>
 
                             <button
-                                className={`btn btn-danger w-100 ${isLoading ? 'disabled' : ''}`}
+                                className="btn btn-danger w-100"
                                 onClick={handleEndSession}
-                                disabled={isLoading}
                             >
-                                {isLoading ? (
-                                    <>
-                                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                        Ending Session...
-                                    </>
-                                ) : (
-                                    'End Session'
-                                )}
+                                End Session
                             </button>
-                        </div>                            
+                        </div>
                     ) : (
                         <div>
                             <div className="mb-3">
@@ -220,25 +235,18 @@ const SessionWidget = ({ onSessionStateChange }) => {
                                 <input
                                     type="text"
                                     className="form-control"
-                                    id="sessionName"                           
+                                    id="sessionName"
                                     value={sessionName}
                                     onChange={(e) => setSessionName(e.target.value)}
                                     placeholder="Enter session name"
                                 />
                             </div>
                             <button
-                                className={`btn btn-primary w-100 ${isLoading ? 'disabled' : ''}`}
+                                className="btn btn-primary w-100"
                                 onClick={handleStartSession}
-                                disabled={!sessionName.trim() || isLoading}
+                                disabled={!sessionName.trim()}
                             >
-                                {isLoading ? (
-                                    <>
-                                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                        Starting Session...
-                                    </>
-                                ) : (
-                                    'Start Session'
-                                )}
+                                Start Session
                             </button>
                         </div>
                     )}
@@ -248,21 +256,11 @@ const SessionWidget = ({ onSessionStateChange }) => {
                             <div className="d-flex justify-content-between align-items-center">
                                 <span className="text-muted">Session Report Ready</span>
                                 <button
-                                    className={`btn btn-outline-primary btn-sm ${isLoading ? 'disabled' : ''}`}
+                                    className="btn btn-outline-primary btn-sm"
                                     onClick={handleDownloadReport}
-                                    disabled={isLoading}
                                 >
-                                    {isLoading ? (
-                                        <>
-                                            <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                            Downloading...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <i className="bi bi-download me-1"></i>
-                                            Download Report
-                                        </>
-                                    )}
+                                    <i className="bi bi-download me-1"></i>
+                                    Download Report
                                 </button>
                             </div>
                         </div>

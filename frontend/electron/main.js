@@ -3,54 +3,74 @@ const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const { spawn } = require('child_process');
 const fs = require('fs');
+const tcpPortUsed = require('tcp-port-used');
+const kill = require('tree-kill');
 
-function startPythonBackend() {
+async function killProcessOnPort(port) {
+  const isPortInUse = await tcpPortUsed.check(port);
+  if (isPortInUse) {
+    if (process.platform === 'win32') {
+      // On Windows, use netstat to find and kill the process
+      const { exec } = require('child_process');
+      exec(`for /f "tokens=5" %a in ('netstat -aon ^| find ":${port}"') do taskkill /F /PID %a`, (error, stdout, stderr) => {
+        if (error) {
+          console.error(`Error killing process on port ${port}:`, error);
+        }
+      });
+    } else {
+      // On Unix-like systems
+      exec(`lsof -i :${port} | grep LISTEN | awk '{print $2}' | xargs kill -9`, (error, stdout, stderr) => {
+        if (error) {
+          console.error(`Error killing process on port ${port}:`, error);
+        }
+      });
+    }
+    
+    // Wait for port to be released
+    await tcpPortUsed.waitUntilFree(port, 300, 1000);
+  }
+}
+
+async function startPythonBackend() {
+  // Ensure port 5000 is free
+  await killProcessOnPort(5000);
+  
   let pythonProcess = null;
   
-  if (!app.isPackaged) {
-    // Development
-    const scriptPath = path.join(__dirname, '../../backend/productivity-tracker/app.py');
-    pythonProcess = spawn('python', [scriptPath], {
-      env: {
-        ...process.env,
-        PYTHONPATH: path.join(__dirname, '../../backend/productivity-tracker')
+  try {
+    if (!app.isPackaged) {
+      const scriptPath = path.join(__dirname, '../../backend/productivity-tracker/app.py');
+      pythonProcess = spawn('python', [scriptPath], {
+        env: {
+          ...process.env,
+          PYTHONPATH: path.join(__dirname, '../../backend/productivity-tracker')
+        }
+      });
+    } else {
+      const exePath = path.join(process.resourcesPath, 'backend', 'app.exe');
+      if (!fs.existsSync(exePath)) {
+        throw new Error(`Python executable not found at: ${exePath}`);
       }
-    });
-  } else {
-    // Production
-    const exePath = path.join(process.resourcesPath, 'backend', 'app.exe');
-    console.log('Looking for Python executable at:', exePath);
-    
-    if (!fs.existsSync(exePath)) {
-      console.error('Python executable not found!');
-      throw new Error(`Python executable not found at: ${exePath}`);
+      pythonProcess = spawn(exePath, [], {
+        cwd: path.join(process.resourcesPath, 'backend'),
+        stdio: 'pipe',
+        windowsHide: true
+      });
     }
 
-    // Start the process with working directory set to resources/backend
-    pythonProcess = spawn(exePath, [], {
-      cwd: path.join(process.resourcesPath, 'backend'),
-      stdio: 'pipe',
-      windowsHide: true
+    // Handle process cleanup
+    pythonProcess.on('exit', (code, signal) => {
+      console.log(`Python process exited with code ${code} and signal ${signal}`);
+      if (global.pythonProcess === pythonProcess) {
+        global.pythonProcess = null;
+      }
     });
-  }
 
-  // Enhanced logging
-  pythonProcess.stdout.on('data', (data) => {
-    console.log(`Python stdout: ${data.toString()}`);
-    global.mainWindow?.webContents.send('python-log', data.toString());
-  });
-
-  pythonProcess.stderr.on('data', (data) => {
-    console.error(`Python stderr: ${data.toString()}`);
-    global.mainWindow?.webContents.send('python-error', data.toString());
-  });
-
-  pythonProcess.on('error', (error) => {
+    return pythonProcess;
+  } catch (error) {
     console.error('Failed to start Python process:', error);
-    global.mainWindow?.webContents.send('python-error', error.message);
-  });
-
-  return pythonProcess;
+    throw error;
+  }
 }
 
 // Modified createWindow function

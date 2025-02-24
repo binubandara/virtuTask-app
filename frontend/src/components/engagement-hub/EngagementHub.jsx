@@ -12,9 +12,15 @@ const EngagementHub = () => {
     },
     {
       id: 2,
-      title: "Memory Game",
-      image: "/path-to-memory-image.jpg",
-      path: "/games/memory/index.html"
+      title: "Astro Dash",
+      image: "/astroDash.png",
+      path: "/games/astroDash/index.html"
+    },
+    {
+      id: 3,
+      title: "Snake Game",
+      image: "/snakeGame.jpg",
+      path: "/games/snakeGame/index.html"
     }
   ];
 
