@@ -1,21 +1,129 @@
-/* Basic styles for the page */
+/* General styles */
 body {
-    margin: 0;
-    padding: 0;
-    font-family: Arial, sans-serif;
-    background-color: white;
-  }
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+  background-color: #eff4f6f5;
+
+}
+
+/* Container */
+.project-manager-container {
+  padding: 20px;
+}
+
+/* Title */
+.title {
+  position: absolute;
+  top: 25px;
+  left:7.5cm;
+  font-size: 36px;
+  font-weight: bold;
+  color: #6f6c6c;
+}
+
+/* Line below the title */
+.line {
+  position: absolute;
+  top: 146px;
+  left: 7.5cm;
+  width: calc(100% - 7.5cm); /* Makes the line extend to the right edge of the page */
+  height: 1px; /* Line thickness */
+  background-color: #bbbdbe;
+}
+
+/* Toolbar (above the line) */
+.toolbar {
+  position: absolute;
+  top: 100px; /* Adjusted to keep it above the line */
+  left: 7.5cm;
+  width: calc(100% - 7.5cm);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Dropdown container */
+.dropdowns {
+  display: flex;
+  gap: 15px;
+}
+
+/* Dropdown style */
+.dropdown {
+  padding: 6px 10px;
+  border: 1px solid #ccc;
+  border-radius: 15px;
+  font-size: 14px;
+  cursor: pointer;
+  background-color: #eff4f6f5;
+}
+
+/* Button container */
+.button-group {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding-right: 20px;
+}
+
+/* Icon buttons */
+.icon-button {
+  width: 36px;
+  height: 36px;
+  border: 1px solid #ccc;
+  border-radius: 15px;
+  background-color:#eff4f6f5;
+  cursor: pointer;
+ 
+}
+
+/* Add New Project button */
+.add-project {
+  padding: 8px 15px;
+  border: none;
+  border-radius: 15px;
+  background-color: #007BFF;
+  color: white;
+  border: 1px solid #ccc;
+  font-size: 14px;
+  cursor: pointer;
   
-  .project-manager-container {
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-    height: 100vh;
-  }
-  
-  .title {
-    margin-left: 6cm;
-    font-size: 36px;
-    font-weight: bold;
-  }
-  
+}
+
+/* MyProjectsManager.css (continued) */
+
+.project-tiles {
+  display: flex;
+  flex-wrap: wrap; 
+  padding: 5px; 
+  margin-top: 160px;
+  margin-left: 7.5cm; 
+  gap: 20px; /* Adjust gap as necessary */
+}
+
+.project-tile {
+  background-color: #fff;
+  border-radius: 24.5px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  width: calc((100% - 6cm) / 3);
+  box-sizing: border-box; 
+  height: 260px; /* Maintain height */
+}
+
+.tile-content {
+  display: flex; /* Aligns the image and text side by side */
+  align-items: flex-start; /* Aligns the items vertically */
+}
+
+.project-image {
+  width: 100px; /* Set default size here */
+  height: auto; /* Maintain aspect ratio */
+  margin-right: 20px; /* Space between image and text */
+}
+
+.project-details {
+  display: flex;
+  flex-direction: column; /* Stack name, department, and description vertically */
+}
