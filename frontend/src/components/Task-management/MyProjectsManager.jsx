@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import './MyProjectsManager.css';
 import ProjectForm from './ProjectForm';
+import ReactDOM from 'react-dom';
 
 function MyProjectsManager() {
   const [showForm, setShowForm] = useState(false);
@@ -45,9 +46,13 @@ function MyProjectsManager() {
 
   return (
     <>
-      {showForm && <div className="modal-overlay" />}
+      
 
-      <div className={`project-manager-container ${showForm ? 'blur-background' : ''}`}>
+      <div 
+        className={`project-manager-container ${showForm ? 'blur-background' : ''}`}
+        data-gp-c-s-check-loaded="true"
+        data-gp-test-installed="1.4.1224"
+      >
         <h1 className="title">Project Management</h1>
         <div className="line"></div>
 
@@ -74,7 +79,7 @@ function MyProjectsManager() {
           </div>
         </div>
 
-        {showForm && <ProjectForm closeForm={() => setShowForm(false)} addProject={addProject} />}
+        
 
         <div className="project-tiles">
           {projects.map((project) => (
@@ -107,7 +112,19 @@ function MyProjectsManager() {
           ))}
         </div>
       </div>
+      {ReactDOM.createPortal(
+        showForm && (
+          <div className="modal-overlay">
+            <ProjectForm
+              closeForm={() => setShowForm(false)}
+              addProject={addProject}
+            />
+          </div>
+  ),
+  document.body
+)}
     </>
+  
   );
 }
 
