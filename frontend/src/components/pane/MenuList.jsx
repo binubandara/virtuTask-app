@@ -1,42 +1,50 @@
 import { Menu } from 'antd';
 import { AppstoreOutlined, ProjectOutlined, BarsOutlined, HomeOutlined, SettingOutlined, CheckSquareOutlined, GlobalOutlined, ToolOutlined, TeamOutlined, AimOutlined, HeartOutlined } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
+
 const MenuList = () => {
-    return (
-        <Menu mode="inline" className='sideBar' >
-            <Menu.Item style={{marginTop:10, marginBottom: 15, }}key="home" icon={<HomeOutlined />}>
-            Home
-            </Menu.Item>
+  const navigate = useNavigate();
 
-            <Menu.Item style={{marginBottom: 15, }}key="dashboard" icon={<BarsOutlined />}>
-            Dashboard
-            </Menu.Item>
+  const handleMenuClick = (key) => {
+    // Navigate to the corresponding route based on the key
+    switch (key) {
+      case 'dashboard':
+        navigate('/pane/dashboard');
+        break;
+      case 'projects':
+        navigate('/pane/projects');
+        break;
+      case 'myTask':
+        navigate('/pane/my-tasks');
+        break;
+      case 'global':
+        navigate('/pane/global-sync');
+        break;
+      case 'settings':
+        navigate('/pane/settings');
+        break;
+      // Add cases for other menu items if needed
+      default:
+        break;
+    }
+  };
 
-            <Menu.Item style={{ marginBottom: 15 }} key="projects" icon={<ProjectOutlined />}>
-            Projects
-            </Menu.Item>
+  return (
+    <Menu mode="inline" className='sideBar' onClick={({ key }) => handleMenuClick(key)}>
+      <Menu.Item style={{ marginTop: "12px", marginBottom: "10px" }} key="dashboard" icon={<BarsOutlined />}> Dashboard </Menu.Item>
+      <Menu.Item style={{ marginBottom: "10px" }} key="projects" icon={<ProjectOutlined />}> Projects </Menu.Item>
+      <Menu.Item style={{ marginBottom: "10px" }} key="myTask" icon={<CheckSquareOutlined />}> My Task </Menu.Item>
+      <Menu.Item style={{ marginBottom: "10px" }} key="global" icon={<GlobalOutlined />}> Global Time Sync </Menu.Item>
 
-            <Menu.Item style={{ marginBottom: 15 }}key="myTask" icon={<CheckSquareOutlined />}>
-            My Task
-            </Menu.Item>
+      <Menu.SubMenu style={{ marginBottom: "10px" }} key="tools" icon={<ToolOutlined />} title="Tools">
+        <Menu.Item style={{ marginBottom: "10px" }} key="tool-1" icon={<TeamOutlined />}> Engagement Hub </Menu.Item>
+        <Menu.Item style={{ marginBottom: "10px" }} key="tool-2" icon={<AimOutlined />}> Focus Mode </Menu.Item>
+        <Menu.Item style={{ marginBottom: "10px" }} key="tool-3" icon={<HeartOutlined />}> Health Habit Tracker </Menu.Item>
+      </Menu.SubMenu>
 
-            <Menu.Item style={{ marginBottom: 15 }}key="global" icon={<GlobalOutlined />}>
-            Global Time Sync
-            </Menu.Item>
-
-            <Menu.SubMenu style={{ marginBottom: 15 }}key="tools" icon={<ToolOutlined />}
-            title= "Tools">
-            <Menu.Item style={{ marginBottom: 15 }} key="tool-1" icon={<TeamOutlined />}>Engagement Hub</Menu.Item>
-            <Menu.Item style={{ marginBottom: 15 }} key="tool-2" icon={<AimOutlined />}>Focus Mode</Menu.Item>
-            <Menu.Item style={{ marginBottom: 15 }} key="tool-3" icon={<HeartOutlined />}>Health Habit Tracker</Menu.Item>
-            </Menu.SubMenu>
-
-
-            <Menu.Item style={{ marginBottom: 15 }} key="settings" icon={<SettingOutlined />}>
-            Settings
-            </Menu.Item>
-
-        </Menu>
-    );
+      <Menu.Item style={{ marginBottom: "10px" }} key="settings" icon={<SettingOutlined />}> Settings </Menu.Item>
+    </Menu>
+  );
 };
 
 export default MenuList;

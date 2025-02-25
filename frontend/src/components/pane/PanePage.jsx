@@ -1,9 +1,13 @@
-// components/pane/PanePage.jsx
 import React from 'react';
 import { Layout } from 'antd';
+import { Routes, Route } from 'react-router-dom';
 import Logo from './Logo';
 import MenuList from './MenuList';
 import Profile from './Profile';
+import Settings from '../settingsPage/Settings'; // Import Settings Page
+import Dashboard from './Dashboard'; // Import other components as needed
+
+import GlobalSync from './GlobalSync';
 
 const { Sider, Content } = Layout;
 
@@ -12,11 +16,17 @@ const PanePage = () => {
     <Layout style={{ minHeight: '100vh' }}>
       <Sider theme="light" width={250}>
         <Logo />
-        <MenuList />
-        <Profile />
+        <MenuList />  {/* Pass function properly */}
+        <Profile />  {/* Profile will always be visible in the sidebar */}
       </Sider>
       <Content style={{ padding: '24px' }}>
-        {/* Add your main content here */}
+        <Routes>
+          <Route path="/" element={<Dashboard />} /> {/* Default route for /pane */}
+          <Route path="dashboard" element={<Dashboard />} />
+          <Route path="global-sync" element={<GlobalSync />} />
+          <Route path="settings" element={<Settings />} />
+          {/* Add other routes here */}
+        </Routes>
       </Content>
     </Layout>
   );

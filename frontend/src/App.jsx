@@ -26,10 +26,13 @@ function App() {
 function AppContent() {
   const location = useLocation(); // Get the current route location
 
+  // Check if the current path starts with '/pane'
+  const isPaneRoute = location.pathname.startsWith('/pane');
+
   return (
     <>
       {/* Render Navbar, Services, and MyFooter only on landing pages */}
-      {location.pathname !== '/pane' && (
+      {!isPaneRoute && (
         <>
           <Flowbite>
             <Navbar />
@@ -41,11 +44,11 @@ function AppContent() {
 
       {/* Main Routes */}
       <Routes>
-        <Route path="/pane" element={<PanePage />} /> {/* Pane Page */}
+        <Route path="/pane/*" element={<PanePage />} /> {/* Pane Page with nested routes */}
       </Routes>
 
       {/* Render MyFooter only on landing pages */}
-      {location.pathname !== '/pane' && <MyFooter />}
+      {!isPaneRoute && <MyFooter />}
     </>
   );
 }
