@@ -1,26 +1,36 @@
-#backend/window_tracker.py
-
 import platform
 import psutil
 import win32gui
 import win32process
 
 class WindowTracker:
+    def __init__(self):
+        # List of window titles to exclude from tracking
+        self.excluded_terms = ["VirtuTask"]
+    
     def get_active_window(self):
         """
         Retrieve the currently active window's process name and title
         Supports cross-platform tracking
+        Excludes windows that contain excluded terms
         """
         system = platform.system()
         
         if system == "Windows":
-            return self._get_windows_active_window()
+            window_info = self._get_windows_active_window()
         elif system == "Darwin":  # macOS
-            return self._get_mac_active_window()
+            window_info = self._get_mac_active_window()
         elif system == "Linux":
-            return self._get_linux_active_window()
+            window_info = self._get_linux_active_window()
         else:
             raise NotImplementedError(f"Unsupported OS: {system}")
+        
+        # Check if window should be excluded
+        for term in self.excluded_terms:
+            if term in window_info:
+                return None  # Return None for excluded windows
+                
+        return window_info
     
     def _get_windows_active_window(self):
         """Windows-specific window tracking"""

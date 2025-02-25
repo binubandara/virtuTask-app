@@ -70,6 +70,11 @@ class ProductivityTracker:
         # Insert new session and get the ID
         session_id = self.sessions_collection.insert_one(self.current_session).inserted_id
         self.current_session['_id'] = session_id
+
+        # Create and START the screenshot thread
+        self.screenshot_thread = threading.Thread(target=self._screenshot_loop)
+        self.screenshot_thread.daemon = True
+        self.screenshot_thread.start()
         
         return {"status": "success", "message": "Session started"}
 
@@ -223,6 +228,12 @@ class ProductivityTracker:
 
                 if elapsed_seconds > 0:
                     active_window = self.window_tracker.get_active_window()
+                    
+                    # Skip processing if window is excluded (None is returned)
+                    if active_window is None:
+                        last_update = current_time
+                        time.sleep(0.1)
+                        continue
 
                     # Retry AI classification if it fails
                     retry_count = 3

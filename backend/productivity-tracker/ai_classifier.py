@@ -330,22 +330,12 @@ class AIClassifier:
         """
         Enhanced classify window as productive or unproductive
         Uses multiple strategies for more accurate classification
-        Completely filters out VirtuTask windows
         """
         try:
-            # Early check for VirtuTask
-            if window_info is None or "VirtuTask" in window_info:
-                return None  # Signal that this window should be ignored
-                
             # Extract and clean app name and title
             app_name, window_title = self._extract_app_and_title(window_info)
-            
-            # Additional check for VirtuTask in extracted components
-            if "VirtuTask" in app_name or "VirtuTask" in window_title:
-                return None  # Signal that this window should be ignored
-                
             clean_app = self._clean_app_name(app_name)
-                
+            
             # Strategy 1: Known correction check
             if app_name in self.known_corrections:
                 return self.known_corrections[app_name]
@@ -417,7 +407,7 @@ class AIClassifier:
                     is_productive = 'yes' in response.text.lower() and 'no' not in response.text.lower()
                     
                     # Cache the result
-                    self.classification_cache[clean_app] = { 
+                    self.classification_cache[clean_app] = {
                         'productive': is_productive,
                         'timestamp': datetime.now(),
                         'source': 'ai'
