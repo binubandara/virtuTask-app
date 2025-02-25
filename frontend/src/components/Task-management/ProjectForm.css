@@ -30,9 +30,12 @@
 .form-row {
   display: flex;
   gap: 2rem;
-  margin-bottom: 1.5rem;
-  padding:10px ;
+  
+  padding-top:10px ;
+  padding-left: 10px;
+  padding-right: 10px;
 }
+
 
 .right-form-column {
   flex: 1;
@@ -42,6 +45,8 @@
 .left-form-column  {
   flex: 1;
   width: 775px;
+  padding-bottom: 1px;
+  
 }
 
 label {
@@ -63,7 +68,7 @@ input, textarea, .date-picker {
 }
 
 .textarea {
-  height: 100px;
+  height:75.5px;
   resize: vertical;
 }
 
@@ -105,7 +110,7 @@ input, textarea, .date-picker {
   display: flex;
   justify-content: flex-end;
   gap: 1rem;
-  margin-top: 1rem;
+  margin-top: 2px;
   border-radius: 15spx;
   
   
@@ -132,15 +137,28 @@ input, textarea, .date-picker {
   
 }
 
-.svg-member-icon { 
-  position: absolute; 
-  margin-right: 90px; 
-  margin-top: 140px; 
-}
-
 .minus-icon {
   position: absolute;
-  right: 10px;
-  top: 10px;
+  right: 380px;
+  top: 119px;
   cursor: pointer;
-}  /* Added closing brace */
+  width: 24px; /* Adjust size */
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: black; /* Ensure visibility */
+}
+.minus-icon:hover{
+  color: #068ea3;
+}
+
+.svg-member-icon { 
+  position: absolute; 
+  right: 404.5px; /* Adjust alignment */
+  top: 492.8px; /* Center vertically */
+  transform: translateY(-50%);
+  width: 24px;
+  height: 24px;
+  color: black; /* Ensure it contrasts */
+}

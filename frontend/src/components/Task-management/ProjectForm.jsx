@@ -33,21 +33,22 @@ function ProjectForm({ closeForm, addProject }) {
         
         <div div className="modal-header">
           <h1>Create New Project</h1>
-          <div className="minus-icon">
-            {<svg 
+          <div className="minus-icon" onClick={closeForm}>
+            <svg 
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
               viewBox="0 0 24 24" 
-              strokeWidth="1.5"  // camelCase
+              strokeWidth="1.5"
               stroke="currentColor" 
-              className="size-6"  // className instead of class
+              className="size-6"
+              width="24" height="24"
             >
               <path 
-                strokeLinecap="round"  // camelCase
+                strokeLinecap="round"
                 strokeLinejoin="round" 
                 d="M5 12h14" 
               />
-            </svg>}
+            </svg>
           </div>
         </div>
         <form onSubmit={handleSubmit}>
@@ -137,21 +138,24 @@ function ProjectForm({ closeForm, addProject }) {
                 type="search" 
                 name="members" 
                 className="members-input" 
+                placeholder="Search Member by ID"
               />
-              <div className="svg-member-icon">{
+              <div className="svg-member-icon">
                 <svg 
                   xmlns="http://www.w3.org/2000/svg" 
                   fill="none" 
                   viewBox="0 0 24 24" 
-                  strokeWidth="0.2" 
+                  strokeWidth="1" 
                   stroke="currentColor" 
-                  className="size-6">
-                    <path 
-                      strokeLinecap="round" 
-                      strokeLinejoin="round" 
-                      d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" 
-                    />
-                </svg>}
+                  className="size-6"
+                  width="24" height="24"
+                >
+                  <path 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" 
+                  />
+                </svg>
               </div>
             </div>
             </div>
