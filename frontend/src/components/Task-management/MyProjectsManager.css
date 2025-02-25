@@ -104,6 +104,7 @@ body {
 
 .project-tile {
   background-color: #fff;
+  
   border-radius: 24.5px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   padding: 20px;
@@ -127,6 +128,7 @@ body {
   overflow-wrap: anywhere; /* Ensures text breaks when needed */
   text-align: left;
   width: 100%;
+  padding-left: 10px;
 }
 
 
@@ -135,6 +137,7 @@ body {
   margin-top: 18px;
   word-wrap: break-word;
   max-width: 100%;
+  padding-left: 15px;
   
   
 }
@@ -144,11 +147,15 @@ body {
   height: 50px;
   min-width: 80px;
   min-height: 50px;
-  
   display: flex;
   justify-content: center;
   align-items: center;
   margin-top: 10px;
-  padding: 8px;
+  
 }
 
+
+
+.project-icon:hover .project-svg-icon {
+  opacity: 0.8; /* Adds a hover effect */
+}
