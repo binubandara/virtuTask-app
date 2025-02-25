@@ -331,6 +331,25 @@ class ProductivityTracker:
                     }
                 window_times[window]['active_time'] += details.get('active_time', 0)
 
+        # Calculate productivity score
+        total_time = total_productive_time + total_unproductive_time
+        productivity_score = 0
+        if total_time > 0:
+            productivity_score = (total_productive_time / total_time) * 100
+
+        # Save the daily productivity score
+        self.db['daily_scores'].update_one(
+            {'date': today_start},
+            {'$set': {
+                'date': today_start,
+                'productivity_score': productivity_score,
+                'total_productive_time': total_productive_time,
+                'total_unproductive_time': total_unproductive_time,
+                'total_time': total_time
+            }},
+            upsert=True
+        )
+
         # Convert window times to list and sort by active time
         productive_windows = sorted(
             [
@@ -348,5 +367,6 @@ class ProductivityTracker:
         return {
             'total_productive_time': total_productive_time,
             'total_unproductive_time': total_unproductive_time,
+            'productivity_score': productivity_score,
             'productive_windows': productive_windows
         }

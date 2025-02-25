@@ -36,6 +36,7 @@ def get_daily_summary():
         response_data = {
             'totalProductiveTime': summary['total_productive_time'],
             'totalUnproductiveTime': summary['total_unproductive_time'],
+            'productivityScore': summary.get('productivity_score', 0),
             'windowTimes': window_times
         }
         

@@ -10,6 +10,7 @@ const ProductivityDashboard = () => {
     const [dailySummary, setDailySummary] = useState({
         totalProductiveTime: 0,
         totalUnproductiveTime: 0,
+        productivityScore: 0,
         windowTimes: []
     });
     
@@ -28,6 +29,7 @@ const ProductivityDashboard = () => {
                     setDailySummary({
                         totalProductiveTime: parseInt(response.data.totalProductiveTime) || 0,
                         totalUnproductiveTime: parseInt(response.data.totalUnproductiveTime) || 0,
+                        productivityScore: parseFloat(response.data.productivityScore) || 0,
                         windowTimes: response.data.windowTimes || []
                     });
                 }
@@ -57,6 +59,13 @@ const ProductivityDashboard = () => {
         }
         
         return `${hours}h ${minutes}m`;
+    };
+
+    // Get score color based on productivity score
+    const getScoreColor = (score) => {
+        if (score >= 75) return 'success';
+        if (score >= 50) return 'warning';
+        return 'danger';
     };
 
     // Prepare pie chart data for time distribution
@@ -135,7 +144,21 @@ const ProductivityDashboard = () => {
                 </div>
                 <div className="card-body">
                     <div className="row g-4 mb-4">
-                        <div className="col-md-6">
+                        {/* Productivity Score Card */}
+                        <div className="col-md-4">
+                            <div className={`card h-100 bg-${getScoreColor(dailySummary.productivityScore)} bg-opacity-10 border-${getScoreColor(dailySummary.productivityScore)}`}>
+                                <div className="card-body text-center">
+                                    <h6 className={`text-${getScoreColor(dailySummary.productivityScore)}`}>Productivity Score</h6>
+                                    <div className="d-flex align-items-center justify-content-center">
+                                        <div className={`display-3 fw-bold text-${getScoreColor(dailySummary.productivityScore)}`}>
+                                            {Math.round(dailySummary.productivityScore)}%
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div className="col-md-4">
                             <div className="card h-100 bg-success bg-opacity-10 border-success">
                                 <div className="card-body">
                                     <h6 className="text-success">Total Productive Time Today</h6>
@@ -145,7 +168,7 @@ const ProductivityDashboard = () => {
                                 </div>
                             </div>
                         </div>
-                        <div className="col-md-6">
+                        <div className="col-md-4">
                             <div className="card h-100 bg-danger bg-opacity-10 border-danger">
                                 <div className="card-body">
                                     <h6 className="text-danger">Total Unproductive Time Today</h6>

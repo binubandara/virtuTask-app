@@ -19,3 +19,5 @@ contextBridge.exposeInMainWorld(
         getAppPath: () => ipcRenderer.invoke('get-app-path')
     }
 );
+
+fgeyfffff
