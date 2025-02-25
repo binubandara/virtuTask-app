@@ -6,14 +6,18 @@ function ProjectForm({ closeForm, addProject }) {
     projectname: '',
     department: '',
     description: '',
+    startDate: '',
+    dueDate: '',
+    priority: 'medium'
   });
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value
-    });
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handlePriorityChange = (level) => {
+    setFormData(prev => ({ ...prev, priority: level }));
   };
 
   const handleSubmit = (e) => {
@@ -23,39 +27,108 @@ function ProjectForm({ closeForm, addProject }) {
 
   return (
     <div className="form-modal" onClick={closeForm}>
-      <div className="form-container" onClick={(e) => e.stopPropagation()}>
+      <div className="projects-container" onClick={(e) => e.stopPropagation()}>
         <h1>Create New Project</h1>
         <form onSubmit={handleSubmit}>
-          <label htmlFor="projectname">Project Name</label>
-          <input type="text" placeholder="Enter Project Name" name="projectname" onChange={handleChange} />
+          <div className="form-row">
+            {/* Left Column */}
+            <div className="form-column">
+              <label htmlFor="projectname">Project Name</label>
+              <input 
+                type="text" 
+                name="projectname" 
+                placeholder="Enter Project Name" 
+                onChange={handleChange}
+                required
+              />
 
-          <label htmlFor="department">Department</label>
-          <input type="text" placeholder="Enter Department" name="department" onChange={handleChange} />
+              <label htmlFor="department">Department</label>
+              <input 
+                type="text" 
+                name="department" 
+                placeholder="Enter Department" 
+                onChange={handleChange}
+              />
 
-          <label htmlFor="Client">Client</label>
-          <input type="text" placeholder="Enter Client" name="Client" />
+              <label htmlFor="client">Client</label>
+              <input 
+                type="text" 
+                name="client" 
+                placeholder="Enter Client (N/A)" 
+                onChange={handleChange}
+              />
 
-          <label htmlFor="gender">Gender</label>
-          <input type="radio" name="gender" />Male
-          <input type="radio" name="gender" />Female
-          <input type="radio" name="gender" />Other
+              <label htmlFor="description">Description</label>
+              <textarea 
+                name="description" 
+                placeholder="Enter Description" 
+                onChange={handleChange}
+                className="textarea"
+              />
+            </div>
 
-          <label htmlFor="level">Priority Level</label>
-          <select name="level" id="level">
-            <option value="high">High</option>
-            <option value="medium">Medium</option>
-            <option value="low">Low</option>
-          </select>
+            {/* Right Column */}
+            <div className="form-column">
+              <label>Priority Level</label>
+              <div className="priority-buttons">
+                <button 
+                  type="button" 
+                  className={`high ${formData.priority === 'high' ? 'active' : ''}`}
+                  onClick={() => handlePriorityChange('high')}
+                >
+                  High
+                </button>
+                <button 
+                  type="button" 
+                  className={`medium ${formData.priority === 'medium' ? 'active' : ''}`}
+                  onClick={() => handlePriorityChange('medium')}
+                >
+                  Medium
+                </button>
+                <button 
+                  type="button" 
+                  className={`low ${formData.priority === 'low' ? 'active' : ''}`}
+                  onClick={() => handlePriorityChange('low')}
+                >
+                  Low
+                </button>
+              </div>
 
-          <label htmlFor="files">Attachments</label>
-          <input type="file" name="Attachments" />
+              <label htmlFor="startDate">Start Date</label>
+              <input 
+                type="date" 
+                name="startDate" 
+                className="date-picker"
+                onChange={handleChange}
+              />
 
+              <label htmlFor="dueDate">Due Date</label>
+              <input 
+                type="date" 
+                name="dueDate" 
+                className="date-picker"
+                onChange={handleChange}
+              />
 
-          <label htmlFor="description">Description</label>
-          <textarea name="description" rows={3} placeholder="Enter description" onChange={handleChange}></textarea>
+              <label htmlFor="attachments">Attachments</label>
+              <input 
+                type="file" 
+                name="attachments" 
+                className="members-input"
+                onChange={handleChange}
+              />
+            </div>
+          </div>
 
-          <button type="button" onClick={closeForm}>Cancel</button>
-          <button type="submit">Create Project</button>
+          {/* Form Buttons */}
+          <div className="form-buttons">
+            <button type="button" onClick={closeForm} className="form-btn cancel">
+              Cancel
+            </button>
+            <button type="submit" className="form-btn create">
+              Create Project
+            </button>
+          </div>
         </form>
       </div>
     </div>

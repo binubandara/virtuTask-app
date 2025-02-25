@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Projects.css';
 
@@ -7,6 +7,9 @@ function Projects() {
   const handleReset = () => {
     document.getElementById("projectsForm").reset();
   };
+
+  const [startDate, setStartDate] = useState('');
+  const [dueDate, setDueDate] = useState('');
 
   return (
     <div className="projects-body">
@@ -27,26 +30,41 @@ function Projects() {
 
               <label htmlFor="address">Description</label>
               <textarea name="address" placeholder="Enter Address" className="textarea"></textarea>
-
             </div>
 
             {/* Right Section */}
             <div className="form-column">
-              <div className="input-row">
-              <div className='plevel'>
-                <h4>Priority Level</h4>
-                <button type="button">High</button>
-                <button type="button">Medium</button>
-                <button type="button">Low</button>
-              </div>
-              
+              <label>Priority Level</label>
+              <div className="priority-buttons">
+                <button type="button" className="high">High</button>
+                <button type="button" className="medium">Medium</button>
+                <button type="button" className="low">Low</button>
               </div>
 
-              <label htmlFor="attachment">Attachments</label>
-              <input type="file" name="resume" />
-               
-              <label htmlFor="projectname">Project Name</label>
-              <input type="text" placeholder="Enter Project Name" name="projectname" />
+              <label htmlFor="startdate">Start Date</label>
+              <input 
+                type="text" 
+                placeholder="Select Start Date" 
+                className="date-picker" 
+                value={startDate} 
+                onFocus={(e) => e.target.type = 'date'}
+                onBlur={(e) => e.target.type = 'text'}
+                onChange={(e) => setStartDate(e.target.value)}
+              />
+
+              <label htmlFor="duedate">Due Date</label>
+              <input 
+                type="text" 
+                placeholder="Select Due Date" 
+                className="date-picker" 
+                value={dueDate} 
+                onFocus={(e) => e.target.type = 'date'}
+                onBlur={(e) => e.target.type = 'text'}
+                onChange={(e) => setDueDate(e.target.value)}
+              />
+
+              <label>Members</label>
+              <input type="text" placeholder="Search Members" className="members-input" />
             </div>
           </div>
 
@@ -55,8 +73,6 @@ function Projects() {
             <button type="button" onClick={handleReset} className="form-btn">Cancel</button>
             <button type="button" onClick={() => navigate('/password')} className="form-btn">Create Project</button>
           </div>
-
-          
         </form>
       </div>
     </div>
