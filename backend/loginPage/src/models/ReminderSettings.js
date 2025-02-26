@@ -9,7 +9,7 @@ const reminderSettingSchema = new mongoose.Schema({
         immutable : true
     },
 
-    posture : {
+    postureReminder : {
         interval : {
             type : Number,
             min : [1, 'Interval must be at least 1 minute'],
@@ -18,4 +18,32 @@ const reminderSettingSchema = new mongoose.Schema({
         },
         enabled : {type : Boolean, default : true}
     },
-})
+
+    hydrationReminder : {
+        interval : {
+            type : Number,
+            min : [1, 'Interval must be at least 1 minute'],
+            max : [1140, 'Interval cannot exceed 24 hours'],
+            default : 60
+        },
+        enabled : {type : Boolean, default : true}
+    },
+
+    movementReminder : {
+        interval : {
+            type : Number,
+            min : [1, 'Interval must be at least 1 minute'],
+            max : [1440, 'Interval cannot exceed 24 hours'],
+            default : 45
+        },
+        enabled : {type : Boolean, default : true}
+    }
+}, {
+        timestamps : true,
+        toJSON : {virtuals : true},
+        toObject : {virtuals : true}});
+
+reminderSettingSchema.index({user : 1}, {unique : true});
+
+const ReminderSettings = mongoose.model('ReminderSetting', reminderSettingSchema);
+export default ReminderSettings;
