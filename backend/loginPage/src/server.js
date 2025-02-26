@@ -14,7 +14,10 @@ app.use(express.json());
 
 // Routes
 const authRoutes = require('./routes/authRoutes');
+const reminderRoutes = require('./routes/reminderRoutes');
+
 app.use('/api/auth', authRoutes);
+app.use('/api/reminders', reminderRoutes);
 
 // Basic route
 app.get('/', (req, res) => {
