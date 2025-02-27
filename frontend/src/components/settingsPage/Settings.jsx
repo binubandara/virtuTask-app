@@ -2,10 +2,8 @@ import React, { useState } from "react";
 import { FaPalette, FaCalendarAlt, FaBell, FaLock, FaPowerOff, FaGlobe } from "react-icons/fa";
 
 const Settings = () => {
-  // State for Dark Mode
   const [darkMode, setDarkMode] = useState(false);
 
-  // State for Notifications
   const [notifications, setNotifications] = useState({
     email: true,
     app: true,
@@ -17,17 +15,14 @@ const Settings = () => {
     focusMode: false,
   });
 
-  // State for Time Zone Selection
+  
   const [selectedCountry, setSelectedCountry] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
 
-  // State for Date Format Selection
   const [dateFormat, setDateFormat] = useState("MM/DD/YY");
 
-  // State for Time Format Selection
   const [timeFormat, setTimeFormat] = useState("digital");
 
-  // Handler for Notification Changes
   const handleNotificationChange = (type) => {
     setNotifications((prev) => ({
       ...prev,
@@ -37,11 +32,10 @@ const Settings = () => {
 
   return (
     <div className={`w-full ${darkMode ? "bg-gray-900 text-white" : "bg-white text-black"}`}>
-      {/* First Row: Theme Settings and Notifications Settings */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         {/* Theme Settings */}
         <div
-          style= {{marginTop :"3"}} className={` p-4 rounded-lg shadow-md border-2 ${
+           className={` p-4 rounded-lg shadow-md border-2 ${
             darkMode ? "bg-gray-800 border-gray-700 text-white" : "bg-white border-black text-black"
           }`}
         >
@@ -66,7 +60,7 @@ const Settings = () => {
           </div>
         </div>
 
-        {/* Notifications Settings */}
+        {/* Notifications */}
         <div
           className={`p-6 rounded-lg shadow-md border-2 ${
             darkMode ? "bg-gray-800 border-gray-700 text-white" : "bg-white border-black text-black"
@@ -76,7 +70,6 @@ const Settings = () => {
             <FaBell /> Notifications Settings
           </h2>
           <div className="mt-4 space-y-3">
-            {/* Task Updates */}
             <label className="flex items-center gap-2">
               <input
                 type="checkbox"
@@ -87,7 +80,6 @@ const Settings = () => {
               Task Updates
             </label>
 
-            {/* Messages */}
             <label className="flex items-center gap-2">
               <input
                 type="checkbox"
@@ -98,7 +90,6 @@ const Settings = () => {
               Messages
             </label>
 
-            {/* Reminders */}
             <label className="flex items-center gap-2">
               <input
                 type="checkbox"
@@ -109,7 +100,6 @@ const Settings = () => {
               Reminders
             </label>
 
-            {/* Health Notifications */}
             <label className="flex items-center gap-2">
               <input
                 type="checkbox"
@@ -120,7 +110,6 @@ const Settings = () => {
               Health Notifications
             </label>
 
-            {/* Focus Mode Notifications */}
             <label className="flex items-center gap-2">
               <input
                 type="checkbox"
@@ -134,9 +123,8 @@ const Settings = () => {
         </div>
       </div>
 
-      {/* Second Row: Time Zone Selection and Date & Time Format */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        {/* Time Zone Selection */}
+        {/* Time Zone Select*/}
         <div
           className={`p-6 rounded-lg shadow-md border-2 ${
             darkMode ? "bg-gray-800 border-gray-700 text-white" : "bg-white border-black text-black"
@@ -190,7 +178,7 @@ const Settings = () => {
           </div>
         </div>
 
-        {/* Combined Date and Time Format Selection */}
+        {/*Date and Time  */}
         <div
           className={`p-6 rounded-lg shadow-md border-2 ${
             darkMode ? "bg-gray-800 border-gray-700 text-white" : "bg-white border-black text-black"
@@ -200,7 +188,6 @@ const Settings = () => {
             <FaCalendarAlt /> Date & Time Format
           </h2>
 
-          {/* Date Format Selection */}
           <div className="mt-4">
             <h3 className="text-l font-medium">Date Format</h3>
             <div className="mt-2 flex gap-4">
@@ -227,7 +214,6 @@ const Settings = () => {
             </div>
           </div>
 
-          {/* Time Format Selection */}
           <div className="mt-6">
             <h3 className="text-l font-medium">Time Format</h3>
             <div className="mt-2 flex gap-4">
