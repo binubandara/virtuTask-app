@@ -90,6 +90,10 @@ body {
   cursor: pointer;
   
 }
+.blur-background {
+  filter: blur(4px);
+  pointer-events: none;
+}
 
 /* MyProjectsManager.css (continued) */
 
@@ -102,9 +106,12 @@ body {
   gap: 20px; /* Adjust gap as necessary */
 }
 
+
+
+
 .project-tile {
+  position: relative;
   background-color: #fff;
-  
   border-radius: 24.5px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   padding: 20px;
@@ -159,11 +166,34 @@ body {
 .project-icon:hover .project-svg-icon {
   opacity: 0.8; /* Adds a hover effect */
 }
+
+/* Add this CSS code for the pencil icon and alignments */
+.clock-icon {
+  
+  top: 10px; /* Adjust as per your layout */
+  right: 10px; /* Adjust as per your layout */
+  cursor: pointer; /* Change pointer on hover */
+  width: 16px;
+}
+
 .due-button {
+  position: relative;
   border-radius: 20px;
-  padding: 10px;
-  margin-top: 10px;
-  color: white;
+  padding: 5px;
+  margin-left: 13.5px;
+  margin-top: 15px;
   font-weight: bold;
   border: none;
+  display: flex;
+  align-items: center;
+  gap: 4.5px;
 }
+.pencil-icon {
+  position: absolute;
+  top: 15px;
+  right: 17px;
+  width: 15px;
+  height: 21px;
+  cursor: pointer;
+}
+

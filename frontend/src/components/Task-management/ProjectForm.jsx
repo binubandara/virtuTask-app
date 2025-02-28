@@ -1,15 +1,18 @@
 import React, { useState } from 'react';
 import './ProjectForm.css';
 
-function ProjectForm({ closeForm, addProject }) {
-  const [formData, setFormData] = useState({
+function ProjectForm({ closeForm, addProject, editProject, initialData, mode }) {
+  const [formData, setFormData] = useState(initialData || {
     projectname: '',
     department: '',
+    client: '',
     description: '',
     startDate: '',
     dueDate: '',
     priority: 'medium'
   });
+
+  const [originalData] = useState(initialData || {...formData});
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -22,14 +25,64 @@ function ProjectForm({ closeForm, addProject }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    addProject(formData);
+
+    const requiredFields = ['projectname', 'department', 'startDate', 'dueDate'];
+    const missingFields = requiredFields.filter(field => !formData[field]);
+    
+    if (missingFields.length > 0) {
+      alert(`Missing required fields: ${missingFields.join(', ')}`);
+      return;
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const startDate = new Date(formData.startDate);
+    const dueDate = new Date(formData.dueDate);
+
+    if (dueDate < startDate) {
+      alert('Due date must be after start date');
+      return;
+    }
+
+    if (dueDate < today) {
+      alert('Due date cannot be in the past');
+      return;
+    }
+
+    if (mode === 'edit') {
+      if (window.confirm('Confirm project changes?')) {
+        editProject(formData);
+      }
+    } else {
+      addProject(formData);
+    }
+  };
+
+  const handleCreateReset = () => {
+    if (window.confirm('Are you sure you want to reset the form?')) {
+      setFormData({
+        projectname: '',
+        department: '',
+        client: '',
+        description: '',
+        startDate: '',
+        dueDate: '',
+        priority: 'medium'
+      });
+    }
+  };
+
+  const handleEditReset = () => {
+    if (window.confirm('Reset to original values?')) {
+      setFormData(originalData);
+    }
   };
 
   return (
-    <div className="form-modal" onClick={closeForm}>
+    <div className="form-modal">
       <div className="projects-container" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h1>Create New Project</h1>
+          <h1>{mode === 'edit' ? 'Edit Project' : 'Create New Project'}</h1>
           <div className="minus-icon" onClick={closeForm}>
             <svg 
               xmlns="http://www.w3.org/2000/svg"
@@ -38,7 +91,8 @@ function ProjectForm({ closeForm, addProject }) {
               strokeWidth="1.5"
               stroke="currentColor" 
               className="size-6"
-              width="24" height="24"
+              width="24" 
+              height="24"
             >
               <path 
                 strokeLinecap="round"
@@ -51,21 +105,24 @@ function ProjectForm({ closeForm, addProject }) {
         <form onSubmit={handleSubmit}>
           <div className="form-row">
             <div className="left-form-column">
-              <label htmlFor="projectname">Project Name</label>
+              <label htmlFor="projectname">Project Name *</label>
               <input 
                 type="text" 
                 name="projectname" 
                 placeholder="Enter Project Name" 
+                value={formData.projectname}
                 onChange={handleChange}
                 required
               />
 
-              <label htmlFor="department">Department</label>
+              <label htmlFor="department">Department *</label>
               <input 
                 type="text" 
                 name="department" 
                 placeholder="Enter Department" 
+                value={formData.department}
                 onChange={handleChange}
+                required
               />
 
               <label htmlFor="client">Client</label>
@@ -73,6 +130,7 @@ function ProjectForm({ closeForm, addProject }) {
                 type="text" 
                 name="client" 
                 placeholder="Enter Client (N/A)" 
+                value={formData.client}
                 onChange={handleChange}
               />
 
@@ -80,6 +138,7 @@ function ProjectForm({ closeForm, addProject }) {
               <textarea 
                 name="description" 
                 placeholder="Enter Description" 
+                value={formData.description}
                 onChange={handleChange}
                 className="textarea"
               />
@@ -111,30 +170,48 @@ function ProjectForm({ closeForm, addProject }) {
                 </button>
               </div>
 
-              <label htmlFor="startDate">Start Date</label>
+              <label htmlFor="startDate">Start Date *</label>
               <input 
                 type="date" 
                 name="startDate" 
                 className="date-picker"
+                value={formData.startDate}
                 onChange={handleChange}
+                required
               />
 
-              <label htmlFor="dueDate">Due Date</label>
+              <label htmlFor="dueDate">Due Date *</label>
               <input 
                 type="date" 
                 name="dueDate" 
                 className="date-picker"
+                value={formData.dueDate}
                 onChange={handleChange}
+                required
               />
             </div>
           </div>
 
           <div className="form-buttons">
-            <button type="button" onClick={closeForm} className="form-btn reset">
-              Reset
-            </button>
+            {mode === 'edit' ? (
+              <button 
+                type="button" 
+                onClick={handleEditReset} 
+                className="form-btn reset"
+              >
+                Original Input
+              </button>
+            ) : (
+              <button 
+                type="button" 
+                onClick={handleCreateReset} 
+                className="form-btn reset"
+              >
+                Reset
+              </button>
+            )}
             <button type="submit" className="form-btn create">
-              Create Project
+              {mode === 'edit' ? 'Confirm Edit' : 'Create Project'}
             </button>
           </div>
         </form>

@@ -10,6 +10,10 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  backdrop-filter: blur(2px);
+}
+.form-modal > * {
+  pointer-events: none;
 }
 
 .projects-container {
@@ -19,6 +23,10 @@
   width: 800px;
   max-height: 90vh;
   overflow-y: auto;
+  pointer-events: all;
+}
+.projects-container * {
+  pointer-events: all;
 }
 
 .projects-container h1 {
