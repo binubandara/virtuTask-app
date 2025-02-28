@@ -1,3 +1,4 @@
+// Middleware to restrict access based on user roles
 const roleMiddleware = (roles) => {
     return (req, res, next) => {
         if (!roles.includes(req.user.role)) {
