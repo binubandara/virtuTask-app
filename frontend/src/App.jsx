@@ -9,11 +9,12 @@ import './App.css';
 import Navbar from "./components/landingPage/Navbar";
 import React from "react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
-import Home from './components/landingPage/Home'; // Import your Home component
+import Home from './components/landingPage/Home'; 
 import { Flowbite } from "flowbite-react";
 import Services from "./components/landingPage/Services";
 import MyFooter from "./components/landingPage/MyFooter";
-import PanePage from './components/pane/PanePage'; // Import the PanePage component
+import PanePage from './components/pane/PanePage'; 
+import ProfilePage from "./components/userProfile/ProfilePage";
 
 function App() {
   return (
@@ -45,6 +46,7 @@ function AppContent() {
       {/* Main Routes */}
       <Routes>
         <Route path="/pane/*" element={<PanePage />} /> {/* Pane Page with nested routes */}
+        <Route path="/profile" element={<ProfilePage />} /> {/* Add Profile Page Route */}
       </Routes>
 
       {/* Render MyFooter only on landing pages */}

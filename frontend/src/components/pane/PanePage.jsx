@@ -8,6 +8,7 @@ import Settings from '../settingsPage/Settings'; // Import Settings Page
 import Dashboard from './Dashboard'; // Import other components as needed
 
 import GlobalSync from './GlobalSync';
+import ProfilePage from '../userProfile/ProfilePage';
 
 const { Sider, Content } = Layout;
 
@@ -25,6 +26,7 @@ const PanePage = () => {
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="global-sync" element={<GlobalSync />} />
           <Route path="settings" element={<Settings />} />
+          <Route path="profile" element={<ProfilePage/>} />
           {/* Add other routes here */}
         </Routes>
       </Content>
