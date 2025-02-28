@@ -1,0 +1,36 @@
+import React, { useContext } from "react";
+import { CountdownCircleTimer } from "react-countdown-circle-timer";
+import { SettingContext } from "../context/SettingsContext";
+
+const CountdownAnimation = ({ timer = 20, animate = true }) => {
+  const { stopTimer } = useContext(SettingContext);
+
+  return (
+    <CountdownCircleTimer
+      isPlaying={animate}
+      duration={timer * 60} // Convert minutes to seconds
+      colors={["#fe6f6b"]}
+      strokeWidth={6}
+      size={240}
+      trailColor="#151932"
+      onComplete={() => {
+        stopTimer();
+        return { shouldRepeat: false };
+      }}
+    >
+      {({ remainingTime }) => {
+        // Convert seconds to minutes and seconds
+        const minutes = Math.floor(remainingTime / 60);
+        const seconds = remainingTime % 60;
+
+        return (
+          <div className="timer-text">
+            {minutes}:{seconds < 10 ? `0${seconds}` : seconds}
+          </div>
+        );
+      }}
+    </CountdownCircleTimer>
+  );
+};
+
+export default CountdownAnimation;
