@@ -1,129 +1,106 @@
+body {
+  overflow-x: hidden; /* Prevents horizontal scrolling */
+}
+
 .register-body {
-    background: rgb(214, 212, 212);
-    min-height: 100vh;
-    width: 100vw;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-  
-  .register-container {
-    background-color: #fff;
-    border-radius: 25px;
-    padding: 25px 30px;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
-    width: 1300px;
-  }
-  
-  .register-container h1 {
-    font-size: x-large;
-    text-align: center;
-    color: #4206a3;
-  }
-  
-  /* Form Structure */
-  .form-row {
-    display: flex;
-    justify-content: space-between;
-    gap: 20px;
-    align-items: stretch;
-    padding-right: 60px;
-    padding-left: 50px;
-  }
-  
-  .form-column {
-    width: 48%;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-  }
-  
-  /* Address & Postal Code, Role & Attachments */
-  .input-row {
-    display: flex;
-    justify-content: space-between;
-    gap: 15px;
-    align-items: flex-start;
-  }
-  
-  .input-half {
-    width: 50%;
-    display: flex;
-    flex-direction: column;
-  }
-  
-  /* Inputs & Labels */
-  .register-container label {
-    font-size: 15px;
-    font-weight: bold;
-    color: #555;
-    margin-top: 15px;
-  }
-  
-  .register-container input, select, textarea {
-    width: 100%;
-    padding: 8px;
-    border-radius: 15px;
-    border: 1px solid #ccc;
-  }
-  
-  .textarea {
-    height: 100px;
-  }
-  
-  .about-textarea {
-    height: 180px; /* Increased height for About section */
-  }
-  
-  /* Gender Options (Properly Aligned to the Left) */
-  .gender-options {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;  /* Align everything to the left */
-    margin-top: 4px;
-    margin-left: 27px;
-  }
-  
-  .gender-options label {
-    display: flex;
-    align-items: center;
-    gap: 8px;  /* Reduce space between radio button and label */
-  }
-  
-  .gender-options input[type="radio"] {
-    margin: 0; /* Remove extra margins */
-    transform: scale(1.1); /* Make radio buttons slightly bigger for better visibility */
-    cursor: pointer;
-  }
-  
-  /* Buttons (Reset, Register, and Google Signup all same style) */
-  .form-buttons {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 20px;
-  }
-  
-  .form-btn {
-    width: 48%;
-    padding: 10px;
-    font-size: 16px;
-    background: #358bcd;
-    color: white;
-    border: none;
-    cursor: pointer;
-    border-radius: 15px;
-    text-align: center;
-  }
-  
-  .form-btn:hover {
-    background: #1d98c1;
-    color: rgb(19, 19, 19);
-  }
-  
-  /* Google Signup (Aligned with Register) */
-  .google-register-section {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 10px;
-  }
-  
+  background: rgb(214, 212, 212);
+  min-height: 100vh;
+  width: 100vw;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.register-container {
+  background-color: #fff;
+  border-radius: 25px;
+  padding: 25px 30px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+  width: 90%;
+  max-width: 600px;
+  margin-top: 3.5cm; /* Added margin for separation */
+}
+
+.register-container h1 {
+  font-size: x-large;
+  text-align: center;
+  color: #4206a3;
+  margin-bottom: 20px;
+}
+
+.form-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.register-container label {
+  font-size: 15px;
+  font-weight: bold;
+  color: #555;
+  margin-top: 15px;
+  margin-bottom: 5px;
+}
+
+.register-container input, 
+.register-container select, 
+.register-container textarea {
+  width: 100%;
+  padding: 12px; /* Increased padding */
+  border-radius: 15px;
+  border: 1px solid #ccc;
+  margin-bottom: 5px;
+}
+
+.textarea {
+  height: 100px;
+  resize: vertical;
+}
+
+.about-textarea {
+  height: 120px;
+}
+
+/* Updated gender options styles */
+.gender-options {
+  display: flex;
+  flex-direction: column;  /* Keeps options in a column */
+  align-items: flex-start; /* Align left */
+  margin: 10px 0; /* Removed gap */
+}
+
+.gender-options label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.form-buttons {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  margin-top: 25px;
+}
+
+.form-btn {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  background: #358bcd;
+  color: white;
+  border: none;
+  cursor: pointer;
+  border-radius: 15px;
+  transition: background 0.3s ease;
+}
+
+.form-btn:hover {
+  background: #1d98c1;
+}
+
+.google-register-section {
+  margin-top: 15px;
+}
+
+input[type="file"] {
+  padding: 5px;
+}
