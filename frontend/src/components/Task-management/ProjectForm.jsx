@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import './ProjectForm.css';
 
 function ProjectForm({ closeForm, addProject, editProject, initialData, mode }) {
+  // Updated initial state to include tasks array
   const [formData, setFormData] = useState(initialData || {
     projectname: '',
     department: '',
@@ -9,7 +10,8 @@ function ProjectForm({ closeForm, addProject, editProject, initialData, mode }) 
     description: '',
     startDate: '',
     dueDate: '',
-    priority: 'medium'
+    priority: 'medium',
+    tasks: [] // Added tasks array here
   });
 
   const [originalData] = useState(initialData || {...formData});
@@ -67,7 +69,8 @@ function ProjectForm({ closeForm, addProject, editProject, initialData, mode }) 
         description: '',
         startDate: '',
         dueDate: '',
-        priority: 'medium'
+        priority: 'medium',
+        tasks: [] // Reset tasks array here
       });
     }
   };
@@ -189,6 +192,32 @@ function ProjectForm({ closeForm, addProject, editProject, initialData, mode }) 
                 onChange={handleChange}
                 required
               />
+               <label htmlFor="members">Members</label>
+              <div className="members-container">
+              <input 
+                type="search" 
+                name="members" 
+                className="members-input" 
+                placeholder="Search Member by ID"
+              />
+              <div className="svg-member-icon">
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  strokeWidth="1" 
+                  stroke="currentColor" 
+                  className="size-6"
+                  width="24" height="24"
+                >
+                  <path 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" 
+                  />
+                </svg>
+              </div>
+            </div>
             </div>
           </div>
 

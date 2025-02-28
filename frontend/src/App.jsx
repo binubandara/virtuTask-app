@@ -5,6 +5,8 @@ import Register from "./components/Login/Register";
 import Password from "./components/Login/Password"; 
 import MyProjectsManager from "./components/Task-management/MyProjectsManager";
 import ProjectForm from "./components/Task-management/ProjectForm";
+import TaskManage from "./components/Task-management/TaskManage";
+import TaskForm from "./components/Task-management/TaskForm";
 
 
 
@@ -17,6 +19,8 @@ function App() {
                 <Route path="/password" element={<Password />} />
                 <Route path="/My-projects-manager" element={<MyProjectsManager />} />
                 <Route path="/Project-form" element={<ProjectForm />} />
+                <Route path="/Task-manage" element={<TaskManage />} />
+                <Route path="/TaskForm" element={<TaskForm />} />
                 
                 
             </Routes>
