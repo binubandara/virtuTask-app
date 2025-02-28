@@ -1,10 +1,10 @@
 const ReminderSettings = require('../models/ReminderSettings');
 
 //@desc     Get reminder settings
-//@route    GET /api/auth/reminders
+//@route    GET /api/reminders/settings
 //@access   Private
 
-const getReminderSettings = async (req, res) => {
+const getReminder = async (req, res) => {
     try {
         let settings = await ReminderSettings.findOne({ user: req.user._id});
 
@@ -19,45 +19,24 @@ const getReminderSettings = async (req, res) => {
     }
 };
 
-// @desc    create reminder settings
-// @route   POST /api/auth/reminders
-// @access  Private 
-
-const createReminder = async (req, res) => {
-    try {
-        const { title, description, date} = req.body;
-        const reminder = new ReminderSettings({
-            userId: req.user._id,
-            title,
-            description,
-            date
-        });
-        const createdReminder = await reminder.save();
-        res.status(201).json(createdReminder);
-    }catch (error){
-        console.error(error);
-        res.status(500).json({ message: 'Server Error'});
-    }
-};
-
 // @desc    Update reminder settings
-// @route   PUT /api/auth/reminders/:id
+// @route   PUT /api/reminders/settings
 // @access  Private
 
 const updateReminder = async (req, res) => {
     try{
-        const { title, description, date} = req.body;
-        const reminder = await ReminderSettings.findById(req.params.id);
+        const { postureReminder, hydrationReminder, movementReminder } = req.body;
+        let settings = await ReminderSettings.findOne({user : req.user._id});
 
-        if(reminder){
-            reminder.title = title;
-            reminder.description = description;
-            reminder.date = date;
+        if(settings){
+            settings.postureReminder = postureReminder;
+            settings.hydrationReminder = hydrationReminder;
+            settings.movementReminder = movementReminder;
 
-            const updatedReminder = await reminder.save();
-            res.json(updatedReminder);
+            const updatedSettings = await settings.save();
+            res.json(updatedSettings);
         } else {
-            res.status(404).json({ message: 'Reminder not found'});
+            res.status(404).json({ message: 'Settings not found'});
         }
     }catch (error){
         console.error(error);
@@ -65,24 +44,4 @@ const updateReminder = async (req, res) => {
     }
 };
 
-// @desc    Delete reminder settings
-// @route   DELETE /api/auth/reminders/:id
-// @access  Private
-
-const deleteReminder = async (req, res) => {
-    try{
-        const reminder = await ReminderSettings.findById(req.params.id);
-
-        if(reminder){
-            await reminder.remove();
-            res.json({ message: 'Reminder removed'});
-        } else {
-            res.status(404).json({ message: 'Reminder not found'});
-        }
-    }catch (error){
-        console.error(error);
-        res.status(500).json({ message: 'Server Error'});
-    }
-};
-
-module.exports = { getReminderSettings, createReminder, updateReminder, deleteReminder };
+module.exports = { getReminder, updateReminder };
