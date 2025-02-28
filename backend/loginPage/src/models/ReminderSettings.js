@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
 const reminderSettingSchema = new mongoose.Schema({
     user : {
@@ -43,7 +43,5 @@ const reminderSettingSchema = new mongoose.Schema({
         toJSON : {virtuals : true},
         toObject : {virtuals : true}});
 
-reminderSettingSchema.index({user : 1}, {unique : true});
-
 const ReminderSettings = mongoose.model('ReminderSetting', reminderSettingSchema);
-export default ReminderSettings;
+module.exports = ReminderSettings;
