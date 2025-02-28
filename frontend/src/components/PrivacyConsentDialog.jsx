@@ -92,13 +92,12 @@ const PrivacyConsentDialog = ({ onConsent }) => {
             
             <h6 className="mt-4 mb-3">Data Usage</h6>
             <p>
-              All collected data is stored locally on your device and in your personal MongoDB database.
-              We use this data solely to provide you with productivity insights and generate reports.
+              We use all data stored solely to provide you with productivity insights and generate reports.
             </p>
             
             <h6 className="mt-4 mb-3">Data Security</h6>
             <p>
-              Your data remains on your local system. The app may use Google's Gemini API to analyze text,
+              The app may use Google's Gemini API to analyze text,
               which is subject to Google's privacy policy.
             </p>
             
@@ -109,7 +108,7 @@ const PrivacyConsentDialog = ({ onConsent }) => {
                   <h6>1. Data Collection and Storage</h6>
                   <p>
                     VirtuTask collects information about your active windows, applications usage, and 
-                    periodic screenshots. This data is stored in a MongoDB database on your local machine.
+                    periodic screenshots. This data is stored in a database.
                     Screenshots are processed to extract text for productivity analysis.
                   </p>
                   
