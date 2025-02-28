@@ -10,29 +10,26 @@ function MyProjectsManager() {
 
   const getRandomColor = (() => {
     let lastUsedColors = new Set();
-  
     return () => {
       let availableColors = colorPalette.filter(c => !lastUsedColors.has(c));
-  
       if (availableColors.length === 0) {
-        lastUsedColors.clear(); // Reset when all colors are used
+        lastUsedColors.clear(); 
         availableColors = [...colorPalette];
       }
-  
       const randomColor = availableColors[Math.floor(Math.random() * availableColors.length)];
       lastUsedColors.add(randomColor);
-  
       return randomColor;
     };
   })();
-  
   
   const createProject = (formData) => ({
     id: Date.now(),
     projectname: formData.projectname,
     department: formData.department,
     description: formData.description,
-    color: getRandomColor() // Assign color at creation
+    priority: formData.priority,  // Update to include priority
+    dueDate: formData.dueDate, // Update to include due date
+    color: getRandomColor()
   });
 
   const addProject = (formData) => {
@@ -44,15 +41,22 @@ function MyProjectsManager() {
   const truncateText = (text, maxLength) => 
     text.length > maxLength ? `${text.substring(0, maxLength)}...` : text;
 
+  // Helper function to calculate due date display
+  const getDueDateDisplay = (dueDate) => {
+    const today = new Date();
+    const due = new Date(dueDate);
+    const diffTime = due - today; 
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+
+    if (diffDays < 0) return ''; // Past due date
+    if (diffDays <= 30) return ` ${Math.ceil(diffDays / 7)} weeks`;
+    
+    return ` ${due.toLocaleString('default', { month: 'long' })}`;
+  };
+
   return (
     <>
-      
-
-      <div 
-        className={`project-manager-container ${showForm ? 'blur-background' : ''}`}
-        data-gp-c-s-check-loaded="true"
-        data-gp-test-installed="1.4.1224"
-      >
+      <div className={`project-manager-container ${showForm ? 'blur-background' : ''}`}>
         <h1 className="title">Project Management</h1>
         <div className="line"></div>
 
@@ -79,27 +83,25 @@ function MyProjectsManager() {
           </div>
         </div>
 
-        
-
         <div className="project-tiles">
           {projects.map((project) => (
             <div className="project-tile" key={project.id}>
               <div className="tile-content">
                 <div className="project-icon">
-                <svg 
-                  xmlns="http://www.w3.org/2000/svg" 
-                  fill={project.color}
-                  viewBox="0 0 24 24" 
-                  stroke="black" 
-                  strokeWidth="0.2"  // Remove black stroke
-                  className="project-svg-icon"  // Add this class
-                >
-                  <path 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round" 
-                    d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" 
-                  />
-                </svg>
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    fill={project.color}
+                    viewBox="0 0 24 24" 
+                    stroke="black" 
+                    strokeWidth="0.2"
+                    className="project-svg-icon"
+                  >
+                    <path 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" 
+                    />
+                  </svg>
                 </div>
 
                 <div className="project-details">
@@ -108,6 +110,23 @@ function MyProjectsManager() {
                 </div>
               </div>
               <p>{truncateText(project.description)}</p>
+              
+              {/* Add a button for the due date display */}
+              {project.priority === 'high' && (
+                <button className="due-button" style={{ backgroundColor: 'red' }}>
+                  {getDueDateDisplay(project.dueDate)}
+                </button>
+              )}
+              {project.priority === 'medium' && (
+                <button className="due-button" style={{ backgroundColor: 'yellow' }}>
+                  {getDueDateDisplay(project.dueDate)}
+                </button>
+              )}
+              {project.priority === 'low' && (
+                <button className="due-button" style={{ backgroundColor: 'green' }}>
+                  {getDueDateDisplay(project.dueDate)}
+                </button>
+              )}
             </div>
           ))}
         </div>
@@ -120,11 +139,10 @@ function MyProjectsManager() {
               addProject={addProject}
             />
           </div>
-  ),
-  document.body
-)}
+        ),
+        document.body
+      )}
     </>
-  
   );
 }
 

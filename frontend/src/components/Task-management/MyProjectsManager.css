@@ -159,3 +159,11 @@ body {
 .project-icon:hover .project-svg-icon {
   opacity: 0.8; /* Adds a hover effect */
 }
+.due-button {
+  border-radius: 20px;
+  padding: 10px;
+  margin-top: 10px;
+  color: white;
+  font-weight: bold;
+  border: none;
+}

@@ -2,15 +2,13 @@ import React, { useState } from 'react';
 import './ProjectForm.css';
 
 function ProjectForm({ closeForm, addProject }) {
-  // Add startDate and dueDate to your initial state:
   const [formData, setFormData] = useState({
     projectname: '',
     department: '',
     description: '',
     startDate: '',
-    dueDate: '',  // Was missing in initial state
+    dueDate: '',
     priority: 'medium'
-
   });
 
   const handleChange = (e) => {
@@ -30,8 +28,7 @@ function ProjectForm({ closeForm, addProject }) {
   return (
     <div className="form-modal" onClick={closeForm}>
       <div className="projects-container" onClick={(e) => e.stopPropagation()}>
-        
-        <div div className="modal-header">
+        <div className="modal-header">
           <h1>Create New Project</h1>
           <div className="minus-icon" onClick={closeForm}>
             <svg 
@@ -53,7 +50,6 @@ function ProjectForm({ closeForm, addProject }) {
         </div>
         <form onSubmit={handleSubmit}>
           <div className="form-row">
-            {/* Left Column */}
             <div className="left-form-column">
               <label htmlFor="projectname">Project Name</label>
               <input 
@@ -89,7 +85,6 @@ function ProjectForm({ closeForm, addProject }) {
               />
             </div>
 
-            {/* Right Column */}
             <div className="right-form-column">
               <label>Priority Level</label>
               <div className="priority-buttons">
@@ -131,37 +126,9 @@ function ProjectForm({ closeForm, addProject }) {
                 className="date-picker"
                 onChange={handleChange}
               />
-
-            <label htmlFor="members">Members</label>
-            <div className="members-container">
-              <input 
-                type="search" 
-                name="members" 
-                className="members-input" 
-                placeholder="Search Member by ID"
-              />
-              <div className="svg-member-icon">
-                <svg 
-                  xmlns="http://www.w3.org/2000/svg" 
-                  fill="none" 
-                  viewBox="0 0 24 24" 
-                  strokeWidth="1" 
-                  stroke="currentColor" 
-                  className="size-6"
-                  width="24" height="24"
-                >
-                  <path 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round" 
-                    d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" 
-                  />
-                </svg>
-              </div>
-            </div>
             </div>
           </div>
 
-          {/* Form Buttons */}
           <div className="form-buttons">
             <button type="button" onClick={closeForm} className="form-btn reset">
               Reset

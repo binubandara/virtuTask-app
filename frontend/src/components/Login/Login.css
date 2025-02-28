@@ -1,244 +1,244 @@
 /* General Button Styles */
 .button {
-    width: 100%;
-    background: white;
-    color: black;
-    padding: 14px;
-    border: 1px solid black;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 16px;
-    margin-bottom: 15px;
-    transition: background 0.3s ease, transform 0.1s;
-  }
-  
-  .button:hover {
-    background: black;
-    color: white;
-  }
-  
-  .button:active {
-    background: #333;
-    color: white;
-    transform: scale(0.98);
-  }
-  
-  /* Selected Button (Black by Default) */
-  .button.selected {
-    background: black;
-    color: white;
-    border: none;
-  }  
+  width: 100%;
+  background: white;
+  color: black;
+  padding: 14px;
+  border: 1px solid black;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  margin-bottom: 15px;
+  transition: background 0.3s ease, transform 0.1s;
+}
+
+.button:hover {
+  background: black;
+  color: white;
+}
+
+.button:active {
+  background: #333;
+  color: white;
+  transform: scale(0.98);
+}
+
+/* Selected Button (Black by Default) */
+.button.selected {
+  background: black;
+  color: white;
+  border: none;
+}  
 /* Reset Default Styles */
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: Arial, sans-serif;
-  }
-  
-  /* Main Container */
-  .container {
-    display: flex;
-    height: 100vh;
-  }
-  
-  /* Left Section (Image & Text) */
-  .left-section {
-    flex: 1.2; /* Takes more space than the right side */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-  }
-  
- 
-  
-  /* Text Overlay */
-  .left-content {
-    position: absolute;
-    text-align: center;
-    color: white;
-    width: 80%;
-    z-index: 1;
-    background: rgba(0, 0, 0, 0.5);
-    padding: 20px;
-    border-radius: 10px;
-  }
-  
-  .left-content h1 {
-    font-size: 2rem;
-    margin-bottom: 10px;
-  }
-  
-  .left-content p {
-    font-size: 1rem;
-  }
-  
-  /* Right Section (Full-Width Login Form) */
-  .right-section {
-    flex: 0.8; /* 40% width */
-    background: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 40%;
-    padding: 50px;
-  }
-  
-  .login-box {
-    width: 100%;
-    max-width: 500px;
-    text-align: left;
-    padding: 0;
-    box-shadow: none;
-    background: none;
-  }
-  
-  /* Login Heading & Subtext */
-  .login-box h2 {
-    font-size: 26px;
-    margin-bottom: 10px;
-  }
-  
-  .login-subtext {
-    font-size: 16px;
-    color: gray;
-    margin-bottom: 20px;
-  }
-  
-  /* Line-Style Inputs */
-  .input-container {
-    width: 100%;
-    margin-bottom: 15px;
-    border-bottom: 2px solid #ccc;
-    display: flex;
-  }
-  
-  .input-line {
-    width: 100%;
-    border: none;
-    outline: none;
-    padding: 12px;
-    font-size: 16px;
-    background: transparent;
-  }
-  
-  /* Remember Me & Forgot Password */
-  .login-options {
-    display: flex;
-    justify-content: space-between;
-    font-size: 14px;
-    color: gray;
-    margin-bottom: 20px;
-  }
-  
-  .forgot-password {
-    text-decoration: none;
-    color: blue;
-  }
-  
-  .forgot-password:hover {
-    text-decoration: underline;
-  }
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+}
+
+/* Main Container */
+.container {
+  display: flex;
+  height: 100vh;
+}
+
+/* Left Section (Image & Text) */
+.left-section {
+  flex: 1.2; /* Takes more space than the right side */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+
+
+/* Text Overlay */
+.left-content {
+  position: absolute;
+  text-align: center;
+  color: white;
+  width: 80%;
+  z-index: 1;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 20px;
+  border-radius: 10px;
+}
+
+.left-content h1 {
+  font-size: 2rem;
+  margin-bottom: 10px;
+}
+
+.left-content p {
+  font-size: 1rem;
+}
+
+/* Right Section (Full-Width Login Form) */
+.right-section {
+  flex: 0.8; /* 40% width */
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40%;
+  padding: 50px;
+}
+
+.login-box {
+  width: 100%;
+  max-width: 500px;
+  text-align: left;
+  padding: 0;
+  box-shadow: none;
+  background: none;
+}
+
+/* Login Heading & Subtext */
+.login-box h2 {
+  font-size: 26px;
+  margin-bottom: 10px;
+}
+
+.login-subtext {
+  font-size: 16px;
+  color: gray;
+  margin-bottom: 20px;
+}
+
+/* Line-Style Inputs */
+.input-container {
+  width: 100%;
+  margin-bottom: 15px;
+  border-bottom: 2px solid #ccc;
+  display: flex;
+}
+
+.input-line {
+  width: 100%;
+  border: none;
+  outline: none;
+  padding: 12px;
+  font-size: 16px;
+  background: transparent;
+}
+
+/* Remember Me & Forgot Password */
+.login-options {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  color: gray;
+  margin-bottom: 20px;
+}
+
+.forgot-password {
+  text-decoration: none;
+  color: blue;
+}
+
+.forgot-password:hover {
+  text-decoration: underline;
+}
 /* Login Button (Black Default - Selected) */
 .login-btn {
-    width: 100%;
-    background: black; /* Fully black by default */
-    color: white;
-    padding: 14px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 16px;
-    margin-bottom: 15px;
-    transition: background 0.3s ease, transform 0.1s;
-  }
-  
-  .login-btn:hover {
-    background: #222; /* Slightly lighter black on hover */
-  }
-  
-  .login-btn:active {
-    background: #333; /* Slightly lighter black on click */
-    transform: scale(0.98);
-  }
-  
-  /* Register Button (White Default - Unselected) */
-  .register-btn {
-    width: 100%;
-    background: white; /* White by default */
-    color: black;
-    padding: 14px;
-    border: 1px solid black;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 16px;
-    margin-bottom: 15px;
-    transition: background 0.3s ease, transform 0.1s;
-  }
-  
-  .register-btn:hover {
-    background: black; /* Fully black on hover */
-    color: white;
-  }
-  
-  .register-btn:active {
-    background: #333;
-    color: white;
-    transform: scale(0.98);
-  }
-  
-  /* OR Divider */
-  .or-divider {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: gray;
-    margin-bottom: 20px;
-  }
-  
-  .or-divider hr {
-    width: 40%;
-    border: none;
-    height: 1px;
-    background: #ccc;
-  }
-  
-  .or-divider span {
-    margin: 0 10px;
-    font-size: 14px;
-    font-weight: bold;
-    color: #555;
-  }
-  
-  /* Google Sign-In Button */
-  .google-btn {
-    width: 100%;
-    background: white;
-    color: black;
-    padding: 14px;
-    border: 1px solid gray;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 16px;
-    transition: background 0.3s ease, transform 0.1s;
-  }
-  
-  .google-btn:hover {
-    background: #f4f4f4;
-  }
-  
-  .google-btn:active {
-    background: #ddd;
-    transform: scale(0.98);
-  }
-  .left-section img {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    z-index: -1;
+  width: 100%;
+  background: black; /* Fully black by default */
+  color: white;
+  padding: 14px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  margin-bottom: 15px;
+  transition: background 0.3s ease, transform 0.1s;
+}
+
+.login-btn:hover {
+  background: #222; /* Slightly lighter black on hover */
+}
+
+.login-btn:active {
+  background: #333; /* Slightly lighter black on click */
+  transform: scale(0.98);
+}
+
+/* Register Button (White Default - Unselected) */
+.register-btn {
+  width: 100%;
+  background: white; /* White by default */
+  color: black;
+  padding: 14px;
+  border: 1px solid black;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  margin-bottom: 15px;
+  transition: background 0.3s ease, transform 0.1s;
+}
+
+.register-btn:hover {
+  background: black; /* Fully black on hover */
+  color: white;
+}
+
+.register-btn:active {
+  background: #333;
+  color: white;
+  transform: scale(0.98);
+}
+
+/* OR Divider */
+.or-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: gray;
+  margin-bottom: 20px;
+}
+
+.or-divider hr {
+  width: 40%;
+  border: none;
+  height: 1px;
+  background: #ccc;
+}
+
+.or-divider span {
+  margin: 0 10px;
+  font-size: 14px;
+  font-weight: bold;
+  color: #555;
+}
+
+/* Google Sign-In Button */
+.google-btn {
+  width: 100%;
+  background: white;
+  color: black;
+  padding: 14px;
+  border: 1px solid gray;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background 0.3s ease, transform 0.1s;
+}
+
+.google-btn:hover {
+  background: #f4f4f4;
+}
+
+.google-btn:active {
+  background: #ddd;
+  transform: scale(0.98);
+}
+.left-section img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: -1;
 }

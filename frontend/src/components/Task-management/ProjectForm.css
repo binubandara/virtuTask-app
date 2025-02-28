@@ -139,8 +139,8 @@ input, textarea, .date-picker {
 
 .minus-icon {
   position: absolute;
-  right: 380px;
-  top: 119px;
+  right: 385.5px;
+  top: 121px;
   cursor: pointer;
   width: 24px; /* Adjust size */
   height: 24px;
@@ -155,8 +155,8 @@ input, textarea, .date-picker {
 
 .svg-member-icon { 
   position: absolute; 
-  right: 404.5px; /* Adjust alignment */
-  top: 492.8px; /* Center vertically */
+  right: 409.5px; /* Adjust alignment */
+  top: 493.5px; /* Center vertically */
   transform: translateY(-50%);
   width: 24px;
   height: 24px;
