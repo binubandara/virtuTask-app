@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 
+// Reminder settings schema definition
 const reminderSettingSchema = new mongoose.Schema({
     user : {
         type : mongoose.Schema.Types.ObjectId,
