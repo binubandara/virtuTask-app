@@ -49,7 +49,7 @@ class ReportGenerator:
             spaceAfter=30,
             textColor=self.primary_color,
             leading=32,
-            alignment=1  # Center alignment
+            alignment=1
         ))
         
         self.styles.add(ParagraphStyle(

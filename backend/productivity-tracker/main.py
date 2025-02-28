@@ -49,7 +49,7 @@ class ProductivityTracker:
             """)
         
         genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel('gemini-pro')
+        self.model = genai.GenerativeModel('models/gemini-1.5-pro')
         
     # Update in the ProductivityTracker class (main.py)
 
@@ -108,18 +108,51 @@ class ProductivityTracker:
                 "message": f"Failed to end session: {str(e)}"
             }
 
-    def _generate_ai_summary(self):                 
-        """Generate AI summary from session screenshots"""
+    def _generate_ai_summary(self):
+        """Generate AI summary based on privacy settings with detailed error handling"""
         try:
+            # Get privacy settings
+            settings_doc = self.db['user_settings'].find_one({'type': 'privacy_settings'}) or {}
+            privacy_settings = settings_doc.get('settings', {
+                'enableScreenshots': True,
+                'screenshotInterval': 15,
+                'enableTextExtraction': True,
+                'enableAiAnalysis': True
+            })
+            
+            # Skip AI analysis if disabled
+            if not privacy_settings.get('enableAiAnalysis', True):
+                print("AI analysis is disabled in privacy settings")
+                return "AI analysis disabled in privacy settings."
+            
             # Get all screenshots for this session
+            print(f"Finding screenshots for session ID: {self.current_session['_id']}")
             screenshots = list(self.screenshots_collection.find({
                 "session_id": str(self.current_session['_id'])
             }))
             
+            if not screenshots:
+                print("No screenshots found for this session")
+                return "No screenshots were found for this session. Unable to generate AI summary."
+            
+            print(f"Found {len(screenshots)} screenshots")
+            
             # Combine all extracted text
-            all_text = "\n".join(doc.get('text', '') for doc in screenshots)
+            all_text_list = [doc.get('text', '') for doc in screenshots]
+            all_text = "\n".join(all_text_list)
+            
+            if not all_text or all_text.isspace():
+                print("No text extracted from screenshots")
+                return "No text was extracted from screenshots. Unable to generate AI summary."
+            
+            # Truncate text if it's too long for the API
+            max_text_length = 30000  # Adjust based on Gemini's limitations
+            if len(all_text) > max_text_length:
+                print(f"Text too long ({len(all_text)} chars), truncating to {max_text_length}")
+                all_text = all_text[:max_text_length] + "... [text truncated due to length]"
             
             # Generate summary using Gemini
+            print("Preparing prompt for Gemini API")
             prompt = f"""
             Please analyze this work session based on the following extracted text and create a brief summary:
             
@@ -133,16 +166,48 @@ class ProductivityTracker:
             Keep the summary concise and professional.
             """
             
-            response = self.model.generate_content(prompt)
-            return response.text
+            try:
+                print("Calling Gemini API")
+                response = self.model.generate_content(prompt)
+                print("Received response from Gemini API")
+                return response.text
+            except Exception as api_error:
+                error_message = f"Gemini API error: {str(api_error)}"
+                print(error_message)
+                # Create a detailed error message for debugging
+                return f"Error calling Gemini API: {str(api_error)}"
+                
         except Exception as e:
-            print(f"AI Summary generation error: {e}")
-            return "Unable to generate AI summary due to an error."
+            error_type = type(e).__name__
+            error_message = f"AI Summary generation error ({error_type}): {str(e)}"
+            print(error_message)
+            
+            # For debugging purposes, log the traceback
+            import traceback
+            print("Full traceback:")
+            traceback.print_exc()
+            
+            # Return a detailed error message that will appear in the report
+            return f"Unable to generate AI summary. Error type: {error_type}. Details: {str(e)}"
 
     def _screenshot_loop(self):
-        """Take screenshots every 15 minutes and extract text"""
+        """Take screenshots based on user privacy settings"""
         while self.session_active:
             try:
+                # Get privacy settings from database
+                settings_doc = self.db['user_settings'].find_one({'type': 'privacy_settings'}) or {}
+                privacy_settings = settings_doc.get('settings', {
+                    'enableScreenshots': True,
+                    'screenshotInterval': 15,
+                    'enableTextExtraction': True,
+                    'enableAiAnalysis': True
+                })
+                
+                # Check if screenshots are enabled
+                if not privacy_settings.get('enableScreenshots', True):
+                    time.sleep(60)  # Check settings again in a minute
+                    continue
+                    
                 # Take screenshot
                 screenshot = pyautogui.screenshot()
                 timestamp = datetime.now()
@@ -151,8 +216,10 @@ class ProductivityTracker:
                 temp_path = f"temp_screenshot_{timestamp.timestamp()}.png"
                 screenshot.save(temp_path)
                 
-                # Extract text
-                extracted_text = pytesseract.image_to_string(Image.open(temp_path))
+                # Extract text if enabled
+                extracted_text = ""
+                if privacy_settings.get('enableTextExtraction', True):
+                    extracted_text = pytesseract.image_to_string(Image.open(temp_path))
                 
                 # Save to MongoDB
                 self.screenshots_collection.insert_one({
@@ -164,12 +231,14 @@ class ProductivityTracker:
                 # Clean up temp file
                 os.remove(temp_path)
                 
-                # Wait 15 minutes
-                time.sleep(120)  # 15 minutes in seconds
+                # Wait for the configured interval
+                interval_minutes = privacy_settings.get('screenshotInterval', 15)
+                time.sleep(interval_minutes * 60)  # Convert to seconds
                 
             except Exception as e:
                 print(f"Screenshot error: {e}")
                 time.sleep(60)  # Wait a minute before retrying
+
 
     def _generate_and_store_report(self, summary):
         """Generate PDF report and store it in MongoDB"""

@@ -5,6 +5,9 @@ import threading
 import io
 from bson.objectid import ObjectId
 import logging
+import json
+import zipfile
+import datetime
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG, 
@@ -143,6 +146,124 @@ def get_current_session():
     except Exception as e:
         logger.error(f"Error in current-session: {str(e)}", exc_info=True)
         return jsonify({"error": str(e)}), 500
+    
+
+@app.route('/privacy-settings', methods=['GET'])
+def get_privacy_settings():
+    logger.info("API CALL: /privacy-settings")
+    try:
+        # Get settings from database, or return defaults
+        settings_doc = tracker.db['user_settings'].find_one({'type': 'privacy_settings'})
+        
+        if settings_doc:
+            logger.debug(f"Retrieved privacy settings: {settings_doc.get('settings')}")
+            return jsonify(settings_doc.get('settings', {}))
+        else:
+            # Return default settings
+            default_settings = {
+                'enableScreenshots': True,
+                'screenshotInterval': 15,
+                'enableTextExtraction': True,
+                'enableAiAnalysis': True
+            }
+            logger.debug(f"No settings found, returning defaults: {default_settings}")
+            return jsonify(default_settings)
+    except Exception as e:
+        logger.error(f"Error getting privacy settings: {str(e)}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/privacy-settings', methods=['POST'])
+def update_privacy_settings():
+    logger.info("API CALL: /privacy-settings [POST]")
+    try:
+        data = request.get_json()
+        logger.debug(f"Updating privacy settings: {data}")
+        
+        # Validate settings
+        required_keys = ['enableScreenshots', 'screenshotInterval', 'enableTextExtraction', 'enableAiAnalysis']
+        if not all(key in data for key in required_keys):
+            logger.warning(f"Invalid settings format: {data}")
+            return jsonify({"error": "Invalid settings format"}), 400
+            
+        # Update settings in database
+        tracker.db['user_settings'].update_one(
+            {'type': 'privacy_settings'},
+            {'$set': {'settings': data}},
+            upsert=True
+        )
+        
+        logger.debug("Privacy settings updated successfully")
+        return jsonify({"status": "success", "message": "Privacy settings updated"})
+    except Exception as e:
+        logger.error(f"Error updating privacy settings: {str(e)}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/delete-data', methods=['POST'])
+def delete_user_data():
+    logger.info("API CALL: /delete-data")
+    try:
+        data = request.get_json()
+        delete_type = data.get('type', 'all')
+        
+        if delete_type == 'all':
+            logger.warning("Deleting all user data")
+            # Delete all collections
+            tracker.screenshots_collection.delete_many({})
+            tracker.sessions_collection.delete_many({})
+            tracker.reports_collection.delete_many({})
+            
+            return jsonify({"status": "success", "message": "All user data deleted"})
+        elif delete_type == 'screenshots':
+            logger.warning("Deleting all screenshots")
+            tracker.screenshots_collection.delete_many({})
+            return jsonify({"status": "success", "message": "All screenshots deleted"})
+        else:
+            return jsonify({"error": "Invalid delete type"}), 400
+    except Exception as e:
+        logger.error(f"Error deleting user data: {str(e)}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+        
+
+@app.route('/export-data', methods=['GET'])
+def export_user_data():
+    logger.info("API CALL: /export-data")
+    try:
+        # Create an in-memory file-like object to store the ZIP
+        memory_file = io.BytesIO()
+        
+        with zipfile.ZipFile(memory_file, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            # Export sessions
+            sessions = list(tracker.sessions_collection.find({}, {'_id': False}))
+            zipf.writestr('sessions.json', json.dumps(sessions, default=str, indent=2))
+            
+            # Export screenshots metadata (not the actual images)
+            screenshots = list(tracker.screenshots_collection.find({}, {'_id': False, 'text': True, 'session_id': True, 'timestamp': True}))
+            zipf.writestr('screenshots_metadata.json', json.dumps(screenshots, default=str, indent=2))
+            
+            # Export reports metadata
+            reports = list(tracker.reports_collection.find({}, {'_id': True, 'session_id': True, 'created_at': True, 'filename': True}))
+            zipf.writestr('reports_metadata.json', json.dumps(reports, default=str, indent=2))
+            
+            # Export privacy settings
+            settings = tracker.db['user_settings'].find_one({'type': 'privacy_settings'})
+            if settings:
+                zipf.writestr('privacy_settings.json', json.dumps(settings, default=str, indent=2))
+        
+        # Move to the beginning of the file-like object
+        memory_file.seek(0)
+        
+        # Set up the response
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        response = make_response(memory_file.getvalue())
+        response.headers['Content-Type'] = 'application/zip'
+        response.headers['Content-Disposition'] = f'attachment; filename=virtutask_data_export_{timestamp}.zip'
+        
+        logger.debug("Data export generated successfully")
+        return response
+        
+    except Exception as e:
+        logger.error(f"Error exporting user data: {str(e)}", exc_info=True)
+        return jsonify({"error": str(e)}), 500        
     
 if __name__ == '__main__':
     logger.info("Starting tracking thread...")

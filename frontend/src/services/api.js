@@ -206,5 +206,29 @@ export const productivityService = {
             logger.error('Test connection failed', error);
             throw error;
         }
+    },
+
+    getPrivacySettings: async () => {
+        logger.debug('Calling getPrivacySettings API');
+        try {
+            const response = await apiClient.get('/privacy-settings');
+            logger.debug('Privacy settings retrieved', response.data);
+            return response.data;
+        } catch (error) {
+            logger.error('Failed to get privacy settings', error);
+            throw error;
+        }
+    },
+    
+    updatePrivacySettings: async (settings) => {
+        logger.debug('Calling updatePrivacySettings API', settings);
+        try {
+            const response = await apiClient.post('/privacy-settings', settings);
+            logger.debug('Privacy settings updated successfully', response.data);
+            return response.data;
+        } catch (error) {
+            logger.error('Failed to update privacy settings', error);
+            throw error;
+        }
     }
 };

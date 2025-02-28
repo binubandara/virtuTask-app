@@ -48,7 +48,7 @@ class AIClassifier:
             """)
         
         genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel('gemini-pro')
+        self.model = genai.GenerativeModel('models/gemini-1.5-pro')
         
         # Enhanced predefined lists with more comprehensive coverage
         self.productive_apps = {
