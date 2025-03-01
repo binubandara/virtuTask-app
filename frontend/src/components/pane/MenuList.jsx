@@ -1,6 +1,6 @@
 import { Menu } from 'antd';
 import { Link } from 'react-router-dom';
-import { AppstoreOutlined, ProjectOutlined, BarsOutlined, HomeOutlined, SettingOutlined, CheckSquareOutlined, GlobalOutlined, ToolOutlined, TeamOutlined, AimOutlined, HeartOutlined } from '@ant-design/icons';
+import { AppstoreOutlined, ProjectOutlined, BarsOutlined, HomeOutlined, SettingOutlined, CheckSquareOutlined, GlobalOutlined, ToolOutlined, TeamOutlined, AimOutlined, HeartOutlined, UserOutlined, UserAddOutlined } from '@ant-design/icons';
 
 const MenuList = () => {
     return (
@@ -39,6 +39,16 @@ const MenuList = () => {
 
             <Menu.Item style={{ marginBottom: 15 }} key="settings" icon={<SettingOutlined />}>
                 <Link to="/settings">Settings</Link>
+            </Menu.Item>
+
+            {/* Testing Links */}
+            <Menu.Divider />
+            <Menu.Item style={{ marginBottom: 15 }} key="login" icon={<UserOutlined />}>
+                <Link to="/login">Login</Link>
+            </Menu.Item>
+            
+            <Menu.Item style={{ marginBottom: 15 }} key="register" icon={<UserAddOutlined />}>
+                <Link to="/register">Register</Link>
             </Menu.Item>
         </Menu>
     );

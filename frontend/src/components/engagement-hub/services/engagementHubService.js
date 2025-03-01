@@ -1,7 +1,8 @@
 import axios from 'axios';
 
 const isDev = process.env.NODE_ENV === 'development';
-const API_BASE_URL = isDev ? 'http://127.0.0.1:5000' : 'http://localhost:5000';
+// Update the port from 5000 to 5002
+const API_BASE_URL = isDev ? 'http://127.0.0.1:5002' : 'http://localhost:5002';
 
 // Logger helper
 const logger = {
@@ -32,6 +33,7 @@ const apiClient = axios.create({
     timeout: 10000 // 10 seconds
 });
 
+// Rest of your code remains the same...
 // Request interceptor to log requests
 apiClient.interceptors.request.use(config => {
     // Log the request details

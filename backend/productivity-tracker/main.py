@@ -70,14 +70,17 @@ class ProductivityTracker:
         # Insert new session and get the ID
         session_id = self.sessions_collection.insert_one(self.current_session).inserted_id
         self.current_session['_id'] = session_id
+        # Also store the string version for reference
+        self.current_session['_id_str'] = str(session_id)
 
         # Create and START the screenshot thread
         self.screenshot_thread = threading.Thread(target=self._screenshot_loop)
         self.screenshot_thread.daemon = True
         self.screenshot_thread.start()
-        
+    
         return {"status": "success", "message": "Session started"}
-
+    
+    
     def end_session(self):
         if not self.current_session:
             return {"status": "error", "message": "No active session"}
@@ -125,10 +128,11 @@ class ProductivityTracker:
                 print("AI analysis is disabled in privacy settings")
                 return "AI analysis disabled in privacy settings."
             
-            # Get all screenshots for this session
-            print(f"Finding screenshots for session ID: {self.current_session['_id']}")
+            # Get all screenshots for this session - ensure we have a string ID
+            session_id = str(self.current_session['_id'])
+            print(f"Finding screenshots for session ID: {session_id}")
             screenshots = list(self.screenshots_collection.find({
-                "session_id": str(self.current_session['_id'])
+                "session_id": session_id
             }))
             
             if not screenshots:
@@ -221,9 +225,12 @@ class ProductivityTracker:
                 if privacy_settings.get('enableTextExtraction', True):
                     extracted_text = pytesseract.image_to_string(Image.open(temp_path))
                 
+                # Use the string version of the ID for consistency
+                session_id = str(self.current_session['_id'])
+                
                 # Save to MongoDB
                 self.screenshots_collection.insert_one({
-                    "session_id": str(self.current_session['_id']),
+                    "session_id": session_id,
                     "timestamp": timestamp,
                     "text": extracted_text
                 })
@@ -248,9 +255,19 @@ class ProductivityTracker:
             report_generator = ReportGenerator()
             report_generator.generate_report_to_buffer(self.current_session, summary, report_buffer)
             
+            # Ensure session_id is an ObjectId
+            session_id = self.current_session['_id']
+            if isinstance(session_id, str):
+                try:
+                    session_id = ObjectId(session_id)
+                except Exception as e:
+                    print(f"Warning: Could not convert session_id to ObjectId: {e}")
+                    # Use the string version as fallback
+                    session_id = self.current_session.get('_id_str', session_id)
+            
             # Store in MongoDB
             report_doc = {
-                'session_id': self.current_session['_id'],
+                'session_id': session_id,
                 'created_at': datetime.now(),
                 'filename': f"{self.current_session['name']}_{self.current_session['start_time'].strftime('%Y%m%d_%H%M')}.pdf",
                 'data': Binary(report_buffer.getvalue())

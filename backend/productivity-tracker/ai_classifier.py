@@ -41,7 +41,7 @@ class AIClassifier:
         if not api_key:
             raise ValueError("""
             Gemini API Key not found! 
-            Please:
+            Please:ffffffffffffffffffffffff
             1. Create a .env file in the backend directory
             2. Add GEMINI_API_KEY=your_actual_key
             3. Get an API key from Google AI Studio (https://makersuite.google.com/app/apikey)

@@ -12,6 +12,9 @@ connectDB();
 
 const app = express();
 
+// Set port - changed from 5000 to 5002
+const PORT = process.env.ENGAGEMENT_HUB_PORT || 5002;
+
 // Frontend origin
 const frontendOrigin = process.env.NODE_ENV === 'development' 
   ? 'http://localhost:5173'  // Vite default port
@@ -36,11 +39,8 @@ app.get('/', (req, res) => {
   res.send('Engagement Hub API is running');
 });
 
-// Set port
-const PORT = process.env.PORT || 5000;
-
 // Start server
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`Engagement Hub server running on port ${PORT}`);
   console.log(`CORS enabled for origin: ${frontendOrigin}`);
 });
