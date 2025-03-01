@@ -1,77 +1,54 @@
-// TaskManager.jsx
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import './TaskManager.css';
+import './TaskManage.css';
 import TaskForm from './TaskForm';
+import { useParams } from 'react-router-dom';
 
-const TaskManager = ({ projects }) => {
+const TaskManage = () => {
   const { projectId } = useParams();
-  const [showTaskForm, setShowTaskForm] = useState(false);
-  const [project, setProject] = useState(null);
   const [tasks, setTasks] = useState([]);
+  const [showTaskForm, setShowTaskForm] = useState(false);
+  const [currentProject, setCurrentProject] = useState({});
 
+  // Simulated fetching project from a data source
   useEffect(() => {
-    const foundProject = projects.find(p => p.id.toString() === projectId);
-    setProject(foundProject);
-    setTasks(foundProject?.tasks || []);
-  }, [projectId, projects]);
+    const fetchProject = async () => {
+      // Fetch project details here
+      // For now, just simulating project to showcase usage
+      setCurrentProject({ id: projectId, projectName: 'Project Title', priorityColor: '#f79d65' });
+    };
+    fetchProject();
+  }, [projectId]);
 
-  const addTask = (newTask) => {
-    setTasks([...tasks, { ...newTask, id: Date.now() }]);
+  const addTask = (taskData) => {
+    setTasks((prevTasks) => [...prevTasks, { id: Date.now(), ...taskData }]);
+    setShowTaskForm(false);
   };
 
-  if (!project) return <div>Loading...</div>;
-
   return (
-    <div className="task-manager-container">
-      <div className="task-header">
-        <h1 style={{ color: project.color }}>{project.projectname}</h1>
-        <button 
-          className="add-task-btn"
-          onClick={() => setShowTaskForm(true)}
-          style={{ backgroundColor: project.color }}
-        >
-          + Add Tasks
-        </button>
+    <div className="task-manage-container">
+      <h1 className="project-title" style={{ borderColor: currentProject.priorityColor }}>
+        {currentProject.projectName}
+      </h1>
+
+      <div className="tasks-header">
+        <h2>Tasks</h2>
+        <button className="add-tasks-btn" onClick={() => setShowTaskForm(true)}>Add Tasks</button>
       </div>
 
-      <div className="tasks-container">
-        {tasks.map(task => (
-          <div 
-            key={task.id}
-            className="task-card"
-            style={{ borderLeft: `4px solid ${project.color}` }}
-          >
-            <div className="task-header">
-              <h3>{task.taskName}</h3>
-              <span className={`status ${task.status.replace(' ', '-')}`}>
-                {task.status}
-              </span>
-            </div>
-            
-            <div className="task-details">
-              <p>Due: {new Date(task.dueDate).toLocaleDateString()}</p>
-              <span className={`priority ${task.priority}`}>
-                {task.priority}
-              </span>
-            </div>
-            
-            <p className="task-description">{task.description}</p>
+      <div className="tasks-list">
+        {tasks.length > 0 ? tasks.map(task => (
+          <div className="task-item" key={task.id}>
+            <p>{task.taskName}</p>
+            <span>{task.priority} - {task.dueDate}</span>
           </div>
-        ))}
+        )) : <p>No tasks available</p>}
       </div>
 
       {showTaskForm && (
-        <div className="task-form-overlay">
-          <TaskForm 
-            project={project}
-            closeForm={() => setShowTaskForm(false)}
-            addTask={addTask}
-          />
-        </div>
+        <TaskForm closeForm={() => setShowTaskForm(false)} addTask={addTask} />
       )}
     </div>
   );
 };
 
-export default TaskManager;
+export default TaskManage;
