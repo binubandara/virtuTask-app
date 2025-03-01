@@ -1,35 +1,66 @@
 .task-form-container {
-    background-color: white;
-    padding: 20px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    position: relative;
-  }
-  
-  .task-form-container h2 {
-    margin: 0 0 20px;
-  }
-  
-  .task-form-container label {
-    display: block;
-    margin: 10px 0 5px;
-  }
-  
-  .task-form-container input,
-  .task-form-container select {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 15px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-  }
-  
-  .task-form-container button {
-    margin-right: 10px;
-    padding: 10px 20px;
-    background-color: #6c5ce7;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-  }
+  background-color: white;
+  padding: 25px;
+  position: fixed;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 600px;
+  z-index: 1001;
+  box-shadow: -4px 0 15px rgba(0,0,0,0.1);
+  overflow-y: auto;
+  border-radius: 0;
+}
+
+.task-form-content {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.task-form-container h2 {
+  font-size: 1.8rem;
+  color: #333;
+  margin-bottom: 30px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #eee;
+}
+
+.taskform {
+  margin-bottom: 25px;
+  padding-bottom: 25px;
+  border-bottom: 1px solid #eee;
+}
+
+.taskform:last-child {
+  border-bottom: none;
+}
+
+.task-form-container label {
+  display: block;
+  margin: 20px 0 10px;
+  font-weight: 600;
+  color: #444;
+}
+
+.task-form-container input,
+.task-form-container select {
+  width: 100%;
+  padding: 14px;
+  border: 1px solid #ddd;
+  border-radius: 16px;
+  font-size: 15px;
+  margin-bottom: 15px;
+}
+
+
+
+.task-form-container button[type="submit"] {
+  background-color: #6c5ce7;
+  padding: 14px 35px;
+  font-size: 15px;
+}
+
+.task-form-container button[type="button"] {
+  padding: 14px 35px;
+  font-size: 15px;
+}

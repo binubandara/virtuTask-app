@@ -48,15 +48,16 @@ function MyProjectsManager() {
   const createProject = (formData) => ({
     id: Date.now(),
     ...formData,
-    color: getRandomColor()
+    color: getRandomColor(),
+    priority: formData.priority // Ensure priority is saved
   });
-
+  
   const addProject = (formData) => {
     const newProject = createProject(formData);
     setProjects([...projects, newProject]);
     setShowForm(false);
   };
-
+  
   const editProject = (updatedProject) => {
     setProjects(projects.map(p => p.id === updatedProject.id ? updatedProject : p));
     setShowForm(false);

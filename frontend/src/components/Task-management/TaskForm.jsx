@@ -23,7 +23,7 @@ const TaskForm = ({ closeForm, addTask }) => {
   return (
     <div className="task-form-container">
       <h2>Add Task</h2>
-      <form onSubmit={handleSubmit}>
+      <form className = "taskform" onSubmit={handleSubmit}>
         <label>Task Name:</label>
         <input type="text" name="taskName" value={taskData.taskName} onChange={handleChange} required />
 

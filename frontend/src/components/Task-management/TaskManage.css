@@ -2,13 +2,59 @@
     
     margin-left: 7.5cm;
 }
+.back-button{
+    margin-left: 6.7cm;
+    margin-top: 0.1cm;
 
+}
+/* Add these new rules */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.3); /* Ash color fade */
+    z-index: 999;
+  }
+  
+  .task-form-container {
+    position: fixed;
+    right: 20px;
+    top: 20px;
+    width: 350px;
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    z-index: 1000;
+  }
+  
+  /* Update back button positioning */
+  .back-button {
+    position: absolute;
+    top: 25px;
+    left: 30px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 24px;
+    color: #666;
+    z-index: 1;
+  }
+  
+  .back-button:hover {
+    color: #333;
+  }
+  
+  /* Keep existing other styles */
 .project-title {
     font-size: 31px;
     color: #333;
     padding-bottom: 10px;
     margin-bottom: 20px;
-    margin-top: -18px;
+    margin-top: -32px;
+    margin-left: 1cm;
 }
 
 .header-section {
@@ -91,3 +137,4 @@
     color: #666;
     margin-top: 1px;
 }
+
