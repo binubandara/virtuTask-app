@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import './ProjectForm.css';
 
 function ProjectForm({ closeForm, addProject, editProject, initialData, mode }) {
-  // Updated initial state to include tasks array
   const [formData, setFormData] = useState(initialData || {
     projectname: '',
     department: '',
@@ -10,8 +9,7 @@ function ProjectForm({ closeForm, addProject, editProject, initialData, mode }) 
     description: '',
     startDate: '',
     dueDate: '',
-    priority: 'medium',
-    tasks: [] // Added tasks array here
+    priority: 'medium'
   });
 
   const [originalData] = useState(initialData || {...formData});
@@ -69,8 +67,7 @@ function ProjectForm({ closeForm, addProject, editProject, initialData, mode }) 
         description: '',
         startDate: '',
         dueDate: '',
-        priority: 'medium',
-        tasks: [] // Reset tasks array here
+        priority: 'medium'
       });
     }
   };

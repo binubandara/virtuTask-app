@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './MyProjectsManager.css';
 import ProjectForm from './ProjectForm';
 import ReactDOM from 'react-dom';
+import { useNavigate } from 'react-router-dom';
 
 const clockSVG = (
   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" className="icon icon-tabler icons-tabler-filled icon-tabler-clock">
@@ -12,15 +13,23 @@ const clockSVG = (
 
 const pencilSVG = (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-6">
-    <path d="M21.731 2.269a2.625 2.625 0 0 0-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 0 0 0-3.712ZM19.513 8.199l-3.712-3.712-12.15 12.15a5.25 5.25 0 0 0-1.32 2.214l-.8 2.685a.75.75 0 0 0 .933.933l2.685-.8a5.25 5.25 0 0 0 2.214-1.32L19.513 8.2Z" />
+    <path d="M21.731 2.269a2.625 2.625 0 0 0-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 0 0 0-3.712ZM19.513 8.199l-3.712-3.712-12.15 12.15a5.25 5.25 0 0 0-1.32 2.214l-.8 2.685a.75 .75 0 0 0 .933 .933l2.685-.8a5.25 5.25 0 0 0 2.214-1.32L19.513 8.2Z" />
   </svg>
 );
 
 function MyProjectsManager() {
+  const navigate = useNavigate();
   const [showForm, setShowForm] = useState(false);
-  const [projects, setProjects] = useState([]);
+  const [projects, setProjects] = useState(() => {
+    const saved = localStorage.getItem('projects');
+    return saved ? JSON.parse(saved) : [];
+  });
   const [editingProject, setEditingProject] = useState(null);
   const colorPalette = ["#ffc8dd", "#bde0fe", "#a2d2ff", "#94d2bd","#e0b1cb","#adb5bd","#98f5e1","#f79d65","#858ae3","#c2dfe3","#ffccd5","#e8e8e4","#fdffb6","#f1e8b8","#d8e2dc","#fff0f3","#ccff66"];
+
+  useEffect(() => {
+    localStorage.setItem('projects', JSON.stringify(projects));
+  }, [projects]);
 
   const getRandomColor = (() => {
     let lastUsedColors = new Set();
@@ -113,6 +122,10 @@ function MyProjectsManager() {
     return { text, textColor, backgroundColor };
   };
 
+  const handleTileClick = (projectId) => {
+    navigate(`/task-manager/${projectId}`);
+  };
+
   return (
     <>
       <div className={`project-manager-container ${showForm ? 'blur-background' : ''}`}>
@@ -149,12 +162,20 @@ function MyProjectsManager() {
           {projects.map((project) => {
             const dueDisplay = getDueDateDisplay(project.dueDate);
             return (
-              <div className="project-tile" key={project.id}>
+              <div 
+                className="project-tile" 
+                key={project.id}
+                onClick={() => handleTileClick(project.id)}
+              >
                 <div className="tile-content">
-                  <div className="pencil-icon" onClick={() => {
-                    setEditingProject(project);
-                    setShowForm(true);
-                  }}>
+                  <div 
+                    className="pencil-icon" 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setEditingProject(project);
+                      setShowForm(true);
+                    }}
+                  >
                     {pencilSVG}
                   </div>
                   <div className="project-icon">

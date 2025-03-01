@@ -19,7 +19,7 @@ function App() {
                 <Route path="/password" element={<Password />} />
                 <Route path="/My-projects-manager" element={<MyProjectsManager />} />
                 <Route path="/Project-form" element={<ProjectForm />} />
-                <Route path="/Task-manage" element={<TaskManage />} />
+                <Route path="/task-manager/:projectId" element={<TaskManage />} /> {/* Fixed route */}
                 <Route path="/TaskForm" element={<TaskForm />} />
                 
                 

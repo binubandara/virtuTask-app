@@ -1,33 +1,93 @@
 .task-manage-container {
-    padding: 20px;
-  }
-  
-  .project-title {
-    font-size: 24px;
+    
+    margin-left: 7.5cm;
+}
+
+.project-title {
+    font-size: 31px;
     color: #333;
-    border-bottom: 2px solid;
-  }
-  
-  .tasks-header {
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+    margin-top: -18px;
+}
+
+.header-section {
+    position: relative;
+    margin-bottom: 10px;
+}
+.tasks-section {
+    
+    padding: 0; /* Remove padding from container */
+}
+
+.tasks-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-  }
-  
-  .add-tasks-btn {
+    padding: 20px;
+    position: relative;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+
+.section-title {
+    font-size: 20px;
+    color: #333;
+    margin-left: -18px;
+    border: 1px solid #e0e0e0;
+    background-color: #e0e0e0;
+    padding: 2px 10px;
+    border-radius: 4px;
+    margin-top: -30px;
+    
+}
+
+
+.add-tasks-btn {
     background-color: #6c5ce7;
     color: white;
     border: none;
-    padding: 10px 20px;
+    padding: 10px 25px;
+    border-radius: 20px;
     cursor: pointer;
-  }
-  
-  .tasks-list {
-    margin-top: 20px;
-  }
-  
-  .task-item {
-    padding: 10px;
-    border: 1px solid #ccc;
-    margin: 5px 0;
-  }
+    font-weight: 500;
+    transition: background-color 0.2s;
+    position: absolute;
+    right: 3.5cm;
+    margin-bottom: 42px; /* Space above the line */
+    margin-right:2cm ;
+}
+
+.members-dropdown {
+    background: transparent;
+    border: 1px solid #6c5ce7;
+    color: #6c5ce7;
+    padding: 10px 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-left: 29cm;
+    margin-top: 15px;
+   
+}
+
+.tasks-list {
+    padding: 15px 20px;
+}
+
+.underline {
+    border-bottom: 1px solid #e0e0e0;
+    margin-bottom: 20px;
+}
+
+.task-item {
+    padding: 12px;
+    margin: 10px 0;
+    border-left: 3px solid #6c5ce7;
+    background-color: #f8f9fa;
+}
+
+.no-tasks {
+    color: #666;
+    margin-top: 1px;
+}

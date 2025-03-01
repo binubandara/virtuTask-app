@@ -118,6 +118,8 @@ body {
   width: calc((100% - 2cm) / 4);
   box-sizing: border-box; 
   height: 260px; /* Maintain height */
+  cursor: pointer;
+  
 }
 
 .tile-content {
@@ -195,5 +197,11 @@ body {
   width: 15px;
   height: 21px;
   cursor: pointer;
+  pointer-events: auto;
+  z-index: 2;
 }
-
+tile-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
