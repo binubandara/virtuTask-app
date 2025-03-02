@@ -1,11 +1,9 @@
 .task-manage-container {
-    
     margin-left: 7.5cm;
 }
 .back-button{
     margin-left: 6.7cm;
     margin-top: 0.1cm;
-
 }
 /* Add these new rules */
 .modal-overlay {
@@ -129,12 +127,102 @@
 .task-item {
     padding: 12px;
     margin: 10px 0;
-    border-left: 3px solid #6c5ce7;
-    background-color: #f8f9fa;
+    background-color: #f5f5f5; 
 }
 
 .no-tasks {
     color: #666;
     margin-top: 1px;
 }
+.tasks-table {
+    width: 95%;
+    border-collapse: collapse;
+    margin-top: -15px;
+    table-layout: fixed;
+  }
+  
+  .tasks-table th,
+  .tasks-table td {
+    padding: 15px 15px;
+    text-align: center;
+    border: none; /* Remove borders */
+     
+  }
+  .tasks-table td {
+  border-right: 5px solid #f0f4f6;
+  border-bottom:10px solid #f0f4f6;
+  background-color: #dad8d8;
+  }
+  .tasks-table th {
+    background-color:#f0f4f6;
+    font-weight: 600;
+    color: #333;
+  }
+  
+  .priority-pill {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 0.9em;
+    text-transform: capitalize;
+    width: 80px; /* Fixed width */
+    text-align: center;
+    box-sizing: border-box;
+    
+  }
+  
+  .status-badge {
+    display: inline-block;
+    padding: 2px 12px;
+    border-radius: 20px;
+    font-size: 0.9em;
+    text-transform: capitalize; 
+    width: 100px; /* Fixed width */
+    text-align: center;
+    box-sizing: border-box;
+  }
+  
+  /* Update existing task-item style */
+  .task-item {
+    transition: background-color 0.2s;
+  }
+  
+  .task-item:hover {
+    border-top:1px solid #71bde2;
+    border-right:1px solid #71bde2;
+    border-left:1px solid #71bde2;
+    border-bottom:1px solid #71bde2;
+    cursor: pointer;
+  }
 
+.tname { width: 35%;text-align: left; }        /* Task name column */
+.task-assignee { width: 17%; } /* Assignee column */
+.task-due-date { width: 13%; } /* Due Date column */
+.task-levels { width: 14%; }   /* Priority/Status columns */
+
+.task-name-container {
+    position: relative;
+    padding-left: 35px;
+  }
+  
+  .task-edit-icon {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    padding: 5px;
+    cursor: pointer;
+  }
+  
+  .task-edit-icon svg {
+    width: 20px;
+    height: 20px;
+    color: #666;
+    transition: color 0.2s;
+  }
+  
+  .task-edit-icon:hover svg {
+    color: #333;
+  }

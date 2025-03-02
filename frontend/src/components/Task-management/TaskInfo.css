@@ -1,0 +1,162 @@
+.task-info-container {
+    position: fixed;
+    right: 0;
+    top: 0;
+    height: 100vh;
+    width: 400px;
+    background-color: #ffffff;
+    box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    overflow-y: auto;
+    z-index: 1000;
+  }
+  
+  .task-info-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+  }
+  
+  .task-info-title {
+    margin: 0;
+    font-size: 1.5rem;
+    color: #333;
+  }
+  
+  .task-info-close {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+  }
+  
+  .task-info-close svg {
+    width: 24px;
+    height: 24px;
+    color: #666;
+  }
+  
+  .divider {
+    border-bottom: 2px solid #eee;
+    margin-bottom: 20px;
+  }
+  
+  .meta-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+  }
+  
+  .meta-label {
+    font-weight: 600;
+    margin-right: 10px;
+    min-width: 80px;
+    color: #555;
+  }
+  
+  .status-capsule,
+  .priority-capsule {
+    padding: 4px 12px;
+    border-radius: 15px;
+    color: white;
+    font-size: 0.9rem;
+    text-transform: capitalize;
+  }
+  
+  .due-date {
+    color: #666;
+    font-size: 0.95rem;
+  }
+  
+  .assignee-button {
+    background: none;
+    border: 1px solid #ddd;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    color: #333;
+  }
+  
+  .description-section,
+  .attachments-section,
+  .comments-section {
+    margin-bottom: 25px;
+  }
+  
+  .section-title {
+    font-size: 1.1rem;
+    color: #333;
+    margin-bottom: 12px;
+  }
+  
+  .description-textarea {
+    width: 100%;
+    height: 100px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    resize: vertical;
+  }
+  
+  .attachments-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  
+  .add-attachment {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 1px solid #ddd;
+    background: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .plus-sign {
+    font-size: 1.2rem;
+    color: #666;
+  }
+  
+  .attachment-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .attachment-item {
+    padding: 8px;
+    background-color: #f8f8f8;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    color: #444;
+  }
+  
+  .comments-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  
+  .comment-search {
+    width: 60%;
+    padding: 6px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.9rem;
+  }
+  
+  .comment-textarea {
+    width: 100%;
+    height: 80px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    resize: vertical;
+  }
