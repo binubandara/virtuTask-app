@@ -122,13 +122,31 @@ async function startPythonBackend() {
     let pythonProcess;
     
     if (!app.isPackaged) {
-      const scriptPath = path.join(__dirname, '../../backend/productivity-tracker/app.py');
-      console.log(`Spawning Python script from: ${scriptPath}`);
+      // Try multiple potential paths for development
+      const possiblePaths = [
+        path.join(__dirname, '../../backend/productivity-tracker/app.py'),
+        path.join(__dirname, '../backend/productivity-tracker/app.py'),
+        path.join(process.cwd(), 'backend/productivity-tracker/app.py')
+      ];
       
+      let scriptPath = null;
+      for (const testPath of possiblePaths) {
+        console.log(`Checking for Python script at: ${testPath}`);
+        if (fs.existsSync(testPath)) {
+          scriptPath = testPath;
+          break;
+        }
+      }
+      
+      if (!scriptPath) {
+        throw new Error('Python script not found in any of the expected locations');
+      }
+      
+      console.log(`Spawning Python script from: ${scriptPath}`);
       pythonProcess = spawn('python', [scriptPath], {
         env: {
           ...process.env,
-          PYTHONPATH: path.join(__dirname, '../../backend/productivity-tracker')
+          PYTHONPATH: path.dirname(scriptPath)
         }
       });
     } else {
@@ -195,19 +213,52 @@ async function startAuthServer() {
     let authProcess;
     
     if (!app.isPackaged) {
-      const scriptPath = path.join(__dirname, '../../backend/loginPage/server.js');
+      // Try multiple potential paths for development
+      const possiblePaths = [
+        path.join(__dirname, '../../backend/loginPage/server.js'),
+        path.join(__dirname, '../backend/loginPage/server.js'),
+        path.join(process.cwd(), 'backend/loginPage/server.js')
+      ];
+      
+      let scriptPath = null;
+      for (const testPath of possiblePaths) {
+        console.log(`Checking for Auth server at: ${testPath}`);
+        if (fs.existsSync(testPath)) {
+          scriptPath = testPath;
+          break;
+        }
+      }
+      
+      if (!scriptPath) {
+        throw new Error('Auth server script not found in any of the expected locations');
+      }
+      
       console.log(`Spawning Auth server from: ${scriptPath}`);
       
       // Set environment variable for the port
-      const env = { ...process.env, PORT: port };
+      const env = { 
+        ...process.env, 
+        PORT: port,
+        // Add MongoDB connection - may need to be modified based on your actual setup
+        MONGODB_URI: process.env.MONGODB_URI || 'mongodb://localhost:27017/yourdb',
+        JWT_SECRET: process.env.JWT_SECRET || 'your-secret-key'
+      };
       
-      authProcess = spawn('node', [scriptPath], { env });
+      authProcess = spawn('node', [scriptPath], { 
+        env,
+        cwd: path.dirname(scriptPath) // Ensure we're in the correct directory
+      });
     } else {
       const scriptPath = path.join(process.resourcesPath, 'backend', 'auth-server', 'server.js');
       console.log(`Spawning Auth server from: ${scriptPath}`);
       
       authProcess = spawn('node', [scriptPath], { 
-        env: { ...process.env, PORT: port },
+        env: { 
+          ...process.env, 
+          PORT: port,
+          MONGODB_URI: process.env.MONGODB_URI || 'mongodb://localhost:27017/yourdb',
+          JWT_SECRET: process.env.JWT_SECRET || 'your-secret-key'
+        },
         cwd: path.join(process.resourcesPath, 'backend', 'auth-server')
       });
     }
@@ -260,17 +311,42 @@ async function startEngagementHubServer() {
     let hubProcess;
     
     if (!app.isPackaged) {
-      const scriptPath = path.join(__dirname, '../../backend/engagement-hub/server.js');
+      // Try multiple potential paths for development
+      const possiblePaths = [
+        path.join(__dirname, '../../backend/engagement-hub/server.js'),
+        path.join(__dirname, '../backend/engagement-hub/server.js'),
+        path.join(process.cwd(), 'backend/engagement-hub/server.js')
+      ];
+      
+      let scriptPath = null;
+      for (const testPath of possiblePaths) {
+        console.log(`Checking for Engagement Hub at: ${testPath}`);
+        if (fs.existsSync(testPath)) {
+          scriptPath = testPath;
+          break;
+        }
+      }
+      
+      if (!scriptPath) {
+        throw new Error('Engagement Hub script not found in any of the expected locations');
+      }
+      
       console.log(`Spawning Engagement Hub server from: ${scriptPath}`);
       
       // Set environment variable for the port
       const env = { 
         ...process.env, 
         ENGAGEMENT_HUB_PORT: port,
-        NODE_ENV: process.env.NODE_ENV || 'development'
+        NODE_ENV: process.env.NODE_ENV || 'development',
+        // Add any other required env variables
+        MONGODB_URI: process.env.MONGODB_URI || 'mongodb://localhost:27017/yourdb',
+        JWT_SECRET: process.env.JWT_SECRET || 'your-secret-key'
       };
       
-      hubProcess = spawn('node', [scriptPath], { env });
+      hubProcess = spawn('node', [scriptPath], { 
+        env,
+        cwd: path.dirname(scriptPath) // Ensure we're in the correct directory
+      });
     } else {
       const scriptPath = path.join(process.resourcesPath, 'backend', 'engagement-hub', 'app.js');
       console.log(`Spawning Engagement Hub server from: ${scriptPath}`);
@@ -279,7 +355,9 @@ async function startEngagementHubServer() {
         env: { 
           ...process.env, 
           ENGAGEMENT_HUB_PORT: port,
-          NODE_ENV: 'production'
+          NODE_ENV: 'production',
+          MONGODB_URI: process.env.MONGODB_URI || 'mongodb://localhost:27017/yourdb',
+          JWT_SECRET: process.env.JWT_SECRET || 'your-secret-key'
         },
         cwd: path.join(process.resourcesPath, 'backend', 'engagement-hub')
       });
@@ -312,6 +390,28 @@ async function startEngagementHubServer() {
     console.error(`Failed to start Engagement Hub: ${error.message}`);
     throw error;
   }
+}
+
+// Function to check if server is reachable
+async function checkServerReachable(port, timeoutMs = 10000) {
+  const startTime = Date.now();
+  
+  while (Date.now() - startTime < timeoutMs) {
+    try {
+      const inUse = await tcpPortUsed.check(port, '127.0.0.1');
+      if (inUse) {
+        console.log(`Server on port ${port} is now reachable`);
+        return true;
+      }
+      // Wait a bit before checking again
+      await new Promise(resolve => setTimeout(resolve, 500));
+    } catch (err) {
+      console.warn(`Error checking server reachability: ${err.message}`);
+    }
+  }
+  
+  console.warn(`Timeout waiting for server on port ${port} to be reachable`);
+  return false;
 }
 
 async function createWindow() {
@@ -362,8 +462,13 @@ async function createWindow() {
     await Promise.allSettled(startPromises);
     
     console.log('Waiting for backends to initialize...');
-    await new Promise((resolve) => setTimeout(resolve, 3000));
-
+    
+    // Check if auth server is reachable (this is the one you're having issues with)
+    const authServerReachable = await checkServerReachable(5001, 15000);
+    if (!authServerReachable) {
+      console.warn("Auth server is not reachable. Authentication features might not work.");
+    }
+    
     console.log('Loading frontend...');
     if (!app.isPackaged) {
       // In development, check if Vite server is running first
@@ -384,7 +489,7 @@ async function createWindow() {
     global.mainWindow.webContents.on('did-finish-load', () => {
       global.mainWindow.webContents.send('backend-status', {
         python: backendsStarted.python,
-        auth: backendsStarted.auth,
+        auth: backendsStarted.auth && authServerReachable,
         hub: backendsStarted.hub
       });
     });
