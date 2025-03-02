@@ -1,10 +1,18 @@
-import { Router } from 'express';
+import express from 'express';
+import {
+  getAllProductivityData,
+  getProductivityDataById,
+  createProductivityData,
+  updateProductivityData,
+  deleteProductivityData,
+} from '../controllers/productivityController';
 
-const router = Router();
+const router = express.Router();
 
-// Define your routes here
-router.get('/', (req, res) => {
-  res.send('Productivity routes');
-});
+router.get('/', getAllProductivityData);
+router.get('/:id', getProductivityDataById);
+router.post('/', createProductivityData);
+router.put('/:id', updateProductivityData);
+router.delete('/:id', deleteProductivityData);
 
 export default router;
