@@ -87,29 +87,58 @@ class ProductivityTracker:
             
         try:
             self.session_active = False
+            
+            # Add proper thread handling with timeout and error logging
             if self.screenshot_thread and self.screenshot_thread.is_alive():
-                self.screenshot_thread.join(timeout=5)
+                try:
+                    self.screenshot_thread.join(timeout=5)
+                    if self.screenshot_thread.is_alive():
+                        print("Warning: Screenshot thread did not terminate within timeout")
+                except Exception as thread_err:
+                    print(f"Error while terminating screenshot thread: {thread_err}")
                 
             # Update session end time
             self.current_session['end_time'] = datetime.now()
             
-            # Generate AI summary from screenshots
-            summary = self._generate_ai_summary()
+            # Add error handling for summary generation
+            try:
+                summary = self._generate_ai_summary()
+            except Exception as summary_err:
+                print(f"Error generating summary: {summary_err}")
+                summary = "Error generating summary. Please check logs."
             
-            # Generate and store report
-            report_id = self._generate_and_store_report(summary)
+            # Add extra validation for session_id before report generation
+            if '_id' not in self.current_session:
+                print("Warning: Missing _id in current_session")
+                if '_id_str' in self.current_session:
+                    self.current_session['_id'] = ObjectId(self.current_session['_id_str'])
+                else:
+                    return {"status": "error", "message": "Invalid session ID"}
             
-            return {
-                "status": "success", 
-                "message": "Session ended successfully",
-                "report_id": str(report_id)
-            }
+            # Generate and store report with better error handling
+            try:
+                report_id = self._generate_and_store_report(summary)
+                return {
+                    "status": "success", 
+                    "message": "Session ended successfully",
+                    "report_id": str(report_id)
+                }
+            except Exception as report_err:
+                print(f"Detailed report generation error: {report_err}")
+                # Return partial success if everything else worked
+                return {
+                    "status": "partial", 
+                    "message": f"Session ended but report generation failed: {str(report_err)}"
+                }
         
         except Exception as e:
+            import traceback
+            traceback.print_exc()  # Print full stack trace
             return {
                 "status": "error",
                 "message": f"Failed to end session: {str(e)}"
             }
+    
 
     def _generate_ai_summary(self):
         """Generate AI summary based on privacy settings with detailed error handling"""

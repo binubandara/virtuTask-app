@@ -101,18 +101,27 @@ def end_session():
         logger.debug("Ending current session")
         result = tracker.end_session()
         logger.debug(f"Session end result: {result}")
-        if result["status"] == "success" and "report_id" in result:
+        
+        # Handle partial success case
+        if result.get("status") == "partial":
+            logger.warning(f"Session ended with warnings: {result.get('message')}")
+            return jsonify(result), 207  # Return partial content status
+            
+        # Handle standard success
+        if result.get("status") == "success" and "report_id" in result:
             return jsonify({
                 "status": "success",
                 "message": "Session ended successfully",
                 "report_id": result["report_id"]
             })
+            
+        # Handle other results
         return jsonify(result)
     except Exception as e:
         logger.error(f"Error in end-session: {str(e)}", exc_info=True)
         return jsonify({
             "status": "error",
-            "message": "Failed to end session"
+            "message": f"Failed to end session: {str(e)}"
         }), 500
 
 @app.route('/current-session')
