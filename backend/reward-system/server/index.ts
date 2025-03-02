@@ -3,8 +3,9 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import productivityRoutes from './routes/productivityRoutes';
-import teamRoutes from './routes/teamRoutes';
-
+import teamMemberRoutes from './routes/teamMemberRoutes';
+import leaderboardRoutes from './routes/leaderboardRoutes'; 
+import rewardRoutes from './routes/rewardRoutes'; 
 // Load environment variables
 dotenv.config();
 
@@ -23,7 +24,9 @@ mongoose.connect(process.env.MONGODB_URI as string)
 
 // Routes
 app.use('/api/productivity', productivityRoutes);
-app.use('/api/team', teamRoutes);
+app.use('/api/teamMembers', teamMemberRoutes);
+app.use('/api/leaderboard', leaderboardRoutes); // Use leaderboard routes
+app.use('/api/rewards', rewardRoutes); // Use reward routes
 
 // Basic route
 app.get('/', (req: Request, res: Response) => {

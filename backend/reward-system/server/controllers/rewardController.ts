@@ -75,29 +75,24 @@ export const deleteReward = async (req: Request, res: Response, next: NextFuncti
 // Calculate and award rewards
 export const calculateAndAwardRewards = async (memberId: string): Promise<IReward | null> => {
   try {
-    // 1. Validate Input: Make sure memberId is valid
     if (!memberId || !mongoose.isValidObjectId(memberId)) {
       console.error('Invalid memberId');
       throw new Error('Invalid memberId');
     }
 
-    // 2. Find the TeamMember
     const member = await TeamMember.findById(memberId);
     if (!member) {
       console.error('Member not found');
       throw new Error('Member not found');
     }
 
-    // 3. Get all productivity for the member
     const productivityData = await ProductivityData.find({ memberId: memberId });
 
-    // 4. Check if there is any data
     if (!productivityData || productivityData.length === 0) {
       console.warn('No productivity data found for this member');
-      return null; // No reward if no productivity data
+      return null;
     }
 
-    // 5. Calculate Reward: Sum and determine amount based on score
     let totalScore = 0;
     for (const data of productivityData) {
       totalScore += data.productivity_score;
@@ -105,30 +100,30 @@ export const calculateAndAwardRewards = async (memberId: string): Promise<IRewar
 
     let minutesReward = 0;
     if (totalScore >= 90) {
-      minutesReward = 60; // 1 hour of game time
+      minutesReward = 60;
     } else if (totalScore >= 75) {
-      minutesReward = 30; // 30 minutes of game time
+      minutesReward = 30;
     } else if (totalScore >= 50) {
-      minutesReward = 15; // 15 minutes of game time
+      minutesReward = 15;
     } else {
-      minutesReward = 0; // no game time
+      minutesReward = 0;
     }
 
-    // 6. Create the reward data
     const rewardData = {
       memberId: member._id,
       date: new Date(),
       rewardType: "Game Time",
       rewardAmount: minutesReward,
       description: `Reward for productivity on ${new Date().toLocaleDateString()}`,
+      name: "Productivity Reward", // Add the required name field
+      points: totalScore // Add the required points field
     };
 
-    // 7. Create the reward record
     const newReward = await Reward.create(rewardData);
     return newReward;
   } catch (error) {
     console.error('Error calculating and awarding rewards:', error);
-    throw error; // Re-throw the error for handling elsewhere
+    throw error;
   }
 };
 
