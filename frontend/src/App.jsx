@@ -7,7 +7,7 @@ import MyProjectsManager from "./components/Task-management/MyProjectsManager";
 import ProjectForm from "./components/Task-management/ProjectForm";
 import TaskManage from "./components/Task-management/TaskManage";
 import TaskForm from "./components/Task-management/TaskForm";
-import TaskForm from "./components/Task-management/TaskInfo";
+import TaskForm from "./components/Task-management/TaskInformation";
 
 
 
@@ -22,7 +22,7 @@ function App() {
                 <Route path="/Project-form" element={<ProjectForm />} />
                 <Route path="/task-manager/:projectId" element={<TaskManage />} /> {/* Fixed route */}
                 <Route path="/TaskForm" element={<TaskForm />} />
-                <Route path="/Task-info" element={<TaskInfo />} />
+                <Route path="/Task-info" element={<TaskInfomation />} />
                 
                 
             </Routes>

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './TaskManage.css';
 import TaskForm from './TaskForm';
 import { useParams, useNavigate } from 'react-router-dom';
-import TaskInfo from './TaskInfo';
+import TaskInformation from './TaskInformation';
 
 const PRIORITY_COLORS = {
   high: '#ff4444',
@@ -149,7 +149,7 @@ const TaskManage = () => {
         </div>
       </div>
       {selectedTask && (
-        <TaskInfo 
+        <TaskInformation 
           task={selectedTask} 
           onClose={() => setSelectedTask(null)} 
         />

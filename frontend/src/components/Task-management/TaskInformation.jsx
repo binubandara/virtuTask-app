@@ -1,5 +1,5 @@
 import React from 'react';
-import './TaskInfo.css';
+import './TaskInformation.css';
 
 const TaskInfo = ({ task, onClose }) => {
   if (!task) return null;
