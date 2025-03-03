@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import './ProjectForm.css';
 
+
+
 function ProjectForm({ closeForm, addProject, editProject, initialData, mode }) {
   const [formData, setFormData] = useState(initialData || {
     projectname: '',
@@ -11,7 +13,7 @@ function ProjectForm({ closeForm, addProject, editProject, initialData, mode }) 
     dueDate: '',
     priority: 'medium'
   });
-
+  
   const [originalData] = useState(initialData || {...formData});
 
   const handleChange = (e) => {
@@ -105,7 +107,7 @@ function ProjectForm({ closeForm, addProject, editProject, initialData, mode }) 
         <form onSubmit={handleSubmit}>
           <div className="form-row">
             <div className="left-form-column">
-              <label htmlFor="projectname">Project Name *</label>
+              <label htmlFor="projectname">Project Name</label>
               <input 
                 type="text" 
                 name="projectname" 
@@ -115,7 +117,7 @@ function ProjectForm({ closeForm, addProject, editProject, initialData, mode }) 
                 required
               />
 
-              <label htmlFor="department">Department *</label>
+              <label htmlFor="department">Department</label>
               <input 
                 type="text" 
                 name="department" 
@@ -170,7 +172,7 @@ function ProjectForm({ closeForm, addProject, editProject, initialData, mode }) 
                 </button>
               </div>
 
-              <label htmlFor="startDate">Start Date *</label>
+              <label htmlFor="startDate">Start Date</label>
               <input 
                 type="date" 
                 name="startDate" 
@@ -180,7 +182,7 @@ function ProjectForm({ closeForm, addProject, editProject, initialData, mode }) 
                 required
               />
 
-              <label htmlFor="dueDate">Due Date *</label>
+              <label htmlFor="dueDate">Due Date</label>
               <input 
                 type="date" 
                 name="dueDate" 

@@ -3,13 +3,14 @@
     right: 0;
     top: 0;
     height: 100vh;
-    width: 400px;
+    width: 633px;
     background-color: #ffffff;
     box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
     padding: 20px;
     overflow-y: auto;
     z-index: 1000;
   }
+ 
   
   .task-info-header {
     display: flex;
@@ -22,6 +23,7 @@
     margin: 0;
     font-size: 1.5rem;
     color: #333;
+    font-weight: 549.9;
   }
   
   .task-info-close {
@@ -37,39 +39,61 @@
     color: #666;
   }
   
-  .divider {
+  .task-info-divider {
     border-bottom: 2px solid #eee;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
   }
   
-  .meta-item {
+  .task-info-meta-item {
     display: flex;
     align-items: center;
-    margin-bottom: 15px;
+    margin-bottom: 20px;
+    position: relative; /* Add this */
+    padding-left: 55px; /* Make space for icons */
+    
   }
   
-  .meta-label {
-    font-weight: 600;
+  .task-info-meta-label {
+    font-weight: 530;
     margin-right: 10px;
     min-width: 80px;
-    color: #555;
+    padding-right: 10px;
+    margin-left: 16px;
+    
   }
+  /* In TaskInformation.css */
+.taskinfo-status-svg,
+.taskinfo-priority-svg,
+.taskinfo-duedate-svg,
+.taskinfo-assignee-svg {
+  position: absolute;
+  left: 40px;
+  top: calc(10% + 1px); /* Changed from 50% to 55% */
+}
   
-  .status-capsule,
-  .priority-capsule {
-    padding: 4px 12px;
+  .task-info-status-capsule,
+  .task-info-priority-capsule {
+    padding: 1px 12px;
     border-radius: 15px;
     color: white;
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     text-transform: capitalize;
+    text-align: center;
+
+  }
+  .task-info-status-capsule{
+    width: 100px;
+  }
+  .task-info-priority-capsule{
+    width: 100px;
   }
   
-  .due-date {
+  .task-info-due-date {
     color: #666;
     font-size: 0.95rem;
   }
   
-  .assignee-button {
+  .task-info-assignee-button {
     background: none;
     border: 1px solid #ddd;
     padding: 6px 12px;
@@ -77,86 +101,64 @@
     cursor: pointer;
     color: #333;
   }
-  
-  .description-section,
-  .attachments-section,
-  .comments-section {
-    margin-bottom: 25px;
+  .task-info-meta-section{
+    margin-top: 35px;
+    
   }
   
-  .section-title {
-    font-size: 1.1rem;
+  .task-info-description-section,
+  .task-info-attachments-section,
+  .task-info-comments-section {
+    
+    margin-top: 30px;
+    margin-left: 20px;
+   
+  
+  }
+  .task-info-attachments-section,
+  .task-info-comments-section {
+    margin-top: 5px;
+    
+  }
+  .task-info-comments-section {margin-top: 5px;}
+
+  .task-info-section-title {
+    font-size: 1.17rem;
     color: #333;
-    margin-bottom: 12px;
-  }
-  
-  .description-textarea {
-    width: 100%;
-    height: 100px;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    resize: vertical;
-  }
-  
-  .attachments-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
     margin-bottom: 10px;
-  }
-  
-  .add-attachment {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    border: 1px solid #ddd;
     background: none;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    border: none;
+    font-weight: 50;
   }
   
-  .plus-sign {
-    font-size: 1.2rem;
-    color: #666;
-  }
-  
-  .attachment-list {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-  
-  .attachment-item {
-    padding: 8px;
-    background-color: #f8f8f8;
-    border-radius: 4px;
-    font-size: 0.9rem;
-    color: #444;
-  }
-  
-  .comments-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-  }
-  
-  .comment-search {
-    width: 60%;
-    padding: 6px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 0.9rem;
-  }
-  
-  .comment-textarea {
+  .task-info-description-textarea {
     width: 100%;
     height: 80px;
     padding: 10px;
     border: 1px solid #ddd;
-    border-radius: 4px;
+    border-radius: 14px;
     resize: vertical;
   }
+  
+  .task-info-attachments-header input{
+    width: 500px;
+    margin-top: 3px;
+  }
+  .task-info-comments-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center; 
+  }
+  
+  
+  .task-info-comment-textarea {
+    width: 100%;
+    height: 80px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 14px;
+    resize: vertical;
+    
+  }
+
+  

@@ -25,6 +25,7 @@
   color: #333;
   margin-bottom: 30px;
   padding-bottom: 15px;
+  font-weight: 500;
   border-bottom: 2px solid #eee;
 }
 
@@ -128,7 +129,7 @@
 .task-form-container label {
   display: block;
   margin-bottom: 8px;
-  font-weight: 600;
+  font-weight: 500;
   color: #444;
 }
 
@@ -171,7 +172,7 @@
 .taskform-assignees-icon { 
   position: absolute; 
   right: 36.5px; /* Adjust alignment */
-  top: 579px; /* Center vertically */
+  top: 551px; /* Center vertically */
   width: 28px;
   height: 28px;
   color:  #666; /* Ensure it contrasts */

@@ -12,8 +12,8 @@ const clockSVG = (
 );
 
 const pencilSVG = (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-6">
-    <path d="M21.731 2.269a2.625 2.625 0 0 0-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 0 0 0-3.712ZM19.513 8.199l-3.712-3.712-12.15 12.15a5.25 5.25 0 0 0-1.32 2.214l-.8 2.685a.75 .75 0 0 0 .933 .933l2.685-.8a5.25 5.25 0 0 0 2.214-1.32L19.513 8.2Z" />
+  <svg xmlns="http://www.w3.org/2000/svg"  viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 9h16.5m-16.5 6.75h16.5" />
   </svg>
 );
 
@@ -25,11 +25,49 @@ function MyProjectsManager() {
     return saved ? JSON.parse(saved) : [];
   });
   const [editingProject, setEditingProject] = useState(null);
+  const [selectedProjectId, setSelectedProjectId] = useState(null);
   const colorPalette = ["#ffc8dd", "#bde0fe", "#a2d2ff", "#94d2bd","#e0b1cb","#adb5bd","#98f5e1","#f79d65","#858ae3","#c2dfe3","#ffccd5","#e8e8e4","#fdffb6","#f1e8b8","#d8e2dc","#fff0f3","#ccff66"];
 
+  const saveProjects = (updatedProjects) => {
+    setProjects(updatedProjects);
+    localStorage.setItem('projects', JSON.stringify(updatedProjects));
+  };
+  
+  const addProject = (formData) => {
+    const newProject = createProject(formData);
+    saveProjects([...projects, newProject]);
+    setShowForm(false);
+  };
+
+  const editProject = (updatedProject) => {
+    const updatedProjects = projects.map(p => 
+      p.id === updatedProject.id ? updatedProject : p
+    );
+    saveProjects(updatedProjects);
+    setShowForm(false);
+    setEditingProject(null);
+  };
+
+  const deleteProject = (projectId) => {
+    if (window.confirm('Delete confirmation')) {
+      const updatedProjects = projects.filter(project => project.id !== projectId);
+      saveProjects(updatedProjects);
+    }
+    setSelectedProjectId(null);
+  };
+
+  // Load projects from localStorage on component mount
+  useEffect(() => {
+    const savedProjects = JSON.parse(localStorage.getItem('projects')) || [];
+    setProjects(savedProjects);
+  }, []);
+
+  // Save projects to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem('projects', JSON.stringify(projects));
   }, [projects]);
+
+  
 
   const getRandomColor = (() => {
     let lastUsedColors = new Set();
@@ -52,18 +90,6 @@ function MyProjectsManager() {
     priority: formData.priority // Ensure priority is saved
   });
   
-  const addProject = (formData) => {
-    const newProject = createProject(formData);
-    setProjects([...projects, newProject]);
-    setShowForm(false);
-  };
-  
-  const editProject = (updatedProject) => {
-    setProjects(projects.map(p => p.id === updatedProject.id ? updatedProject : p));
-    setShowForm(false);
-    setEditingProject(null);
-  };
-
   const truncateText = (text, maxLength = 50) => 
     text.length > maxLength ? `${text.substring(0, maxLength)}...` : text;
 
@@ -77,7 +103,7 @@ function MyProjectsManager() {
 
     if (diffDays < 0) return { 
       text: 'Overdue', 
-      textColor: '#ff0000',
+      textColor: ' #ff0000',
       backgroundColor: 'rgba(255, 0, 0, 0.1)' 
     };
 
@@ -87,36 +113,36 @@ function MyProjectsManager() {
 
     if (diffDays === 0) {
       text = 'Today';
-      textColor = '#ff0000';
+      textColor = '#ff4b4b';
     } else if (diffDays === 1) {
       text = '1 day';
-      textColor = '#ff0000';
+      textColor = ' #ff4b4b';
     } else if (diffDays <= 7) {
       text = `${diffDays} days`;
-      textColor = '#ff0000';
+      textColor = ' #ff4b4b';
     } else if (diffDays <= 14) {
       text = '1 week';
-      textColor = '#808080';
+      textColor = ' #808080';
     } else if (diffDays <= 21) {
       text = '2 weeks';
-      textColor = '#808080';
+      textColor = ' #808080';
     } else if (diffDays <= 28) {
       text = '3 weeks';
-      textColor = '#808080';
+      textColor = ' #808080';
     } else if (diffDays <= 58) {
       text = '1 month';
-      textColor = '#ffff00';
+      textColor = '#ffd000';
     } else if (diffDays <= 88) {
       text = '2 months';
-      textColor = '#ffff00';
+      textColor = 'rgb(255, 157, 0)';
     } else if (diffDays <= 364) {
       const months = Math.floor(diffDays / 30);
       text = `${months} month${months > 1 ? 's' : ''}`;
-      textColor = '#ffff00';
+      textColor = 'rgb(255, 157, 0)';
     } else {
       const years = Math.floor(diffDays / 365);
       text = `${years} year${years > 1 ? 's' : ''}`;
-      textColor = '#0000ff';
+      textColor = ' #0073ff';
     }
 
     backgroundColor = `${textColor}1A`;
@@ -173,11 +199,34 @@ function MyProjectsManager() {
                     className="pencil-icon" 
                     onClick={(e) => {
                       e.stopPropagation();
-                      setEditingProject(project);
-                      setShowForm(true);
+                      setSelectedProjectId(project.id === selectedProjectId ? null : project.id);
                     }}
                   >
                     {pencilSVG}
+                    {selectedProjectId === project.id && (
+                      <div className="project-options-dropdown">
+                        <div 
+                          className="option" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingProject(project);
+                            setShowForm(true);
+                            setSelectedProjectId(null);
+                          }}
+                        >
+                          Edit Project
+                        </div>
+                        <div 
+                          className="option delete-option" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteProject(project.id);
+                          }}
+                        >
+                          Delete Project
+                        </div>
+                      </div>
+                    )}
                   </div>
                   <div className="project-icon">
                     <svg 

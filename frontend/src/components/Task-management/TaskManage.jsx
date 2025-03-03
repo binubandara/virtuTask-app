@@ -27,6 +27,10 @@ const TaskManage = () => {
     priority: 'medium'
   });
   const [editingTask, setEditingTask] = useState(null);
+  // Add this to your existing state declarations
+  const [selectedTask, setSelectedTask] = useState(null);
+  const [selectedTaskId, setSelectedTaskId] = useState(null); // New state for dropdown
+
 
   useEffect(() => {
     const savedProjects = JSON.parse(localStorage.getItem('projects')) || [];
@@ -41,23 +45,55 @@ const TaskManage = () => {
         priority: project.priority || 'medium',
         priorityColor: PRIORITY_COLORS[project.priority] || '#e0e0e0'
       });
+      // Load tasks from the project's data
+      setTasks(project.tasks || []);
     }
   }, [projectId]);
 
+  // Unified function to update tasks in state and localStorage
+  const updateTasks = (newTasks) => {
+    setTasks(newTasks);
+    
+    // Update localStorage projects
+    const savedProjects = JSON.parse(localStorage.getItem('projects')) || [];
+    const updatedProjects = savedProjects.map(p => {
+      if (p.id === Number(projectId)) {
+        return { ...p, tasks: newTasks };
+      }
+      return p;
+    });
+    localStorage.setItem('projects', JSON.stringify(updatedProjects));
+  };
+
   const addTask = (taskData) => {
-    setTasks((prevTasks) => [...prevTasks, { id: Date.now(), ...taskData }]);
+    const newTask = { id: Date.now(), ...taskData };
+    updateTasks([...tasks, newTask]);
     setShowTaskForm(false);
   };
 
   const editTask = (updatedTask) => {
-    setTasks(prevTasks => prevTasks.map(task => 
-      task.id === editingTask.id ? {...updatedTask, id: task.id} : task
-    ));
+    const newTasks = tasks.map(task => 
+      task.id === updatedTask.id ? updatedTask : task
+    );
+    updateTasks(newTasks);
     setShowTaskForm(false);
     setEditingTask(null);
   };
 
+  const deleteTask = (taskId) => {
+    if (window.confirm('Are you sure you want to delete this task?')) {
+      const newTasks = tasks.filter(task => task.id !== taskId);
+      updateTasks(newTasks);
+    }
+    setSelectedTaskId(null);
+  };
+  
+
+  
   const handleBack = () => navigate(-1);
+
+  
+  // ... keep existing useEffect and other functions ...
 
   const TaskNameWithEdit = ({ task }) => (
     <td className='tname'>
@@ -66,14 +102,37 @@ const TaskManage = () => {
           className="task-edit-icon"
           onClick={(e) => {
             e.stopPropagation();
-            setEditingTask(task);
-            setShowTaskForm(true);
+            setSelectedTaskId(task.id === selectedTaskId ? null : task.id);
           }}
         >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M21.731 2.269a2.625 2.625 0 0 0-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 0 0 0-3.712ZM19.513 8.199l-3.712-3.712-12.15 12.15a5.25 5.25 0 0 0-1.32 2.214l-.8 2.685a.75 .75 0 0 0 .933 .933l2.685-.8a5.25 5.25 0 0 0 2.214-1.32L19.513 8.2Z" />
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 9h16.5m-16.5 6.75h16.5" />
           </svg>
         </button>
+        {selectedTaskId === task.id && (
+          <div className="task-options-dropdown">
+            <div 
+              className="option"
+              onClick={(e) => {
+                e.stopPropagation();
+                setEditingTask(task);
+                setShowTaskForm(true);
+                setSelectedTaskId(null);
+              }}
+            >
+              Edit Task
+            </div>
+            <div 
+              className="option delete-option"
+              onClick={(e) => {
+                e.stopPropagation();
+                deleteTask(task.id);
+              }}
+            >
+              Delete Task
+            </div>
+          </div>
+        )}
         {task.taskName}
       </div>
     </td>
@@ -127,9 +186,9 @@ const TaskManage = () => {
                 {tasks.map(task => (
                   <tr className="task-item" key={task.id}onClick={() => setSelectedTask(task)}>
                     <TaskNameWithEdit task={task} />
-                    <td className='task-assignee'>{task.assignee}</td>
-                    <td className='task-due-date'>{task.dueDate}</td>
-                    <td className='task-levels'>
+                    <td className='task_assignee'>{task.assignee}</td>
+                    <td className='task_due_date'>{task.dueDate}</td>
+                    <td className='task_levels'>
                       <span className="priority-pill" 
                         style={{ backgroundColor: PRIORITY_COLORS[task.priority] }}>
                         {task.priority}
