@@ -8,7 +8,7 @@ const CountdownAnimation = ({ timer = 20, animate = true }) => {
   return (
     <CountdownCircleTimer
       isPlaying={animate}
-      duration={timer * 60} // Convert minutes to seconds
+      duration={timer * 60}
       colors={["#fe6f6b"]}
       strokeWidth={6}
       size={240}
