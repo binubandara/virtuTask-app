@@ -10,6 +10,8 @@ import pyautogui
 import pytesseract
 from PIL import Image
 import threading
+import json
+import zipfile
 from bson.binary import Binary
 from bson.objectid import ObjectId
 import io
@@ -19,13 +21,16 @@ import google.generativeai as genai
 from report_generator import ReportGenerator
 
 class ProductivityTracker:
-    def __init__(self):
+    def __init__(self, employee_id=None):
         # MongoDB Connection
         self.client = pymongo.MongoClient('mongodb://localhost:27017/')
         self.db = self.client['productivity_tracker']
         self.sessions_collection = self.db['user_sessions']
         self.screenshots_collection = self.db['screenshots']
         self.reports_collection = self.db['reports']
+        
+        # Store employee ID
+        self.employee_id = employee_id
         
         # Trackers
         self.window_tracker = WindowTracker()
@@ -51,13 +56,20 @@ class ProductivityTracker:
         genai.configure(api_key=api_key)
         self.model = genai.GenerativeModel('models/gemini-1.5-pro')
         
-    # Update in the ProductivityTracker class (main.py)
+    def set_employee_id(self, employee_id):
+        """Set the employee ID for the tracker instance"""
+        self.employee_id = employee_id
+        print(f"Employee ID set to: {self.employee_id}")
 
     def start_session(self, session_name):
         """Start a new tracking session"""
+        if not self.employee_id:
+            return {"status": "error", "message": "Employee ID not set. Please login first."}
+            
         # Reset session completely
         self.current_session = {
             'name': session_name,
+            'employee_id': self.employee_id,  # Store employee ID with session
             'start_time': datetime.now(),
             'end_time': None,
             'productive_time': 0,
@@ -79,7 +91,6 @@ class ProductivityTracker:
         self.screenshot_thread.start()
     
         return {"status": "success", "message": "Session started"}
-    
     
     def end_session(self):
         if not self.current_session:
@@ -139,12 +150,15 @@ class ProductivityTracker:
                 "message": f"Failed to end session: {str(e)}"
             }
     
-
     def _generate_ai_summary(self):
         """Generate AI summary based on privacy settings with detailed error handling"""
         try:
-            # Get privacy settings
-            settings_doc = self.db['user_settings'].find_one({'type': 'privacy_settings'}) or {}
+            # Get privacy settings - use employee_id to get specific settings
+            settings_doc = self.db['user_settings'].find_one({
+                'type': 'privacy_settings',
+                'employee_id': self.employee_id
+            }) or {}
+            
             privacy_settings = settings_doc.get('settings', {
                 'enableScreenshots': True,
                 'screenshotInterval': 15,
@@ -161,7 +175,8 @@ class ProductivityTracker:
             session_id = str(self.current_session['_id'])
             print(f"Finding screenshots for session ID: {session_id}")
             screenshots = list(self.screenshots_collection.find({
-                "session_id": session_id
+                "session_id": session_id,
+                "employee_id": self.employee_id  # Filter by employee_id
             }))
             
             if not screenshots:
@@ -227,8 +242,12 @@ class ProductivityTracker:
         """Take screenshots based on user privacy settings"""
         while self.session_active:
             try:
-                # Get privacy settings from database
-                settings_doc = self.db['user_settings'].find_one({'type': 'privacy_settings'}) or {}
+                # Get privacy settings from database for this employee
+                settings_doc = self.db['user_settings'].find_one({
+                    'type': 'privacy_settings',
+                    'employee_id': self.employee_id  # Filter by employee_id
+                }) or {}
+                
                 privacy_settings = settings_doc.get('settings', {
                     'enableScreenshots': True,
                     'screenshotInterval': 15,
@@ -257,9 +276,10 @@ class ProductivityTracker:
                 # Use the string version of the ID for consistency
                 session_id = str(self.current_session['_id'])
                 
-                # Save to MongoDB
+                # Save to MongoDB with employee_id
                 self.screenshots_collection.insert_one({
                     "session_id": session_id,
+                    "employee_id": self.employee_id,  # Add employee_id to screenshots
                     "timestamp": timestamp,
                     "text": extracted_text
                 })
@@ -274,7 +294,6 @@ class ProductivityTracker:
             except Exception as e:
                 print(f"Screenshot error: {e}")
                 time.sleep(60)  # Wait a minute before retrying
-
 
     def _generate_and_store_report(self, summary):
         """Generate PDF report and store it in MongoDB"""
@@ -294,9 +313,10 @@ class ProductivityTracker:
                     # Use the string version as fallback
                     session_id = self.current_session.get('_id_str', session_id)
             
-            # Store in MongoDB
+            # Store in MongoDB with employee_id
             report_doc = {
                 'session_id': session_id,
+                'employee_id': self.employee_id,  # Add employee_id to reports
                 'created_at': datetime.now(),
                 'filename': f"{self.current_session['name']}_{self.current_session['start_time'].strftime('%Y%m%d_%H%M')}.pdf",
                 'data': Binary(report_buffer.getvalue())
@@ -312,7 +332,12 @@ class ProductivityTracker:
     def get_report(self, report_id):
         """Retrieve a report from MongoDB"""
         try:
-            report = self.reports_collection.find_one({'_id': ObjectId(report_id)})
+            # Add employee_id check to ensure security
+            report = self.reports_collection.find_one({
+                '_id': ObjectId(report_id),
+                'employee_id': self.employee_id  # Only fetch reports belonging to this employee
+            })
+            
             if not report:
                 return None
                 
@@ -413,18 +438,25 @@ class ProductivityTracker:
     def get_daily_summary(self):
         """
         Retrieve daily productivity summary from MongoDB
-        Aggregates data for the current day's session  
+        Aggregates data for the current day's session for the current employee
         """
+        if not self.employee_id:
+            return {
+                "status": "error",
+                "message": "Employee ID not set. Please login first."
+            }
+            
         # Get today's date
         today_start = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
         today_end = today_start + timedelta(days=1)
 
-        # Aggregate sessions for today
+        # Aggregate sessions for today for this employee
         today_sessions = list(self.sessions_collection.find({
             'start_time': {
                 '$gte': today_start,
                 '$lt': today_end
-            }
+            },
+            'employee_id': self.employee_id  # Only get sessions for this employee
         }))
 
         # Calculate total times and window details
@@ -452,11 +484,15 @@ class ProductivityTracker:
         if total_time > 0:
             productivity_score = (total_productive_time / total_time) * 100
 
-        # Save the daily productivity score
+        # Save the daily productivity score with employee_id
         self.db['daily_scores'].update_one(
-            {'date': today_start},
+            {
+                'date': today_start,
+                'employee_id': self.employee_id  # Make sure scores are per employee
+            },
             {'$set': {
                 'date': today_start,
+                'employee_id': self.employee_id,
                 'productivity_score': productivity_score,
                 'total_productive_time': total_productive_time,
                 'total_unproductive_time': total_unproductive_time,
@@ -485,3 +521,131 @@ class ProductivityTracker:
             'productivity_score': productivity_score,
             'productive_windows': productive_windows
         }
+        
+    def get_privacy_settings(self):
+        """Get privacy settings for the current employee"""
+        if not self.employee_id:
+            return {
+                'enableScreenshots': True,
+                'screenshotInterval': 15,
+                'enableTextExtraction': True,
+                'enableAiAnalysis': True
+            }
+            
+        settings_doc = self.db['user_settings'].find_one({
+            'type': 'privacy_settings',
+            'employee_id': self.employee_id
+        })
+        
+        if settings_doc:
+            return settings_doc.get('settings', {})
+        else:
+            # Return default settings
+            return {
+                'enableScreenshots': True,
+                'screenshotInterval': 15,
+                'enableTextExtraction': True,
+                'enableAiAnalysis': True
+            }
+            
+    def update_privacy_settings(self, settings):
+        """Update privacy settings for the current employee"""
+        if not self.employee_id:
+            return {"status": "error", "message": "Employee ID not set. Please login first."}
+            
+        try:
+            # Validate settings
+            required_keys = ['enableScreenshots', 'screenshotInterval', 'enableTextExtraction', 'enableAiAnalysis']
+            if not all(key in settings for key in required_keys):
+                return {"status": "error", "message": "Invalid settings format"}
+                
+            # Update settings in database with employee_id
+            self.db['user_settings'].update_one(
+                {
+                    'type': 'privacy_settings',
+                    'employee_id': self.employee_id
+                },
+                {'$set': {'settings': settings}},
+                upsert=True
+            )
+            
+            return {"status": "success", "message": "Privacy settings updated"}
+        except Exception as e:
+            print(f"Error updating privacy settings: {e}")
+            return {"status": "error", "message": str(e)}
+            
+    def delete_user_data(self, delete_type='all'):
+        """Delete user data based on employee ID"""
+        if not self.employee_id:
+            return {"status": "error", "message": "Employee ID not set. Please login first."}
+            
+        try:
+            if delete_type == 'all':
+                # Delete all collections for this employee
+                self.screenshots_collection.delete_many({'employee_id': self.employee_id})
+                self.sessions_collection.delete_many({'employee_id': self.employee_id})
+                self.reports_collection.delete_many({'employee_id': self.employee_id})
+                self.db['daily_scores'].delete_many({'employee_id': self.employee_id})
+                self.db['user_settings'].delete_many({'employee_id': self.employee_id})
+                
+                return {"status": "success", "message": "All user data deleted"}
+            elif delete_type == 'screenshots':
+                # Delete only screenshots for this employee
+                self.screenshots_collection.delete_many({'employee_id': self.employee_id})
+                return {"status": "success", "message": "All screenshots deleted"}
+            else:
+                return {"status": "error", "message": "Invalid delete type"}
+        except Exception as e:
+            print(f"Error deleting user data: {e}")
+            return {"status": "error", "message": str(e)}
+            
+    def export_user_data(self):
+        """Export user data for the current employee"""
+        if not self.employee_id:
+            return {"status": "error", "message": "Employee ID not set. Please login first."}
+            
+        # Create an in-memory file-like object to store the ZIP
+        memory_file = io.BytesIO()
+        
+        try:
+            with zipfile.ZipFile(memory_file, 'w', zipfile.ZIP_DEFLATED) as zipf:
+                # Export sessions
+                sessions = list(self.sessions_collection.find(
+                    {'employee_id': self.employee_id}, 
+                    {'_id': False}
+                ))
+                zipf.writestr('sessions.json', json.dumps(sessions, default=str, indent=2))
+                
+                # Export screenshots metadata (not the actual images)
+                screenshots = list(self.screenshots_collection.find(
+                    {'employee_id': self.employee_id}, 
+                    {'_id': False, 'text': True, 'session_id': True, 'timestamp': True}
+                ))
+                zipf.writestr('screenshots_metadata.json', json.dumps(screenshots, default=str, indent=2))
+                
+                # Export reports metadata
+                reports = list(self.reports_collection.find(
+                    {'employee_id': self.employee_id}, 
+                    {'_id': True, 'session_id': True, 'created_at': True, 'filename': True}
+                ))
+                zipf.writestr('reports_metadata.json', json.dumps(reports, default=str, indent=2))
+                
+                # Export privacy settings
+                settings = self.db['user_settings'].find_one(
+                    {'type': 'privacy_settings', 'employee_id': self.employee_id}
+                )
+                if settings:
+                    zipf.writestr('privacy_settings.json', json.dumps(settings, default=str, indent=2))
+            
+            # Move to the beginning of the file-like object
+            memory_file.seek(0)
+            
+            return {
+                "status": "success", 
+                "data": memory_file.getvalue(),
+                "filename": f"virtutask_data_export_{self.employee_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.zip"
+            }
+            
+        except Exception as e:
+            print(f"Error exporting user data: {e}")
+            return {"status": "error", "message": str(e)}

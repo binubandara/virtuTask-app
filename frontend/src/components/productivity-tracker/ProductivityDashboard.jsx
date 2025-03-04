@@ -3,10 +3,16 @@ import { productivityService } from '../../services/api';
 import SessionWidget from './SessionWidget';
 import { Chart as ChartJS, ArcElement, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
 import { Pie, Bar } from 'react-chartjs-2';
+import { useNavigate } from 'react-router-dom';
 
 ChartJS.register(ArcElement, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 const ProductivityDashboard = () => {
+    const navigate = useNavigate();
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [authenticated, setAuthenticated] = useState(false);
+    
     const [dailySummary, setDailySummary] = useState({
         totalProductiveTime: 0,
         totalUnproductiveTime: 0,
@@ -21,7 +27,46 @@ const ProductivityDashboard = () => {
         windowTimes: []
     });
 
+    // Verify token when component mounts
     useEffect(() => {
+        const verifyAndFetchData = async () => {
+            setLoading(true);
+            try {
+                // First verify token with the productivity backend
+                await productivityService.verifyToken();
+                setAuthenticated(true);
+                
+                // Then fetch initial data
+                const response = await productivityService.getDailySummary();
+                if (response.data) {
+                    setDailySummary({
+                        totalProductiveTime: parseInt(response.data.totalProductiveTime) || 0,
+                        totalUnproductiveTime: parseInt(response.data.totalUnproductiveTime) || 0,
+                        productivityScore: parseFloat(response.data.productivityScore) || 0,
+                        windowTimes: response.data.windowTimes || []
+                    });
+                }
+                setError(null);
+            } catch (error) {
+                console.error('Authentication or data loading error:', error);
+                setError(error.userMessage || 'Failed to authenticate with the productivity service');
+                
+                // If there's an authentication error, redirect to login
+                if (error.response?.status === 401) {
+                    navigate('/login');
+                }
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        verifyAndFetchData();
+    }, [navigate]);
+
+    // Set up polling for data updates only after successful authentication
+    useEffect(() => {
+        if (!authenticated) return;
+        
         const fetchDailySummary = async () => {
             try {
                 const response = await productivityService.getDailySummary();
@@ -35,13 +80,16 @@ const ProductivityDashboard = () => {
                 }
             } catch (error) {
                 console.error('Error fetching daily summary:', error);
+                // Only set error if it's not an auth error (which would be handled by the interceptor)
+                if (error.response?.status !== 401) {
+                    setError('Failed to update productivity data');
+                }
             }
         };
 
-        fetchDailySummary();
         const interval = setInterval(fetchDailySummary, 5000);
         return () => clearInterval(interval);
-    }, []);
+    }, [authenticated]);
 
     // Use useCallback to memoize the function
     const handleSessionUpdate = useCallback((sessionData) => {
@@ -100,8 +148,46 @@ const ProductivityDashboard = () => {
         ],
     };
 
+    if (loading) {
+        return (
+            <div className="container py-5 text-center">
+                <div className="spinner-border text-primary" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                </div>
+                <p className="mt-3">Authenticating and loading your productivity data...</p>
+            </div>
+        );
+    }
+
+    if (error && !authenticated) {
+        return (
+            <div className="container py-5">
+                <div className="alert alert-danger" role="alert">
+                    <h4 className="alert-heading">Authentication Error</h4>
+                    <p>{error}</p>
+                    <hr />
+                    <p className="mb-0">
+                        <button 
+                            className="btn btn-outline-danger" 
+                            onClick={() => navigate('/login')}
+                        >
+                            Return to Login
+                        </button>
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="container py-4">
+            {error && (
+                <div className="alert alert-warning alert-dismissible fade show" role="alert">
+                    <strong>Warning:</strong> {error}
+                    <button type="button" className="btn-close" data-bs-dismiss="alert" aria-label="Close" onClick={() => setError(null)}></button>
+                </div>
+            )}
+            
             <SessionWidget onSessionUpdate={handleSessionUpdate} />
             
             {/* Current Session Overview (only shown when active) */}

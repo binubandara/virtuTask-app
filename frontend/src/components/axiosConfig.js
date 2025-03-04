@@ -27,15 +27,23 @@ instance.interceptors.response.use(
     return response;
   },
   (error) => {
-    // Handle connection errors with user-friendly messages
+    // Handle connection errors
     if (!error.response) {
       if (error.code === 'ECONNABORTED') {
         console.error('Request timeout: Server is not responding');
         error.message = 'Server is not responding. Please try again later.';
       } else if (error.code === 'ERR_NETWORK' || error.message.includes('Network Error')) {
         console.error('Network error: Cannot connect to server');
-        error.message = 'Cannot connect to authentication server. Please ensure the backend services are running.';
+        error.message = 'Cannot connect to authentication server. Please check if the server is running.';
       }
+    } else {
+      // Log detailed information about server errors
+      console.error('Server error details:', {
+        status: error.response.status,
+        data: error.response.data,
+        endpoint: error.config.url,
+        method: error.config.method
+      });
     }
     
     return Promise.reject(error);

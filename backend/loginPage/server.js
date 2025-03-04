@@ -8,8 +8,14 @@ const app = express();
 // Connect to the Database
 connectDB();
 
-// Middleware
-app.use(cors());
+// CORS configuration with specific origin
+app.use(cors({
+    origin: 'http://localhost:5173', // Your frontend URL
+    credentials: true,               // Allow credentials
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
 app.use(express.json());
 
 // Routes

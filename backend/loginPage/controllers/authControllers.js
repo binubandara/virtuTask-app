@@ -13,9 +13,21 @@ const generateToken = (id) => {
 // @access  Public
 
 const registerUser = async (req, res) => {
-    try{
+    try {
+        console.log('Registration request received:', req.body);
         const {username, email, password, role} = req.body;
 
+        // Validation check
+        if (!username || !email || !password || !role) {
+            console.log('Missing required fields:', {
+                hasUsername: !!username, 
+                hasEmail: !!email, 
+                hasPassword: !!password, 
+                hasRole: !!role 
+            });
+            return res.status(400).json({message: 'All fields are required'});
+        }
+    
         //check if user exists
         const userExists = await User.findOne({ username });
         if (userExists) {
@@ -48,11 +60,12 @@ const registerUser = async (req, res) => {
                 token : generateToken(user._id)
             });
         }
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({message : 'Server Error'});
+    }  catch (error) {
+        console.error('Registration error:', error);
+        res.status(500).json({message: 'Server Error', error: error.message});
     }
 };
+
 
 // @desc    Login user
 // @route   POST /api/auth/login

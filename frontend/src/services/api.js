@@ -38,7 +38,7 @@ const endpointTimeouts = {
     '/download-report': 60000 // 1 minute for report download
 };
 
-// Request interceptor to set custom timeouts and log requests
+// Request interceptor to set custom timeouts, add auth token, and log requests
 apiClient.interceptors.request.use(config => {
     // Check if endpoint has custom timeout
     const path = config.url?.replace(API_BASE_URL, '');
@@ -46,6 +46,12 @@ apiClient.interceptors.request.use(config => {
     if (path && endpointTimeouts[path]) {
         config.timeout = endpointTimeouts[path];
         logger.debug(`Using custom timeout for ${path}: ${endpointTimeouts[path]}ms`);
+    }
+    
+    // Add auth token to requests
+    const token = localStorage.getItem('userToken');
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
     }
     
     // Log the request details
@@ -96,6 +102,18 @@ apiClient.interceptors.response.use(
             status: error.response?.status
         });
         
+        // Handle 401 unauthorized errors (token issues)
+        if (error.response?.status === 401) {
+            logger.warn('Authentication error - redirecting to login');
+            // Clear local storage
+            localStorage.removeItem('userToken');
+            localStorage.removeItem('userData');
+            // Redirect to login page if we're in a browser environment
+            if (typeof window !== 'undefined') {
+                window.location.href = '/login';
+            }
+        }
+        
         // Custom error messages based on error type
         let errorMessage = 'An unexpected error occurred';
         
@@ -130,8 +148,27 @@ const checkBackendHealth = async () => {
     }
 };
 
+// Token verification with Python backend
+const verifyToken = async () => {
+    const token = localStorage.getItem('userToken');
+    if (!token) {
+        throw new Error('No authentication token found');
+    }
+    
+    logger.debug('Verifying token with productivity backend');
+    try {
+        const response = await apiClient.post('/verify-token', { token });
+        logger.debug('Token verification successful', response.data);
+        return response.data;
+    } catch (error) {
+        logger.error('Token verification failed', error);
+        throw error;
+    }
+};
+
 export const productivityService = {
     checkBackendHealth,
+    verifyToken,
     
     getDailySummary: async () => {
         logger.debug('Calling getDailySummary API');

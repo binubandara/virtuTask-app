@@ -1,4 +1,5 @@
-from flask import Flask, jsonify, request, send_file, make_response
+import requests
+from flask import Flask, jsonify, request, send_file, make_response, session
 from flask_cors import CORS
 from main import ProductivityTracker
 import threading
@@ -7,7 +8,7 @@ from bson.objectid import ObjectId
 import logging
 import json
 import zipfile
-import datetime
+from datetime import datetime
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG, 
@@ -15,10 +16,128 @@ logging.basicConfig(level=logging.DEBUG,
 logger = logging.getLogger('productivity_api')
 
 app = Flask(__name__)
+app.secret_key = 'your_secret_key_here'  # Required for session management
 
 CORS(app, supports_credentials=True, origins=["http://localhost:5173"])
 
+# Initialize the tracker without employee_id
 tracker = ProductivityTracker()
+
+# endpoint to set employee_id
+@app.route('/verify-token', methods=['POST'])
+def verify_token():
+    try:
+        data = request.get_json()
+        token = data.get('token')
+        
+        if not token:
+            return jsonify({
+                "status": "error",
+                "message": "Token is required"
+            }), 400
+            
+        # Call Node.js backend to verify token
+        response = requests.post('http://localhost:5001/api/auth/verify-token', 
+                                json={'token': token})
+        
+        if response.status_code != 200:
+            return jsonify({
+                "status": "error",
+                "message": "Invalid token"
+            }), 401
+        
+        # Extract employee_id from verification response
+        user_data = response.json()
+        employee_id = user_data.get('employeeId')
+        
+        if not employee_id:
+            return jsonify({
+                "status": "error",
+                "message": "User does not have an employee ID"
+            }), 400
+            
+        # Set the employee_id in the tracker instance
+        tracker.set_employee_id(employee_id)
+        
+        # Store in session for persistence
+        session['employee_id'] = employee_id
+        
+        return jsonify({
+            "status": "success",
+            "message": f"Verified as employee {employee_id}"
+        })
+    except Exception as e:
+        logger.error(f"Error in token verification: {str(e)}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
+
+# Middleware to check for employee_id
+@app.before_request
+def check_authentication():
+    # Skip for verification and test endpoints
+    if request.path in ['/verify-token', '/test'] or request.method == 'OPTIONS':
+        return
+        
+    # First check if employee_id is in session (for persistence between requests)
+    employee_id = session.get('employee_id')
+    
+    # If not in session, check authorization header
+    if not employee_id:
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({
+                "status": "error",
+                "message": "Not authenticated. Please login first."
+            }), 401
+            
+        token = auth_header.split(' ')[1]
+        
+        # Verify token with Node.js backend
+        try:
+            response = requests.post('http://localhost:5001/api/auth/verify-token', 
+                                    json={'token': token})
+            
+            if response.status_code != 200:
+                return jsonify({
+                    "status": "error",
+                    "message": "Invalid token"
+                }), 401
+                
+            # Extract employee_id from verification response
+            user_data = response.json()
+            employee_id = user_data.get('employeeId')
+            
+            if not employee_id:
+                return jsonify({
+                    "status": "error",
+                    "message": "User does not have an employee ID"
+                }), 400
+                
+            # Set the employee_id in the tracker instance
+            tracker.set_employee_id(employee_id)
+            
+            # Store in session for persistence
+            session['employee_id'] = employee_id
+                
+        except Exception as e:
+            logger.error(f"Error verifying token: {str(e)}", exc_info=True)
+            return jsonify({
+                "status": "error",
+                "message": "Authentication error"
+            }), 500
+    
+    # If in session but not set in tracker (e.g., after server restart)
+    if employee_id and not tracker.employee_id:
+        tracker.set_employee_id(employee_id)
+        logger.debug(f"Restored employee_id from session: {employee_id}")
+    
+    # If still not set, return error
+    if not tracker.employee_id:
+        return jsonify({
+            "status": "error",
+            "message": "Not authenticated. Please login first."
+        }), 401
+    
 
 @app.route('/daily-summary')
 def get_daily_summary():
@@ -155,28 +274,15 @@ def get_current_session():
     except Exception as e:
         logger.error(f"Error in current-session: {str(e)}", exc_info=True)
         return jsonify({"error": str(e)}), 500
-    
 
 @app.route('/privacy-settings', methods=['GET'])
 def get_privacy_settings():
     logger.info("API CALL: /privacy-settings")
     try:
-        # Get settings from database, or return defaults
-        settings_doc = tracker.db['user_settings'].find_one({'type': 'privacy_settings'})
-        
-        if settings_doc:
-            logger.debug(f"Retrieved privacy settings: {settings_doc.get('settings')}")
-            return jsonify(settings_doc.get('settings', {}))
-        else:
-            # Return default settings
-            default_settings = {
-                'enableScreenshots': True,
-                'screenshotInterval': 15,
-                'enableTextExtraction': True,
-                'enableAiAnalysis': True
-            }
-            logger.debug(f"No settings found, returning defaults: {default_settings}")
-            return jsonify(default_settings)
+        # Get settings from database for specific employee
+        settings = tracker.get_privacy_settings()
+        logger.debug(f"Retrieved privacy settings: {settings}")
+        return jsonify(settings)
     except Exception as e:
         logger.error(f"Error getting privacy settings: {str(e)}", exc_info=True)
         return jsonify({"error": str(e)}), 500
@@ -188,21 +294,15 @@ def update_privacy_settings():
         data = request.get_json()
         logger.debug(f"Updating privacy settings: {data}")
         
-        # Validate settings
-        required_keys = ['enableScreenshots', 'screenshotInterval', 'enableTextExtraction', 'enableAiAnalysis']
-        if not all(key in data for key in required_keys):
-            logger.warning(f"Invalid settings format: {data}")
-            return jsonify({"error": "Invalid settings format"}), 400
-            
-        # Update settings in database
-        tracker.db['user_settings'].update_one(
-            {'type': 'privacy_settings'},
-            {'$set': {'settings': data}},
-            upsert=True
-        )
+        # Update settings using the tracker method
+        result = tracker.update_privacy_settings(data)
         
+        if result.get("status") == "error":
+            logger.warning(f"Error updating settings: {result.get('message')}")
+            return jsonify(result), 400
+            
         logger.debug("Privacy settings updated successfully")
-        return jsonify({"status": "success", "message": "Privacy settings updated"})
+        return jsonify(result)
     except Exception as e:
         logger.error(f"Error updating privacy settings: {str(e)}", exc_info=True)
         return jsonify({"error": str(e)}), 500
@@ -214,66 +314,61 @@ def delete_user_data():
         data = request.get_json()
         delete_type = data.get('type', 'all')
         
-        if delete_type == 'all':
-            logger.warning("Deleting all user data")
-            # Delete all collections
-            tracker.screenshots_collection.delete_many({})
-            tracker.sessions_collection.delete_many({})
-            tracker.reports_collection.delete_many({})
+        # Use the tracker method that filters by employee_id
+        result = tracker.delete_user_data(delete_type)
+        
+        if result.get("status") == "error":
+            logger.warning(f"Error deleting data: {result.get('message')}")
+            return jsonify(result), 400
             
-            return jsonify({"status": "success", "message": "All user data deleted"})
-        elif delete_type == 'screenshots':
-            logger.warning("Deleting all screenshots")
-            tracker.screenshots_collection.delete_many({})
-            return jsonify({"status": "success", "message": "All screenshots deleted"})
-        else:
-            return jsonify({"error": "Invalid delete type"}), 400
+        logger.debug(f"User data deleted successfully: {delete_type}")
+        return jsonify(result)
     except Exception as e:
         logger.error(f"Error deleting user data: {str(e)}", exc_info=True)
         return jsonify({"error": str(e)}), 500
-        
 
 @app.route('/export-data', methods=['GET'])
 def export_user_data():
     logger.info("API CALL: /export-data")
     try:
-        # Create an in-memory file-like object to store the ZIP
-        memory_file = io.BytesIO()
+        # Use the tracker method that filters by employee_id
+        result = tracker.export_user_data()
         
-        with zipfile.ZipFile(memory_file, 'w', zipfile.ZIP_DEFLATED) as zipf:
-            # Export sessions
-            sessions = list(tracker.sessions_collection.find({}, {'_id': False}))
-            zipf.writestr('sessions.json', json.dumps(sessions, default=str, indent=2))
+        if result.get("status") == "error":
+            logger.warning(f"Error exporting data: {result.get('message')}")
+            return jsonify(result), 500
             
-            # Export screenshots metadata (not the actual images)
-            screenshots = list(tracker.screenshots_collection.find({}, {'_id': False, 'text': True, 'session_id': True, 'timestamp': True}))
-            zipf.writestr('screenshots_metadata.json', json.dumps(screenshots, default=str, indent=2))
-            
-            # Export reports metadata
-            reports = list(tracker.reports_collection.find({}, {'_id': True, 'session_id': True, 'created_at': True, 'filename': True}))
-            zipf.writestr('reports_metadata.json', json.dumps(reports, default=str, indent=2))
-            
-            # Export privacy settings
-            settings = tracker.db['user_settings'].find_one({'type': 'privacy_settings'})
-            if settings:
-                zipf.writestr('privacy_settings.json', json.dumps(settings, default=str, indent=2))
-        
-        # Move to the beginning of the file-like object
-        memory_file.seek(0)
-        
         # Set up the response
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        response = make_response(memory_file.getvalue())
+        response = make_response(result["data"])
         response.headers['Content-Type'] = 'application/zip'
-        response.headers['Content-Disposition'] = f'attachment; filename=virtutask_data_export_{timestamp}.zip'
+        response.headers['Content-Disposition'] = f'attachment; filename={result["filename"]}'
         
         logger.debug("Data export generated successfully")
         return response
         
     except Exception as e:
         logger.error(f"Error exporting user data: {str(e)}", exc_info=True)
-        return jsonify({"error": str(e)}), 500        
-    
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/logout', methods=['POST'])
+def logout():
+    logger.info("API CALL: /logout")
+    try:
+        # Clear the employee ID from session
+        session.pop('employee_id', None)
+        
+        # Reset the tracker's employee_id
+        tracker.set_employee_id(None)
+        
+        logger.debug("User logged out successfully")
+        return jsonify({
+            "status": "success",
+            "message": "Logged out successfully"
+        })
+    except Exception as e:
+        logger.error(f"Error in logout: {str(e)}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
 if __name__ == '__main__':
     logger.info("Starting tracking thread...")
     tracking_thread = threading.Thread(target=tracker.update_tracking, daemon=True)
