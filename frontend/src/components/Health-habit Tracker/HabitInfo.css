@@ -1,0 +1,141 @@
+.habit-info-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.habit-info-modal {
+  background: white;
+  border-radius: 0;
+  padding: 1.0rem;
+  height: 680px;
+  width: 1150px;
+  position: relative;
+}
+
+.habit-info-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.7rem;
+  padding: 9px;
+  padding-left: 15px;
+  
+}
+
+.habit-info-header h2 {
+  margin: 0;
+  font-size: 2rem;
+  color: #2c3e50;
+  font-weight: 500;
+}
+
+.habit-info-close-button {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  cursor: pointer;
+  color: #7f8c8d;
+}
+
+.habit-info-sub-carousel-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.habit-info-sub-carousel {
+  overflow: hidden;
+  width: 100%;
+}
+
+.habit-info-sub-carousel-inner {
+  display: flex;
+  transition: transform 0.3s ease-in-out;
+  gap: 1rem; /* Adjust as needed */
+  padding: 0 1rem;
+  min-width: calc(50% - 1rem); /* Account for gap */
+}
+
+.habit-info-sub-tile {
+  flex: 0 0 50%;
+  height: 560px;
+  box-sizing: border-box;
+  border: 2px solid #e2eafc;
+  border-radius: 20px;
+  overflow: hidden;
+  padding: 1.2rem;
+  min-width: calc(50% - 1rem); /* Account for gap */
+  background-color: #e2eafc;
+  
+  
+    
+}
+
+.habit-info-sub-tile-image {
+  height: 150px;
+  background-size: cover;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+}
+
+.habit-info-sub-nav {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  cursor: pointer;
+  
+  color: #3498db;
+  padding: 0;
+}
+.habit-info-sub-nav-prev{
+    margin-right:20px ;
+}
+.habit-info-sub-nav:hover {
+  color: #2980b9;
+}
+/* Content Section Styling */
+.habit-info-sub-tile-content {
+    padding: 0 1rem;
+    height: calc(100% - 170px); /* 150px image + 20px margin */
+    overflow-y: auto;
+  }
+  
+  .habit-info-content-section {
+    margin: 1.0rem 0;
+  }
+  
+  .habit-info-content-section h4 {
+    color: #263645;
+    margin: 0 0 0.5rem 0;
+    font-size: 1.1rem;
+    font-weight: 549;
+  }
+  
+  .habit-info-content-section ul {
+    margin: 0;
+    padding-left: 1.1rem;
+  }
+  
+  .habit-info-content-section li {
+    margin-bottom: 1px;
+    line-height: 01.2;
+    color: #34495e;
+  }
+  
+  .habit-info-sub-tile-content h3 {
+    font-size: 1.1rem;
+    font-weight: 50\50;
+    color: #2c3e50;
+    margin: 0 0 1rem 0;
+    padding-bottom: 3px;
+    border-bottom: 2px solid #bdc3c7;
+  }
