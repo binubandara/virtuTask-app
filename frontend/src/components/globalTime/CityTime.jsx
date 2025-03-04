@@ -23,7 +23,6 @@ export default function CityTime({ city, is12HourFormat, showDayNightIcon }) {
         second: "2-digit",
     });
 
-    // Determine if it's day or night (6 AM to 6 PM is day)
     const currentHour = time.toLocaleTimeString("en-US", {
         timeZone: city.timezone,
         hour: "numeric",
@@ -33,19 +32,23 @@ export default function CityTime({ city, is12HourFormat, showDayNightIcon }) {
 
     return (
         <div className="city-zone">
-            <h2 className="city-name">
-                <ReactCountryFlag
-                    countryCode={city.countryCode}
-                    svg
-                    style={{
-                        width: "1.5em",
-                        height: "1.5em",
-                        marginRight: "0.5em",
-                    }}
-                />
-                {city.name}
-            </h2>
-            <div className="city-time">{formattedTime}</div>
+            <ReactCountryFlag
+                countryCode={city.countryCode}
+                svg
+                style={{
+                    position: "absolute",
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    borderRadius: "50%", 
+                    opacity: 0.2, 
+                    zIndex: 1, 
+                }}
+            />
+            <div style={{ position: "relative", zIndex: 2 }}>
+                <h2 className="city-name">{city.name}</h2>
+                <div className="city-time">{formattedTime}</div>
+            </div>
             {showDayNightIcon && (
                 <div className="day-night-icon">
                     {isDay ? <FaSun className="sun" /> : <FaMoon className="moon" />}
