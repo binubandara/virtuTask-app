@@ -1,58 +1,102 @@
+.dashboard-container {
+  position: relative;
+  width: 100%;
+  height: 100vh; 
+}
 
-  .cities{
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 6rem;
-    margin: 0 auto;
-    max-width: 1200px;
-    padding: 1rem;
-    border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-    background: rgba(0, 0, 0, 0.2);
-    backdrop-filter: blur(10px);
-    transition: all 0.3s;
-  }
-  .city-zone {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-    gap: 0.5rem;
-    margin: 0.5rem 20px;
-    padding: 20px;
-    padding: 10px;
-    border: 1px solid #cdc3c3;
-    border-radius: 50%;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-    background: #4CAF4F;
-    color: #ddd;
-    backdrop-filter: blur(10px);
-    width: 150px;
-    height: 150px;
-    position: relative;
-    cursor: pointer;
-    transition: all 0.3s;
-    &:hover {
-      background: rgba(0, 0, 0, 0.8);
-      color: #ff0000;
-      outline: #ff0000;
-    }
-    &:active{
-      transform: scale(0.8);
-    }
-    .city-name {
-      font-size: 1.5rem;
-      font-size: 1rem;
-      font-weight: 600;
-    }
-    .city-time {
-      font-size: 2rem;
-      font-size: 1.25rem;
-      font-weight: 500;
-      background: rgba(0, 0, 0, 0.5);
-      padding: 0.5rem;
-      border-radius: 10px;
-    }
-  }
+.toggle-btn {
+  position: absolute;
+  top: 20px; 
+  left: 20px; 
+  padding: 10px 20px;
+  font-size: 16px;
+  border: none;
+  border-radius: 5px;
+  background-color: #4D4D4D;
+  color: white;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.toggle-btn:hover {
+  background-color: #393737; 
+  transform: translateY(-3px);
+}
+
+.cities {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr); 
+  justify-content: center;
+  align-items: center;
+  padding: 2rem; 
+  width: 100%;
+  height: 100vh;
+  margin: 0; 
+  background-color: rgba(0, 0, 0, 0.2);
+  padding-left: 4rem;
+}
+
+
+.city-zone {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 20px;
+  border: 1px solid #cdc3c3;
+  border-radius: 50%;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  background: #4CAF4F;
+  color: #ddd;
+  backdrop-filter: blur(10px);
+  width: 160px;
+  height: 160px;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.city-zone:hover {
+  background: #2f9c33;
+  color: #fefefe;
+  outline: #ff0000;
+}
+
+.city-zone:active {
+  transform: scale(0.8);
+}
+
+.city-name {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.city-time {
+  font-size: 1.1rem;
+  font-weight: 500;
+  background: rgba(58, 40, 40, 0.5);
+  padding: 0.5rem;
+  border-radius: 10px;
+  
+}
+
+
+.toggle-btn {
+  display: block;
+  padding: 10px 20px;
+  font-size: 16px;
+  border: none;
+  border-radius: 5px;
+  background-color: #3d3c3c;
+  color: white;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.toggle-btn:hover {
+  background-color: #2b2828; 
+  transform: (-0.3rem);
+}
+
+

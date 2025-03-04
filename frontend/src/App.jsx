@@ -9,11 +9,11 @@ import ClockDashboard from "./components/globalTime/ClockDashboard";
 
 
 
+
 function App() {
   return (
     <BrowserRouter>
       <AppContent />
-      <ClockDashboard/>;
     </BrowserRouter>
   );
 }
@@ -34,8 +34,9 @@ function AppContent() {
       )}
 
       <Routes>
-        <Route path="/pane/*" element={<PanePage />} /> {/* Pane Page with nested routes */}
-        <Route path="/profile" element={<ProfilePage />} /> {/* Add Profile Page Route */}
+        <Route path="/pane/*" element={<PanePage />} />
+        <Route path="/profile" element={<ProfilePage />} /> 
+        <Route path="/global-time" element={<ClockDashboard />} />
       </Routes>
 
     </>

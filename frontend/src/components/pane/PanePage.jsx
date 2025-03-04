@@ -14,12 +14,12 @@ const { Sider, Content } = Layout;
 const PanePage = () => {
   return (
     <Layout style={{ minHeight: '100vh' }}>
-      <Sider theme="light" width={250}>
+      <Sider theme="light" width={240}>
         <Logo />
         <MenuList />  
         <Profile />  
       </Sider>
-      <Content style={{ padding: '24px' }}>
+      <Content >
         <Routes>
           <Route path="/" element={<Dashboard />} /> 
           <Route path="dashboard" element={<Dashboard />} />

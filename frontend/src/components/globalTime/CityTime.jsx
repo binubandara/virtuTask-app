@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
 
-export default function CityTime({ city }) {
-    const[time, setTime] = useState(new Date());
-
+export default function CityTime({ city, is12HourFormat }) {
+    const [time, setTime] = useState(new Date());
 
     useEffect(() => {
         const timer = setInterval(() => {
@@ -14,22 +13,18 @@ export default function CityTime({ city }) {
         };
     }, []);
 
-
-
     const formattedTime = time.toLocaleTimeString("en-US", {
         timeZone: city.timezone,
-        hour12: false,
+        hour12: is12HourFormat, 
         hour: "2-digit",
         minute: "2-digit",
         second: "2-digit",
     });
 
-    return(
+    return (
         <div className="city-zone">
-            <h2 className="city-name">{city.name}
-            </h2>
-            <div className="city-time">
-                {formattedTime}</div>
+            <h2 className="city-name">{city.name}</h2>
+            <div className="city-time">{formattedTime}</div>
         </div>
     );
 }
