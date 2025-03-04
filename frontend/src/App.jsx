@@ -8,6 +8,8 @@ import ProjectForm from "./components/Task-management/ProjectForm";
 import TaskManage from "./components/Task-management/TaskManage";
 import TaskForm from "./components/Task-management/TaskForm";
 import TaskInformation from "./components/Task-management/TaskInformation";
+import HealthHabit from "./components/Health-habit Tracker/HealthHabit";
+import HabitInfo from "./components/Health-habit Tracker/HabitInfo";
 
 
 
@@ -23,6 +25,8 @@ function App() {
                 <Route path="/task-manager/:projectId" element={<TaskManage />} /> {/* Fixed route */}
                 <Route path="/TaskForm" element={<TaskForm />} />
                 <Route path="/task-info" element={<TaskInformation />} />
+                <Route path="/health-habit" element={<HealthHabit />} />
+                <Route path="/habit-info" element={<HabitInfo />} />
                 
                 
             </Routes>
