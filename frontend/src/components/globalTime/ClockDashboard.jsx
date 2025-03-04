@@ -10,24 +10,22 @@ export default function ClockDashboard() {
     };
 
     const cities = [
-        { name: "New York", timezone: "America/New_York" },
-        { name: "London", timezone: "Europe/London" },
-        { name: "Melbourne", timezone: "Australia/Melbourne" },
-        { name: "Tokyo", timezone: "Asia/Tokyo" },
-        { name: "Colombo", timezone: "Asia/Colombo" },
-        { name: "Kuala Lumpur", timezone: "Asia/Kuala_Lumpur" },
-        { name: "Manila", timezone: "Asia/Manila" },
-        { name: "Seoul", timezone: "Asia/Seoul" },
+        { name: "New York", timezone: "America/New_York", countryCode: "US" },
+        { name: "London", timezone: "Europe/London", countryCode: "GB" },
+        { name: "Melbourne", timezone: "Australia/Melbourne", countryCode: "AU" },
+        { name: "Tokyo", timezone: "Asia/Tokyo", countryCode: "JP" },
+        { name: "Colombo", timezone: "Asia/Colombo", countryCode: "LK" },
+        { name: "Paris", timezone: "Europe/Paris", countryCode: "FR" },
+        { name: "Manila", timezone: "Asia/Manila", countryCode: "PH" },
+        { name: "Seoul", timezone: "Asia/Seoul", countryCode: "KR" },
     ];
 
     return (
         <div className="dashboard-container">
-            {/* Toggle Button */}
             <button className="toggle-btn" onClick={toggleTimeFormat}>
                 {is12HourFormat ? "Switch to 24-Hour Format" : "Switch to 12-Hour Format"}
             </button>
 
-            {/* City Time Display */}
             <div className='cities'>
                 {cities.map((city, index) => (
                     <CityTime city={city} key={index} is12HourFormat={is12HourFormat} />
