@@ -6,15 +6,12 @@ import Profile from './components/pane/Profile';
 
 // LandingPage imports
 import './App.css';
-import Navbar from "./components/landingPage/Navbar";
 import React from "react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
-import Home from './components/landingPage/Home'; 
 import { Flowbite } from "flowbite-react";
-import Services from "./components/landingPage/Services";
-import MyFooter from "./components/landingPage/MyFooter";
 import PanePage from './components/pane/PanePage'; 
 import ProfilePage from "./components/userProfile/ProfilePage";
+import LandingPage from './components/landingPage/LandingPage';
 
 function App() {
   return (
@@ -25,32 +22,25 @@ function App() {
 }
 
 function AppContent() {
-  const location = useLocation(); // Get the current route location
+  const location = useLocation(); 
 
-  // Check if the current path starts with '/pane'
   const isPaneRoute = location.pathname.startsWith('/pane');
 
   return (
     <>
-      {/* Render Navbar, Services, and MyFooter only on landing pages */}
       {!isPaneRoute && (
         <>
           <Flowbite>
-            <Navbar />
-            <Home />
-            <Services />
+            <LandingPage />
           </Flowbite>
         </>
       )}
 
-      {/* Main Routes */}
       <Routes>
         <Route path="/pane/*" element={<PanePage />} /> {/* Pane Page with nested routes */}
         <Route path="/profile" element={<ProfilePage />} /> {/* Add Profile Page Route */}
       </Routes>
 
-      {/* Render MyFooter only on landing pages */}
-      {!isPaneRoute && <MyFooter />}
     </>
   );
 }
