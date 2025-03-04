@@ -7,7 +7,6 @@ import Profile from './Profile';
 import Settings from '../settingsPage/Settings';
 import Dashboard from './Dashboard'; 
 import ClockDashboard from '../globalTime/ClockDashboard';  
-import GlobalSync from './GlobalSync';
 import ProfilePage from '../userProfile/ProfilePage';
 
 const { Sider, Content } = Layout;

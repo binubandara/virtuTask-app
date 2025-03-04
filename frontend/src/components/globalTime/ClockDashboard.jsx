@@ -1,13 +1,12 @@
-// components/pane/Dashboard.jsx
 import React from 'react';
+import CityTime from './CityTime';
+import './Global.css';
 
-const ClockDashboard = () => {
-  return (
-    <div>
-      <h1> -- new page try out yay</h1>
-      <p>lets test it out </p>
-    </div>
-  );
-};
-
-export default ClockDashboard;
+export default function ClockDashboard() {
+    return (
+        <div>
+            <h1>Clock Dashboard</h1>
+            <CityTime />
+        </div>
+    );
+}

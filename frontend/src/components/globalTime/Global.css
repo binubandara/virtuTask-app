@@ -1,0 +1,58 @@
+
+  .cities{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6rem;
+    margin: 0 auto;
+    max-width: 1200px;
+    padding: 1rem;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    background: rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s;
+  }
+  .city-zone {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin: 0.5rem 20px;
+    padding: 20px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 50%;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    background: #4CAF4F;
+    color: #ddd;
+    backdrop-filter: blur(10px);
+    width: 150px;
+    height: 150px;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.3s;
+    &:hover {
+      background: rgba(0, 0, 0, 0.8);
+      color: #ff0000;
+      outline: #ff0000;
+    }
+    &:active{
+      transform: scale(0.8);
+    }
+    .city-name {
+      font-size: 1.5rem;
+      font-size: 1rem;
+      font-weight: 600;
+    }
+    .city-time {
+      font-size: 2rem;
+      font-size: 1.25rem;
+      font-weight: 500;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 0.5rem;
+      border-radius: 10px;
+    }
+  }
