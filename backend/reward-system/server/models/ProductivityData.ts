@@ -1,7 +1,8 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Document, Types } from 'mongoose';
 
 interface IProductivityData extends Document {
-  memberId: mongoose.Types.ObjectId;  // Reference to TeamMember (crucial)
+  memberId: Types.ObjectId;  // Reference to TeamMember (crucial - _id)
+  employee_id: string;       // Adding employee_id
   date: Date;
   productivity_score: number;
   total_productive_time: number;
@@ -11,12 +12,17 @@ interface IProductivityData extends Document {
 
 const ProductivityDataSchema: Schema = new Schema({
   memberId: { type: Schema.Types.ObjectId, ref: 'TeamMember', required: true },
+  employee_id: { type: String, required: true },  // Adding employee_id to the schema
   date: { type: Date, required: true },
   productivity_score: { type: Number, required: true },
   total_productive_time: { type: Number, required: true },
   total_time: { type: Number, required: true },
   total_unproductive_time: { type: Number, required: true },
+}, {
+  timestamps: true //Add timestamps
 });
 
-export default mongoose.model<IProductivityData>('ProductivityData', ProductivityDataSchema);
+const ProductivityData = mongoose.model<IProductivityData>('ProductivityData', ProductivityDataSchema);
+
+export default ProductivityData;
 export { IProductivityData };

@@ -1,6 +1,7 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
 interface IReward extends Document {
+  __v: any;
   name: string;
   points: number;
   description: string;

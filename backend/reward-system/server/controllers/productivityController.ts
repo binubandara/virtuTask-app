@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import ProductivityData, { IProductivityData } from '../models/ProductivityData';
-import TeamMember from '../models/TeamMember'; 
+import TeamMember from '../models/TeamMember';
 
 export const importProductivityData = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
@@ -10,57 +10,74 @@ export const importProductivityData = async (req: Request, res: Response, next: 
     // 2. Parse the JSON string
     const productivityDataArray = JSON.parse(jsonString);
 
-    //3. Check to see if the array is empty, or bad
+    // 3. Check to see if the array is empty, or bad
     if (!productivityDataArray || productivityDataArray.length === 0) {
-        res.status(400).json({ message: 'Invalid data' });
-        return;
+      res.status(400).json({ message: 'Invalid data' });
+      return;
     }
 
-    //4. For all objects in the array, we run the function. Create new teamMember. The run a query.
+    // Array to store the newly created productivity data
+    const newProductivityEntries: IProductivityData[] = [];
+
+    // 4. For all objects in the array, we run the function. Find or create teamMember.
     for (const data of productivityDataArray) {
-        //5.  Check that all keys exist
-         if (!data._id || !data.date || !data.productivity_score || !data.total_productive_time
-             || !data.total_time || !data.total_unproductive_time) {
-             res.status(400).json({ message: 'Data is not valid' });
-             return;
-        }
+      // 5. Check that all keys exist
+      if (!data._id || !data.date || !data.employee_id || !data.productivity_score || !data.total_productive_time
+        || !data.total_time || !data.total_unproductive_time) {
+        res.status(400).json({ message: 'Data is not valid' });
+        return;
+      }
 
-        //6. Add a temporary document to the teamMember list. We will only do this if the data exists
-        const teamMemberData = {
-            name: 'Temporary User',
-            email: 'temp@temp.com'
-         };
+      // 6. Find or Create a teamMember based on employee_id
+      let teamMember = await TeamMember.findOne({ employee_id: data.employee_id });
 
-        const teamMember = await TeamMember.create(teamMemberData);
+      if (!teamMember) {
+        // Create a new TeamMember if one doesn't exist
+        const newTeamMemberData = {
+          employee_id: data.employee_id,
+          name: 'Temporary User',
+          email: `temp_${data.employee_id}@temp.com`
+        };
+        teamMember = await TeamMember.create(newTeamMemberData);
+
         if (!teamMember) {
-            res.status(500).json({ message: 'Error creating team member' });
+          console.error('Error creating team member:', newTeamMemberData);
+          res.status(500).json({ message: 'Error creating team member' });
+          return;
         }
+        console.log(`Created new team member with employee_id: ${data.employee_id}`);
+      }
+      if (!teamMember._id) {
+        console.error('Team member does not have a valid ID');
+        res.status(500).json({ message: 'Team Member has Invalid Id' });
+        return;
+      }
 
-        //6.1 create a new productivity for each document
-          const newProductivityData = {
-            memberId: teamMember._id, // Use the TeamMember ID
-            date: data.date.$date, // Access the date value correctly
-            productivity_score: data.productivity_score,
-            total_productive_time: data.total_productive_time,
-            total_time: data.total_time,
-            total_unproductive_time: data.total_unproductive_time,
-          };
+      // 6.1 create a new productivity for each document
+      const newProductivityData = {
+        memberId: teamMember._id, // Use the TeamMember ID
+        date: data.date.$date, // Access the date value correctly
+        employee_id: data.employee_id,
+        productivity_score: data.productivity_score,
+        total_productive_time: data.total_productive_time,
+        total_time: data.total_time,
+        total_unproductive_time: data.total_unproductive_time,
+      };
 
-        await ProductivityData.create(newProductivityData);
-        console.log('New documents created');
+      const createdProductivity = await ProductivityData.create(newProductivityData);
+      newProductivityEntries.push(createdProductivity); // Add to the array
+      console.log('New documents created');
     }
-    //3. Get all the current productivity entries in the database
-    const productivityData = await ProductivityData.find();
 
-    res.status(200).json({ message: 'Data imported successfully!', entries: productivityData });
+    // 7. Send ONLY the newly created entries in the response
+    res.status(200).json({ message: 'Data imported successfully!', entries: newProductivityEntries });
 
   } catch (error) {
     console.error('Error importing data:', error);
     res.status(500).json({ message: 'Error importing data' });
-    return; // Make sure there's a return here!
+    return;
   }
 };
-
 // Get all productivity data
 export const getAllProductivityData = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {

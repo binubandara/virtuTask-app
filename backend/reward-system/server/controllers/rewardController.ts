@@ -115,8 +115,8 @@ export const calculateAndAwardRewards = async (memberId: string): Promise<IRewar
       rewardType: "Game Time",
       rewardAmount: minutesReward,
       description: `Reward for productivity on ${new Date().toLocaleDateString()}`,
-      name: "Productivity Reward", // Add the required name field
-      points: totalScore // Add the required points field
+      name: "Productivity Reward",
+      points: totalScore
     };
 
     const newReward = await Reward.create(rewardData);
@@ -130,10 +130,21 @@ export const calculateAndAwardRewards = async (memberId: string): Promise<IRewar
 // Trigger reward calculation for a member
 export const triggerRewardCalculation = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const { memberId } = req.params; // Get memberId from request params
+    const { memberId } = req.params;
     const newReward = await calculateAndAwardRewards(memberId);
     if (newReward) {
-      res.status(200).json({ message: 'Reward calculated and awarded successfully!', reward: newReward });
+      res.status(200).json({
+        message: 'Reward calculated and awarded successfully!',
+        reward: {
+          name: newReward.name,
+          points: newReward.points,
+          rewardAmount: newReward.rewardAmount, // Include rewardAmount in the response
+          description: newReward.description,
+          date: newReward.date,
+          _id: newReward._id,
+          
+        }
+      });
     } else {
       res.status(200).json({ message: 'No reward given!', reward: newReward });
     }

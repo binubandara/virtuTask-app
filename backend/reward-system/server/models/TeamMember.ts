@@ -1,15 +1,16 @@
-// server/models/TeamMember.ts
 import mongoose, { Schema, Document } from 'mongoose';
 
 interface ITeamMember extends Document {
   name: string;
   email: string;
-  // Other employee details (e.g., employee ID, job title)
+  employee_id: string; // Add the employee_id field
+  // Other employee details (e.g., job title)
 }
 
 const TeamMemberSchema: Schema = new Schema({
   name: { type: String, required: true },
   email: { type: String, required: true },
+  employee_id: { type: String, required: true }, // Add the employee_id field
   // Other fields
 });
 
