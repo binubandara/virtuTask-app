@@ -1,21 +1,79 @@
-import React, { useContext, useState } from "react";
-import { TaskContext } from "../context/TaskContext";
-import { Plus, Trash } from "lucide-react";  
+import React, { useState, useEffect } from "react";
+import { Plus, Trash } from "lucide-react";
 
 const TaskList = () => {
-  const { tasks, addTask, toggleTaskCompletion, deleteTask } = useContext(TaskContext);
+  const [tasks, setTasks] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [taskName, setTaskName] = useState("");
   const [taskDate, setTaskDate] = useState("");
   const [taskSessions, setTaskSessions] = useState("");
 
-  const handleAddTask = () => {
-    if (taskName.trim() && taskDate && taskSessions) {
-      addTask({ name: taskName, date: taskDate, sessions: taskSessions });
-      setTaskName("");
-      setTaskDate("");
-      setTaskSessions("");
-      setShowModal(false);
+  // Fetch tasks from backend on component mount
+  useEffect(() => {
+    fetch("http://localhost:5000/tasks") // Backend API
+      .then((res) => res.json())
+      .then((data) => setTasks(data))
+      .catch((err) => console.error("Error fetching tasks:", err));
+  }, []);
+
+  // Function to add a new task
+  const handleAddTask = async () => {
+    if (!taskName.trim() || !taskDate || !taskSessions) return;
+
+    const newTask = {
+      title: taskName,
+      date: taskDate,
+      sessions: taskSessions,
+      completed: false,
+    };
+
+    try {
+      const response = await fetch("http://localhost:5000/tasks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newTask),
+      });
+
+      if (response.ok) {
+        const savedTask = await response.json();
+        setTasks([...tasks, savedTask]); // Update state with new task
+        setTaskName("");
+        setTaskDate("");
+        setTaskSessions("");
+        setShowModal(false);
+      }
+    } catch (error) {
+      console.error("Error adding task:", error);
+    }
+  };
+
+  // Function to toggle task completion
+  const toggleTaskCompletion = async (taskId, completed) => {
+    try {
+      await fetch(`http://localhost:5000/tasks/${taskId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ completed: !completed }),
+      });
+
+      setTasks(tasks.map((task) =>
+        task.id === taskId ? { ...task, completed: !completed } : task
+      ));
+    } catch (error) {
+      console.error("Error updating task:", error);
+    }
+  };
+
+  // Function to delete a task
+  const handleDeleteTask = async (taskId) => {
+    try {
+      await fetch(`http://localhost:5000/tasks/${taskId}`, {
+        method: "DELETE",
+      });
+
+      setTasks(tasks.filter((task) => task.id !== taskId));
+    } catch (error) {
+      console.error("Error deleting task:", error);
     }
   };
 
@@ -29,10 +87,10 @@ const TaskList = () => {
               <input
                 type="checkbox"
                 checked={task.completed}
-                onChange={() => toggleTaskCompletion(task.id)}
+                onChange={() => toggleTaskCompletion(task.id, task.completed)}
               />
-              <span>{task.name} - {task.date} ({task.sessions} sessions)</span>
-              <Trash className="delete-icon" onClick={() => deleteTask(task.id)} />
+              <span>{task.title} - {task.date} ({task.sessions} sessions)</span>
+              <Trash className="delete-icon" onClick={() => handleDeleteTask(task.id)} />
             </li>
           ))}
         </ul>
