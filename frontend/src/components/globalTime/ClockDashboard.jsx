@@ -1,17 +1,17 @@
-import React, { useState } from 'react';
-import CityTime from './CityTime';
-import './Global.css';
+import React, { useState } from "react";
+import CityTime from "./CityTime";
+import "./Global.css";
 
 export default function ClockDashboard() {
     const [is12HourFormat, setIs12HourFormat] = useState(false);
     const [showDayNightIcons, setShowDayNightIcons] = useState(true);
 
     const toggleTimeFormat = () => {
-        setIs12HourFormat(prevFormat => !prevFormat);
+        setIs12HourFormat((prevFormat) => !prevFormat);
     };
 
     const toggleDayNightIcons = () => {
-        setShowDayNightIcons(prev => !prev);
+        setShowDayNightIcons((prev) => !prev);
     };
 
     const cities = [
@@ -23,21 +23,23 @@ export default function ClockDashboard() {
         { name: "Paris", timezone: "Europe/Paris", countryCode: "FR" },
         { name: "Manila", timezone: "Asia/Manila", countryCode: "PH" },
         { name: "Seoul", timezone: "Asia/Seoul", countryCode: "KR" },
+           { name: "Dubai", timezone: "Asia/Dubai", countryCode: "AE" },
+    { name: "Toronto", timezone: "America/Toronto", countryCode: "CA" }
     ];
 
     return (
         <div className="dashboard-container">
-            <h1 className="dashboard-heading">Clock Dashboard</h1>
+            <h1 className="dashboard-heading">World Clock Dashboard</h1>
             <div className="button-container">
                 <button className="toggle-btn" onClick={toggleTimeFormat}>
-                    {is12HourFormat ? "Switch to 24-Hour Format" : "Switch to 12-Hour Format"}
+                    {is12HourFormat ? "24-Hour Format" : "12-Hour Format"}
                 </button>
                 <button className="toggle-btn" onClick={toggleDayNightIcons}>
-                    {showDayNightIcons ? "Hide 🌞/🌙" : "Show 🌞/🌙"}
+                    {showDayNightIcons ? "Hide Icons" : "Show Icons"}
                 </button>
             </div>
 
-            <div className='cities'>
+            <div className="cities">
                 {cities.map((city, index) => (
                     <CityTime
                         city={city}

@@ -1,114 +1,125 @@
+
+
+/* Dashboard Container */
 .dashboard-container {
   position: relative;
   width: 100%;
-  height: 100vh;
-  overflow: hidden; /* Prevent scrolling */
+  min-height: 100vh;
+  background: #f5f5f5;
+  padding: 2rem;
+  overflow: hidden;
 }
 
+/* Dashboard Heading */
 .dashboard-heading {
-  text-align: left; 
-  font-size: 2.2rem;
-  font-weight: 600;
-  font-weight: se;
-  color: #4D4D4D;
-  margin-top: 1rem;
-  margin-left: 2rem; 
-  margin-bottom: 1rem;
-  width: 75%; /* Equivalent to md:w-3/4 */
-line-height: 1.2; /* Equivalent to leading-snug */
-
-
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #2d3748;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
 }
 
-
-
+/* Button Container */
 .button-container {
   display: flex;
-  gap: 2rem; /* Space between buttons */
-  margin-left: 2rem; /* Align buttons with the heading */
-  margin-bottom: 1rem;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
 }
 
+/* Toggle Buttons */
+.toggle-btn {
+  padding: 12px 24px;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  background-color: #4caf50;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.toggle-btn:hover {
+  background-color: #45a049;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Cities Grid */
 .cities {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1rem; /* Reduced gap between clocks */
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 2rem;
+  padding: 1rem;
   justify-content: center;
   align-items: center;
-  padding: 1rem; /* Reduced padding */
-  width: 100%;
-  height: calc(100vh - 136px); /* Adjusted height to fit everything */
-  margin: 0;
-  background-color: rgba(178, 173, 173, 0.2);
 }
 
+/* City Zone */
 .city-zone {
   display: flex;
   justify-content: center;
   align-items: center;
   flex-direction: column;
-  gap: 0.5rem;
-  padding: 20px;
-  border: 1px solid #cdc3c3;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  border: 1px solid #e0e0e0;
   border-radius: 50%;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-  background: rgba(255, 255, 255, 0.1);
-  color: #ddd;
+  background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(10px);
   width: 200px;
   height: 200px;
   position: relative;
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
+.city-zone:hover {
+  transform: scale(1.05);
+  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* City Name */
 .city-name {
-  font-size: 1.2rem;
-  font-weight: 600;
-  text-align: center;
+  font-size: 1.25rem;
+  font-weight: 700;
   color: #44446e;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  text-align: center;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
 }
 
+/* City Time */
 .city-time {
   font-size: 1.1rem;
-  font-weight: 500;
-  background: rgba(153, 130, 130, 0.5);
-  padding: 0.5rem;
+  font-weight: 600;
+  background: rgba(153, 130, 130, 0.1);
+  padding: 0.5rem 1rem;
   border-radius: 20px;
   color: #44446e;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
 }
 
+/* Day/Night Icon */
 .day-night-icon {
   position: absolute;
   bottom: -30px;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 1rem;
+  font-size: 1.25rem;
   z-index: 2;
 }
 
 .sun {
   color: #f4ce36;
+  filter: drop-shadow(0 0 4px rgba(244, 206, 54, 0.8));
 }
 
 .moon {
-  color: #afa9a9;
-}
-
-.toggle-btn {
-  padding: 10px 20px;
-  font-size: 16px;
-  border: none;
-  border-radius: 5px;
-  background-color: #4caf4f;
-  color: white;
-  cursor: pointer;
-  transition: 0.3s;
-}
-
-.toggle-btn:hover {
-  background-color: #393737;
-  transform: translateY(-3px);
+  color: #6c757d;
+  filter: drop-shadow(0 0 4px rgba(108, 117, 125, 0.8));
 }
