@@ -1,59 +1,46 @@
 .dashboard-container {
   position: relative;
   width: 100%;
-  height: 100vh; 
+  height: 100vh;
+  overflow: hidden; /* Prevent scrolling */
+}
+
+.dashboard-heading {
+  text-align: left; 
+  font-size: 2.2rem;
+  font-weight: 600;
+  font-weight: se;
+  color: #4D4D4D;
+  margin-top: 1rem;
+  margin-left: 2rem; 
+  margin-bottom: 1rem;
+  width: 75%; /* Equivalent to md:w-3/4 */
+line-height: 1.2; /* Equivalent to leading-snug */
+
+
+}
+
+
+
+.button-container {
+  display: flex;
+  gap: 2rem; /* Space between buttons */
+  margin-left: 2rem; /* Align buttons with the heading */
+  margin-bottom: 1rem;
 }
 
 .cities {
   display: grid;
-  grid-template-columns: repeat(4, 1fr); 
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem; /* Reduced gap between clocks */
   justify-content: center;
   align-items: center;
-  padding: 2rem; 
-  padding-top: 6rem;
+  padding: 1rem; /* Reduced padding */
   width: 100%;
-  height: 100vh;
-  margin: 0; 
+  height: calc(100vh - 136px); /* Adjusted height to fit everything */
+  margin: 0;
   background-color: rgba(178, 173, 173, 0.2);
-  padding-left: 4rem;
 }
-
-
-
-.city-zone:hover {
-  outline: #ff0000;
-}
-
-.city-zone:active {
-  transform: scale(0.8);
-}
-
-.toggle-btn {
-  margin-left: 2rem;
-  position: absolute;
-  top: 20px;
-  padding: 10px 20px;
-  font-size: 16px;
-  border: none;
-  border-radius: 5px;
-  background-color: #4caf4f;
-  color: white;
-  cursor: pointer;
-  transition: 0.3s;
-}
-
-.toggle-btn:hover {
-  background-color: #393737;
-  transform: translateY(-3px);
-}
-
-.toggle-btn.right {
-  right: 20px; /* Position on the right side */
-  left: auto; /* Reset left positioning */
-}
-
-
-/* Existing styles... */
 
 .city-zone {
   display: flex;
@@ -65,7 +52,7 @@
   border: 1px solid #cdc3c3;
   border-radius: 50%;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-  background: rgba(255, 255, 255, 0.1); /* Light background for better contrast */
+  background: rgba(255, 255, 255, 0.1);
   color: #ddd;
   backdrop-filter: blur(10px);
   width: 200px;
@@ -79,9 +66,8 @@
   font-size: 1.2rem;
   font-weight: 600;
   text-align: center;
-  color: #44446e; 
-  text-decoration: bold;/* Ensure text is visible */
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5); /* Add shadow for better readability */
+  color: #44446e;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 .city-time {
@@ -90,24 +76,39 @@
   background: rgba(153, 130, 130, 0.5);
   padding: 0.5rem;
   border-radius: 20px;
-  color: #44446e; /* Ensure text is visible */
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5); /* Add shadow for better readability */
+  color: #44446e;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
 }
 
-/* Day/Night icon styles */
 .day-night-icon {
   position: absolute;
-  bottom: -30px; /* Position below the circle */
-  left: 50%; /* Center horizontally */
-  transform: translateX(-50%); /* Center horizontally */
+  bottom: -30px;
+  left: 50%;
+  transform: translateX(-50%);
   font-size: 1rem;
-  z-index: 2; /* Ensure the icon is above the flag */
+  z-index: 2;
 }
 
 .sun {
-  color: #f4ce36; /* Yellow for sun */
+  color: #f4ce36;
 }
 
 .moon {
-  color: #afa9a9; /* Light gray for moon */
+  color: #afa9a9;
+}
+
+.toggle-btn {
+  padding: 10px 20px;
+  font-size: 16px;
+  border: none;
+  border-radius: 5px;
+  background-color: #4caf4f;
+  color: white;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.toggle-btn:hover {
+  background-color: #393737;
+  transform: translateY(-3px);
 }

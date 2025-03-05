@@ -4,14 +4,14 @@ import './Global.css';
 
 export default function ClockDashboard() {
     const [is12HourFormat, setIs12HourFormat] = useState(false);
-    const [showDayNightIcons, setShowDayNightIcons] = useState(true); // New state for toggling icons
+    const [showDayNightIcons, setShowDayNightIcons] = useState(true);
 
     const toggleTimeFormat = () => {
         setIs12HourFormat(prevFormat => !prevFormat);
     };
 
     const toggleDayNightIcons = () => {
-        setShowDayNightIcons(prev => !prev); // Toggle the visibility of day/night icons
+        setShowDayNightIcons(prev => !prev);
     };
 
     const cities = [
@@ -27,12 +27,15 @@ export default function ClockDashboard() {
 
     return (
         <div className="dashboard-container">
-            <button className="toggle-btn" onClick={toggleTimeFormat}>
-                {is12HourFormat ? "Switch to 24-Hour Format" : "Switch to 12-Hour Format"}
-            </button>
-            <button className="toggle-btn right" onClick={toggleDayNightIcons}>
-                {showDayNightIcons ? "Hide Day/Night Icons" : "Show Day/Night Icons"}
-            </button>
+            <h1 className="dashboard-heading">Clock Dashboard</h1>
+            <div className="button-container">
+                <button className="toggle-btn" onClick={toggleTimeFormat}>
+                    {is12HourFormat ? "Switch to 24-Hour Format" : "Switch to 12-Hour Format"}
+                </button>
+                <button className="toggle-btn" onClick={toggleDayNightIcons}>
+                    {showDayNightIcons ? "Hide 🌞/🌙" : "Show 🌞/🌙"}
+                </button>
+            </div>
 
             <div className='cities'>
                 {cities.map((city, index) => (
@@ -40,10 +43,10 @@ export default function ClockDashboard() {
                         city={city}
                         key={index}
                         is12HourFormat={is12HourFormat}
-                        showDayNightIcon={showDayNightIcons} // Pass the state to CityTime
+                        showDayNightIcon={showDayNightIcons}
                     />
                 ))}
-            </div> 
+            </div>
         </div>
     );
 }
