@@ -1,3 +1,4 @@
+# Import required libraries
 import requests
 from flask import Flask, jsonify, request, send_file, make_response, session
 from flask_cors import CORS
@@ -10,23 +11,34 @@ import json
 import zipfile
 from datetime import datetime
 
-# Configure logging
-logging.basicConfig(level=logging.DEBUG, 
-                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+# Configure logging for detailed tracking and debugging
+logging.basicConfig(
+    level=logging.DEBUG, 
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 logger = logging.getLogger('productivity_api')
 
+# Initialize Flask application
 app = Flask(__name__)
 app.secret_key = 'your_secret_key_here'  # Required for session management
 
+# Configure CORS to allow frontend access
 CORS(app, supports_credentials=True, origins=["http://localhost:5173"])
 
-# Initialize the tracker without employee_id
+# Initialize the productivity tracker without an employee ID
 tracker = ProductivityTracker()
 
-# endpoint to set employee_id
+# Authentication and Token Verification Endpoints
 @app.route('/verify-token', methods=['POST'])
 def verify_token():
+    """
+    Verify user authentication token and set employee ID
+    
+    Expects a JSON payload with a token
+    Returns success/error based on token verification
+    """
     try:
+        # Extract token from request
         data = request.get_json()
         token = data.get('token')
         
@@ -35,10 +47,10 @@ def verify_token():
                 "status": "error",
                 "message": "Token is required"
             }), 400
-            
-        # Call Node.js backend to verify token
+        
+        # Verify token with external authentication service
         response = requests.post('http://localhost:5001/api/auth/verify-token', 
-                                json={'token': token})
+                                 json={'token': token})
         
         if response.status_code != 200:
             return jsonify({
@@ -46,7 +58,7 @@ def verify_token():
                 "message": "Invalid token"
             }), 401
         
-        # Extract employee_id from verification response
+        # Extract employee ID from verified token
         user_data = response.json()
         employee_id = user_data.get('employeeId')
         
@@ -55,11 +67,9 @@ def verify_token():
                 "status": "error",
                 "message": "User does not have an employee ID"
             }), 400
-            
-        # Set the employee_id in the tracker instance
-        tracker.set_employee_id(employee_id)
         
-        # Store in session for persistence
+        # Set employee ID in tracker and session
+        tracker.set_employee_id(employee_id)
         session['employee_id'] = employee_id
         
         return jsonify({
@@ -70,18 +80,21 @@ def verify_token():
         logger.error(f"Error in token verification: {str(e)}", exc_info=True)
         return jsonify({"error": str(e)}), 500
 
-
-# Middleware to check for employee_id
+# Authentication Middleware
 @app.before_request
 def check_authentication():
-    # Skip for verification and test endpoints
+    """
+    Middleware to check authentication before processing requests
+    Validates employee ID in session or via authorization header
+    """
+    # Skip authentication for specific routes
     if request.path in ['/verify-token', '/test'] or request.method == 'OPTIONS':
         return
-        
-    # First check if employee_id is in session (for persistence between requests)
+    
+    # Check for employee ID in session
     employee_id = session.get('employee_id')
     
-    # If not in session, check authorization header
+    # Verify authentication via authorization header if not in session
     if not employee_id:
         auth_header = request.headers.get('Authorization')
         if not auth_header or not auth_header.startswith('Bearer '):
@@ -89,21 +102,21 @@ def check_authentication():
                 "status": "error",
                 "message": "Not authenticated. Please login first."
             }), 401
-            
+        
         token = auth_header.split(' ')[1]
         
-        # Verify token with Node.js backend
         try:
+            # Verify token with external authentication service
             response = requests.post('http://localhost:5001/api/auth/verify-token', 
-                                    json={'token': token})
+                                     json={'token': token})
             
             if response.status_code != 200:
                 return jsonify({
                     "status": "error",
                     "message": "Invalid token"
                 }), 401
-                
-            # Extract employee_id from verification response
+            
+            # Extract and set employee ID
             user_data = response.json()
             employee_id = user_data.get('employeeId')
             
@@ -112,11 +125,8 @@ def check_authentication():
                     "status": "error",
                     "message": "User does not have an employee ID"
                 }), 400
-                
-            # Set the employee_id in the tracker instance
-            tracker.set_employee_id(employee_id)
             
-            # Store in session for persistence
+            tracker.set_employee_id(employee_id)
             session['employee_id'] = employee_id
                 
         except Exception as e:
@@ -126,24 +136,27 @@ def check_authentication():
                 "message": "Authentication error"
             }), 500
     
-    # If in session but not set in tracker (e.g., after server restart)
+    # Ensure employee ID is set in tracker after session restoration
     if employee_id and not tracker.employee_id:
         tracker.set_employee_id(employee_id)
         logger.debug(f"Restored employee_id from session: {employee_id}")
     
-    # If still not set, return error
+    # Final authentication check
     if not tracker.employee_id:
         return jsonify({
             "status": "error",
             "message": "Not authenticated. Please login first."
         }), 401
-    
 
+# Application Routes
 @app.route('/daily-summary')
 def get_daily_summary():
+    """
+    Retrieve daily productivity summary
+    Returns total productive/unproductive time and productivity score
+    """
     logger.info("API CALL: /daily-summary")
     try:
-        logger.debug("Fetching daily summary from tracker")
         summary = tracker.get_daily_summary()
         
         window_times = [
@@ -167,15 +180,22 @@ def get_daily_summary():
     except Exception as e:
         logger.error(f"Error in daily-summary: {str(e)}", exc_info=True)
         return jsonify({"error": str(e)}), 500
-    
+
 @app.route('/test')
 def test():
+    """
+    Simple health check endpoint to verify server is running
+    """
     logger.info("API CALL: /test")
     logger.debug("Test endpoint called - server is running")
     return jsonify({"status": "Server is running"})
 
 @app.route('/start-session', methods=['POST'])
 def start_session():
+    """
+    Start a new productivity tracking session
+    Requires session name in request payload
+    """
     logger.info("API CALL: /start-session")
     try:
         data = request.get_json()
@@ -189,6 +209,9 @@ def start_session():
 
 @app.route('/download-report/<report_id>')
 def download_report(report_id):
+    """
+    Download a specific productivity report by report ID
+    """
     logger.info(f"API CALL: /download-report/{report_id}")
     try:
         logger.debug(f"Fetching report with ID: {report_id}")
@@ -199,7 +222,7 @@ def download_report(report_id):
                 "status": "error",
                 "message": "Report not found"
             }), 404
-            
+        
         logger.debug(f"Report found, preparing download: {report.get('filename')}")
         response = make_response(report['data'])
         response.headers['Content-Type'] = report['content_type']
@@ -215,6 +238,9 @@ def download_report(report_id):
 
 @app.route('/end-session', methods=['POST'])
 def end_session():
+    """
+    End the current productivity tracking session
+    """
     logger.info("API CALL: /end-session")
     try:
         logger.debug("Ending current session")
@@ -225,7 +251,7 @@ def end_session():
         if result.get("status") == "partial":
             logger.warning(f"Session ended with warnings: {result.get('message')}")
             return jsonify(result), 207  # Return partial content status
-            
+        
         # Handle standard success
         if result.get("status") == "success" and "report_id" in result:
             return jsonify({
@@ -233,7 +259,7 @@ def end_session():
                 "message": "Session ended successfully",
                 "report_id": result["report_id"]
             })
-            
+        
         # Handle other results
         return jsonify(result)
     except Exception as e:
@@ -245,6 +271,9 @@ def end_session():
 
 @app.route('/current-session')
 def get_current_session():
+    """
+    Retrieve details of the current active session
+    """
     logger.info("API CALL: /current-session")
     try:
         if not tracker.current_session or not tracker.session_active:
@@ -253,7 +282,7 @@ def get_current_session():
                 "status": "error",
                 "message": "No active session"
             }), 404
-            
+        
         logger.debug("Fetching current session details")
         current_data = {
             "session_name": tracker.current_session.get('name', ''),
@@ -277,9 +306,11 @@ def get_current_session():
 
 @app.route('/privacy-settings', methods=['GET'])
 def get_privacy_settings():
+    """
+    Retrieve user privacy settings
+    """
     logger.info("API CALL: /privacy-settings")
     try:
-        # Get settings from database for specific employee
         settings = tracker.get_privacy_settings()
         logger.debug(f"Retrieved privacy settings: {settings}")
         return jsonify(settings)
@@ -289,18 +320,20 @@ def get_privacy_settings():
 
 @app.route('/privacy-settings', methods=['POST'])
 def update_privacy_settings():
+    """
+    Update user privacy settings
+    """
     logger.info("API CALL: /privacy-settings [POST]")
     try:
         data = request.get_json()
         logger.debug(f"Updating privacy settings: {data}")
         
-        # Update settings using the tracker method
         result = tracker.update_privacy_settings(data)
         
         if result.get("status") == "error":
             logger.warning(f"Error updating settings: {result.get('message')}")
             return jsonify(result), 400
-            
+        
         logger.debug("Privacy settings updated successfully")
         return jsonify(result)
     except Exception as e:
@@ -309,18 +342,20 @@ def update_privacy_settings():
 
 @app.route('/delete-data', methods=['POST'])
 def delete_user_data():
+    """
+    Delete user data based on specified type
+    """
     logger.info("API CALL: /delete-data")
     try:
         data = request.get_json()
         delete_type = data.get('type', 'all')
         
-        # Use the tracker method that filters by employee_id
         result = tracker.delete_user_data(delete_type)
         
         if result.get("status") == "error":
             logger.warning(f"Error deleting data: {result.get('message')}")
             return jsonify(result), 400
-            
+        
         logger.debug(f"User data deleted successfully: {delete_type}")
         return jsonify(result)
     except Exception as e:
@@ -329,16 +364,18 @@ def delete_user_data():
 
 @app.route('/export-data', methods=['GET'])
 def export_user_data():
+    """
+    Export user data as a zip file
+    """
     logger.info("API CALL: /export-data")
     try:
-        # Use the tracker method that filters by employee_id
         result = tracker.export_user_data()
         
         if result.get("status") == "error":
             logger.warning(f"Error exporting data: {result.get('message')}")
             return jsonify(result), 500
-            
-        # Set up the response
+        
+        # Set up the download response
         response = make_response(result["data"])
         response.headers['Content-Type'] = 'application/zip'
         response.headers['Content-Disposition'] = f'attachment; filename={result["filename"]}'
@@ -352,6 +389,10 @@ def export_user_data():
 
 @app.route('/logout', methods=['POST'])
 def logout():
+    """
+    Logout the current user
+    Clear session and reset tracker
+    """
     logger.info("API CALL: /logout")
     try:
         # Clear the employee ID from session
@@ -369,10 +410,13 @@ def logout():
         logger.error(f"Error in logout: {str(e)}", exc_info=True)
         return jsonify({"error": str(e)}), 500
 
+# Main application entry point
 if __name__ == '__main__':
+    # Start background tracking thread
     logger.info("Starting tracking thread...")
     tracking_thread = threading.Thread(target=tracker.update_tracking, daemon=True)
     tracking_thread.start()
     
+    # Launch Flask application
     logger.info("Starting Flask app on port 5000...")
     app.run(port=5000, debug=True, threaded=True, host='127.0.0.1')

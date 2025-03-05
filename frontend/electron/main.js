@@ -1,3 +1,4 @@
+// Import required Electron and Node.js modules
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const { spawn } = require('child_process');
@@ -6,23 +7,31 @@ const tcpPortUsed = require('tcp-port-used');
 const kill = require('tree-kill');
 const { exec } = require('child_process');
 
-// Store all backend processes
+/**
+ * Global storage for backend processes to enable centralized management
+ * Stores references to Python Tracker, Auth Server, and Engagement Hub processes
+ */
 global.backendProcesses = {
   pythonTracker: null,
   authServer: null,
   engagementHub: null
 };
 
-// Use a more reliable approach to check and kill processes on Windows
+/**
+ * Safely kill a process using a specific port, with special handling for Windows
+ * @param {number} port - Port number to check and potentially free
+ * @returns {Promise<void>} Promise resolving when port is freed
+ */
 async function killProcessOnPort(port) {
   try {
+    // Check if port is currently in use
     const isPortInUse = await tcpPortUsed.check(port, '127.0.0.1');
     
     if (isPortInUse) {
       console.log(`Port ${port} is in use, attempting to free it...`);
       
       if (process.platform === 'win32') {
-        // Improved Windows port killing
+        // Windows-specific port killing mechanism
         return new Promise((resolve, reject) => {
           exec(`netstat -ano | findstr :${port} | findstr LISTENING`, (error, stdout) => {
             if (error || !stdout) {
@@ -33,7 +42,7 @@ async function killProcessOnPort(port) {
             
             const lines = stdout.trim().split('\n');
             if (lines.length > 0) {
-              // Extract PID - last column of netstat output
+              // Extract Process ID from netstat output
               const pidMatch = lines[0].match(/(\d+)$/);
               if (pidMatch && pidMatch[1]) {
                 const pid = pidMatch[1].trim();
@@ -45,7 +54,6 @@ async function killProcessOnPort(port) {
                   } else {
                     console.log(`Successfully killed process ${pid}`);
                   }
-                  // Continue anyway, even if there was an error
                   resolve();
                 });
               } else {
@@ -58,7 +66,7 @@ async function killProcessOnPort(port) {
           });
         });
       } else {
-        // Unix systems
+        // Unix-based systems port killing
         return new Promise((resolve) => {
           exec(`lsof -i :${port} | grep LISTEN | awk '{print $2}' | xargs -r kill -9`, (error) => {
             if (error) {
@@ -74,12 +82,16 @@ async function killProcessOnPort(port) {
     }
   } catch (error) {
     console.error(`Error in killProcessOnPort: ${error.message}`);
-    // Continue execution even if there's an error
     return Promise.resolve();
   }
 }
 
-// Function to check if port is free with timeout
+/**
+ * Wait for a specific port to become free
+ * @param {number} port - Port to monitor
+ * @param {number} timeoutMs - Maximum time to wait (default: 5000ms)
+ * @returns {Promise<boolean>} Whether port became free within timeout
+ */
 async function waitForPortToBeFree(port, timeoutMs = 5000) {
   const startTime = Date.now();
   
@@ -90,11 +102,10 @@ async function waitForPortToBeFree(port, timeoutMs = 5000) {
         console.log(`Port ${port} is free now`);
         return true;
       }
-      // Wait a bit before checking again
+      // Wait before rechecking
       await new Promise(resolve => setTimeout(resolve, 500));
     } catch (err) {
       console.warn(`Error checking port: ${err.message}`);
-      // If we can't check, assume it might be free
       return true;
     }
   }
@@ -103,7 +114,10 @@ async function waitForPortToBeFree(port, timeoutMs = 5000) {
   return false;
 }
 
-// Start Python Productivity Tracker backend
+/**
+ * Start the Python Productivity Tracker backend
+ * @returns {Promise<ChildProcess>} The spawned Python process
+ */
 async function startPythonBackend() {
   const port = 5000;
   console.log(`Checking if port ${port} is in use...`);
@@ -122,7 +136,7 @@ async function startPythonBackend() {
     let pythonProcess;
     
     if (!app.isPackaged) {
-      // Try multiple potential paths for development
+      // Development mode - find Python script
       const possiblePaths = [
         path.join(__dirname, '../../backend/productivity-tracker/app.py'),
         path.join(__dirname, '../backend/productivity-tracker/app.py'),
@@ -150,6 +164,7 @@ async function startPythonBackend() {
         }
       });
     } else {
+      // Packaged app mode
       const exePath = path.join(process.resourcesPath, 'backend', 'app.exe');
       console.log(`Checking for packaged executable at: ${exePath}`);
       
@@ -194,7 +209,10 @@ async function startPythonBackend() {
   }
 }
 
-// Start Auth Server (nodejs)
+/**
+ * Start the Auth Server
+ * @returns {Promise<ChildProcess>} The spawned Node.js auth server process
+ */
 async function startAuthServer() {
   const port = 5001;
   console.log(`Checking if port ${port} is in use...`);
@@ -213,7 +231,7 @@ async function startAuthServer() {
     let authProcess;
     
     if (!app.isPackaged) {
-      // Try multiple potential paths for development
+      // Development mode - find server script
       const possiblePaths = [
         path.join(__dirname, '../../backend/loginPage/server.js'),
         path.join(__dirname, '../backend/loginPage/server.js'),
@@ -235,20 +253,20 @@ async function startAuthServer() {
       
       console.log(`Spawning Auth server from: ${scriptPath}`);
       
-      // Set environment variable for the port
+      // Set environment variables
       const env = { 
         ...process.env, 
         PORT: port,
-        // Add MongoDB connection - may need to be modified based on your actual setup
         MONGODB_URI: process.env.MONGODB_URI || 'mongodb://localhost:27017/yourdb',
         JWT_SECRET: process.env.JWT_SECRET || 'your-secret-key'
       };
       
       authProcess = spawn('node', [scriptPath], { 
         env,
-        cwd: path.dirname(scriptPath) // Ensure we're in the correct directory
+        cwd: path.dirname(scriptPath)
       });
     } else {
+      // Packaged app mode
       const scriptPath = path.join(process.resourcesPath, 'backend', 'auth-server', 'server.js');
       console.log(`Spawning Auth server from: ${scriptPath}`);
       
@@ -292,7 +310,10 @@ async function startAuthServer() {
   }
 }
 
-// Start Engagement Hub Server (nodejs)
+/**
+ * Start the Engagement Hub Server
+ * @returns {Promise<ChildProcess>} The spawned Node.js engagement hub process
+ */
 async function startEngagementHubServer() {
   const port = 5002;
   console.log(`Checking if port ${port} is in use...`);
@@ -311,7 +332,7 @@ async function startEngagementHubServer() {
     let hubProcess;
     
     if (!app.isPackaged) {
-      // Try multiple potential paths for development
+      // Development mode - find server script
       const possiblePaths = [
         path.join(__dirname, '../../backend/engagement-hub/server.js'),
         path.join(__dirname, '../backend/engagement-hub/server.js'),
@@ -333,21 +354,21 @@ async function startEngagementHubServer() {
       
       console.log(`Spawning Engagement Hub server from: ${scriptPath}`);
       
-      // Set environment variable for the port
+      // Set environment variables
       const env = { 
         ...process.env, 
         ENGAGEMENT_HUB_PORT: port,
         NODE_ENV: process.env.NODE_ENV || 'development',
-        // Add any other required env variables
         MONGODB_URI: process.env.MONGODB_URI || 'mongodb://localhost:27017/yourdb',
         JWT_SECRET: process.env.JWT_SECRET || 'your-secret-key'
       };
       
       hubProcess = spawn('node', [scriptPath], { 
         env,
-        cwd: path.dirname(scriptPath) // Ensure we're in the correct directory
+        cwd: path.dirname(scriptPath)
       });
     } else {
+      // Packaged app mode
       const scriptPath = path.join(process.resourcesPath, 'backend', 'engagement-hub', 'app.js');
       console.log(`Spawning Engagement Hub server from: ${scriptPath}`);
       
@@ -392,7 +413,12 @@ async function startEngagementHubServer() {
   }
 }
 
-// Function to check if server is reachable
+/**
+ * Check if a server is reachable on a specific port
+ * @param {number} port - Port to check
+ * @param {number} timeoutMs - Maximum time to wait (default: 10000ms)
+ * @returns {Promise<boolean>} Whether server became reachable within timeout
+ */
 async function checkServerReachable(port, timeoutMs = 10000) {
   const startTime = Date.now();
   
@@ -414,7 +440,11 @@ async function checkServerReachable(port, timeoutMs = 10000) {
   return false;
 }
 
+/**
+ * Create the main application window and start backend services
+ */
 async function createWindow() {
+  // Create main application window
   global.mainWindow = new BrowserWindow({
     width: 1024,
     height: 768,
@@ -425,6 +455,7 @@ async function createWindow() {
     }
   });
 
+  // Track backend startup status
   let backendsStarted = {
     python: false,
     auth: false,
@@ -463,7 +494,7 @@ async function createWindow() {
     
     console.log('Waiting for backends to initialize...');
     
-    // Check if auth server is reachable (this is the one you're having issues with)
+    // Check if auth server is reachable
     const authServerReachable = await checkServerReachable(5001, 15000);
     if (!authServerReachable) {
       console.warn("Auth server is not reachable. Authentication features might not work.");
@@ -471,7 +502,7 @@ async function createWindow() {
     
     console.log('Loading frontend...');
     if (!app.isPackaged) {
-      // In development, check if Vite server is running first
+      // In development, load from Vite dev server
       console.log('Attempting to load from development server...');
       try {
         await global.mainWindow.loadURL('http://localhost:5173');
@@ -481,6 +512,7 @@ async function createWindow() {
         throw new Error('Could not connect to development server. Make sure Vite is running.');
       }
     } else {
+      // In production, load from packaged app
       console.log('Loading from packaged app...');
       await global.mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
     }
@@ -509,9 +541,10 @@ async function createWindow() {
   }
 }
 
-// Modified app lifecycle handlers
+// App lifecycle management
 app.whenReady().then(createWindow);
 
+// Handle window closure
 app.on('window-all-closed', () => {
   console.log('All windows closed, cleaning up...');
   
@@ -531,18 +564,18 @@ app.on('window-all-closed', () => {
   }
 });
 
+// Reactivate app on macOS
 app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) {
     createWindow();
   }
 });
 
-// Handle IPC messages from renderer
+// IPC Handlers for restarting individual services
 ipcMain.on('restart-python', async () => {
   console.log('Restart Python request received');
   
   if (global.backendProcesses.pythonTracker) {
-    // Kill existing process
     kill(global.backendProcesses.pythonTracker.pid, 'SIGTERM', async (err) => {
       if (err) console.error(`Error killing Python process: ${err.message}`);
       
@@ -565,7 +598,7 @@ ipcMain.on('restart-python', async () => {
   }
 });
 
-// Add handlers for other services
+// Restart Auth Server handler
 ipcMain.on('restart-auth-server', async () => {
   console.log('Restart Auth Server request received');
   
@@ -591,6 +624,7 @@ ipcMain.on('restart-auth-server', async () => {
   }
 });
 
+// Restart Engagement Hub handler
 ipcMain.on('restart-engagement-hub', async () => {
   console.log('Restart Engagement Hub request received');
   

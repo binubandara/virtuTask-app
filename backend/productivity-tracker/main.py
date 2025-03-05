@@ -1,5 +1,6 @@
 # backend/main.py
 
+# Import necessary libraries for various functionalities
 import os
 import time
 import pymongo
@@ -22,6 +23,12 @@ from report_generator import ReportGenerator
 
 class ProductivityTracker:
     def __init__(self, employee_id=None):
+        """
+        Initialize the ProductivityTracker with MongoDB connection and tracking components.
+        
+        Args:
+            employee_id (str, optional): Unique identifier for the employee. Defaults to None.
+        """
         # MongoDB Connection
         self.client = pymongo.MongoClient('mongodb://localhost:27017/')
         self.db = self.client['productivity_tracker']
@@ -57,12 +64,25 @@ class ProductivityTracker:
         self.model = genai.GenerativeModel('models/gemini-1.5-pro')
         
     def set_employee_id(self, employee_id):
-        """Set the employee ID for the tracker instance"""
+        """
+        Set the employee ID for the tracker instance.
+        
+        Args:
+            employee_id (str): Unique identifier for the employee.
+        """
         self.employee_id = employee_id
         print(f"Employee ID set to: {self.employee_id}")
 
     def start_session(self, session_name):
-        """Start a new tracking session"""
+        """
+        Start a new tracking session.
+        
+        Args:
+            session_name (str): Name or description of the session.
+        
+        Returns:
+            dict: Status of session start with message.
+        """
         if not self.employee_id:
             return {"status": "error", "message": "Employee ID not set. Please login first."}
             
@@ -93,6 +113,12 @@ class ProductivityTracker:
         return {"status": "success", "message": "Session started"}
     
     def end_session(self):
+        """
+        End the current tracking session.
+        
+        Returns:
+            dict: Status of session end with potential report ID or error message.
+        """
         if not self.current_session:
             return {"status": "error", "message": "No active session"}
             
@@ -151,7 +177,12 @@ class ProductivityTracker:
             }
     
     def _generate_ai_summary(self):
-        """Generate AI summary based on privacy settings with detailed error handling"""
+        """
+        Generate AI summary based on privacy settings.
+        
+        Returns:
+            str: AI-generated summary of the session or error message.
+        """
         try:
             # Get privacy settings - use employee_id to get specific settings
             settings_doc = self.db['user_settings'].find_one({
@@ -239,7 +270,10 @@ class ProductivityTracker:
             return f"Unable to generate AI summary. Error type: {error_type}. Details: {str(e)}"
 
     def _screenshot_loop(self):
-        """Take screenshots based on user privacy settings"""
+        """
+        Take screenshots based on user privacy settings in a continuous loop.
+        Runs as a daemon thread during an active session.
+        """
         while self.session_active:
             try:
                 # Get privacy settings from database for this employee
@@ -296,7 +330,15 @@ class ProductivityTracker:
                 time.sleep(60)  # Wait a minute before retrying
 
     def _generate_and_store_report(self, summary):
-        """Generate PDF report and store it in MongoDB"""
+        """
+        Generate PDF report and store it in MongoDB.
+        
+        Args:
+            summary (str): AI-generated summary of the session.
+        
+        Returns:
+            ObjectId: Inserted report document ID.
+        """
         try:
             # Create PDF in memory
             report_buffer = io.BytesIO()
@@ -328,7 +370,7 @@ class ProductivityTracker:
         except Exception as e:
             print(f"Error generating/storing report: {e}")
             raise
-
+        
     def get_report(self, report_id):
         """Retrieve a report from MongoDB"""
         try:

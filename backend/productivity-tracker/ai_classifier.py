@@ -7,12 +7,29 @@ from datetime import datetime, timedelta
 import re
 
 class RateLimiter:
+    """
+    A class to manage API request rate limiting.
+    
+    Ensures that the number of requests does not exceed a specified limit per minute
+    by tracking request times and implementing a waiting mechanism.
+    """
     def __init__(self, requests_per_minute=60):
+        """
+        Initialize the RateLimiter with a specified requests per minute limit.
+        
+        Args:
+            requests_per_minute (int): Maximum number of requests allowed per minute.
+        """
         self.requests_per_minute = requests_per_minute
         self.request_times = deque()
         
     def wait_if_needed(self):
-        """Wait if necessary to stay within rate limits"""
+        """
+        Wait if necessary to stay within rate limits.
+        
+        Removes requests older than 1 minute, checks if current request will exceed limit,
+        and sleeps if needed to maintain the rate limit.
+        """
         now = datetime.now()
         
         # Remove requests older than 1 minute
@@ -29,7 +46,17 @@ class RateLimiter:
         self.request_times.append(now)
 
 class AIClassifier:
+    """
+    A comprehensive AI-powered application productivity classifier.
+    
+    Uses multiple strategies to classify whether a window/application 
+    is being used for productive or unproductive purposes.
+    """
     def __init__(self):
+        """
+        Initialize the AIClassifier with API configuration, 
+        predefined app lists, and classification strategies.
+        """
         # Load environment variables
         load_dotenv()
         
@@ -47,6 +74,7 @@ class AIClassifier:
             3. Get an API key from Google AI Studio (https://makersuite.google.com/app/apikey)
             """)
         
+        # Configure Gemini API
         genai.configure(api_key=api_key)
         self.model = genai.GenerativeModel('models/gemini-1.5-pro')
         
