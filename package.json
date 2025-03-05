@@ -1,0 +1,20 @@
+{
+  "name": "virtuTask-app",
+  "version": "1.0.0",
+  "main": "main.js",
+  "scripts": {
+    "dev": "concurrently \"yarn backend\" \"yarn frontend\" \"yarn electron\"",
+    "backend": "cd backend && yarn start",
+    "frontend": "cd frontend && yarn dev",
+    "electron": "electron .",
+    "build": "cd frontend && yarn build && cd .. && electron-builder",
+    "start": "electron ."
+  },
+  "dependencies": {
+    "electron": "^27.0.0",
+    "concurrently": "^7.6.0"
+  },
+  "devDependencies": {
+    "electron-builder": "^24.6.0"
+  }
+}
