@@ -30,7 +30,7 @@
     
   }
   
-  .habit-tile {
+  .health-habit-tile {
     --tile-width: 230px; /* Reduced tile width */
     flex: 0 0 var(--tile-width);
     height: 400px;
@@ -42,13 +42,13 @@
     transition: transform 0.2s ease;
   }
   
-  .habit-tile:hover {
+  .health-habit-tile:hover {
     transform: translateY(-5px);
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
     cursor: pointer;
   }
   
-  .habit-tile-image {
+  .health-habit-tile-image {
     height: 75%;
     background-size: cover;
     background-position: center;
@@ -56,7 +56,7 @@
     background-image: linear-gradient(45deg, #dfe6e9, #ecf0f1);
   }
   
-  .habit-tile-title {
+  .health-habit-tile-title {
     margin: 0;
     padding: 1rem;
     text-align: center;

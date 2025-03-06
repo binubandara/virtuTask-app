@@ -1,18 +1,20 @@
 import React, { useState } from 'react';
 import './HabitInfo.css';
 
-const HabitInfo = ({ habit, onClose }) => {
+const HabitInfo = ({ habit, onClose, color }) => {
   const [currentSubIndex, setCurrentSubIndex] = useState(0);
   const subTilesPerView = 2;
 
   const handlePrevSub = () => {
-    setCurrentSubIndex(prev => (prev === 0 ? habit.subItems.length - 1 : prev - 1));
+    setCurrentSubIndex(prev => (prev === 0 ? habit.subItems.length - subTilesPerView : prev - subTilesPerView));
   };
   
   const handleNextSub = () => {
-    setCurrentSubIndex(prev => (prev === habit.subItems.length - 1 ? 0 : prev + 1));
+    setCurrentSubIndex(prev => (prev >= habit.subItems.length - subTilesPerView ? 0 : prev + subTilesPerView));
   };
-  
+
+  const visibleSubItems = habit.subItems.slice(currentSubIndex, currentSubIndex + subTilesPerView);
+
   return (
     <div className="habit-info-overlay">
       <div className="habit-info-modal">
@@ -22,13 +24,20 @@ const HabitInfo = ({ habit, onClose }) => {
         </div>
 
         <div className="habit-info-sub-carousel-wrapper">
-          <button className="habit-info-sub-nav prev" onClick={handlePrevSub}>‹</button>
-          
+          <button className="habit-info-sub-nav habit-info-sub-nav-prev" onClick={handlePrevSub}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M15 18L9 12L15 6" stroke="#2c3e50" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+
           <div className="habit-info-sub-carousel">
-            <div className="habit-info-sub-carousel-inner" 
-              style={{ transform: `translateX(-${currentSubIndex * 50}%)` }}>
-              {habit.subItems.map((subItem) => (
-                <div className="habit-info-sub-tile" key={subItem.id}>
+            <div className="habit-info-sub-carousel-inner">
+              {visibleSubItems.map((subItem) => (
+                <div 
+                  className="habit-info-sub-tile" 
+                  key={subItem.id}
+                  style={{ backgroundColor: color,borderColor: color }} // Apply the color here
+                >
                   <div 
                     className="habit-info-sub-tile-image"
                     style={{ backgroundImage: `url(${subItem.image})` }}
@@ -39,7 +48,7 @@ const HabitInfo = ({ habit, onClose }) => {
                       <div key={index} className="habit-info-content-section">
                         <h4>{section.title}</h4>
                         <ul>
-                          {section.content.map((item, i) => (
+                          {section.health_habit_content.map((item, i) => (
                             <li key={i}>{item}</li>
                           ))}
                         </ul>
@@ -50,8 +59,11 @@ const HabitInfo = ({ habit, onClose }) => {
               ))}
             </div>
           </div>
-
-          <button className="habit-info-sub-nav next" onClick={handleNextSub}>›</button>
+          <button className="habit-info-sub-nav habit-info-sub-nav-next" onClick={handleNextSub}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M9 18L15 12L9 6" stroke="#2c3e50" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
         </div>
       </div>
     </div>
