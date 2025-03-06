@@ -170,41 +170,46 @@ export const getTask = async (req: Request, res: Response): Promise<void> => {
 
 // Create a new project
 export const createProject = async (req: Request, res: Response): Promise<void> => {
-try {
-  console.log('Creating new project:', req.body);
-  
-  // Validate required fields
-  const { name, description, startDate, dueDate } = req.body;
-  if (!name || !startDate || !dueDate || !description) {
-    res.status(400).json({ message: 'Name, description, start date, and due date are required' });
-    return;
+  try {
+      console.log('Creating new project:', req.body);
+
+      // Validate required fields
+      const { name, description, startDate, dueDate, department, client, priority, members } = req.body;
+      if (!name || !startDate || !dueDate || !description || !department || !client || !members || !priority) {
+          res.status(400).json({ message: 'Name, description, start date, due date, department, client, priority, and members are required' });
+          return;
+      }
+
+      // Generate a UUID for the project_id
+      const project_id = uuidv4();
+
+      // Create a new project
+      const project = await Project.create({
+          project_id: project_id,
+          name,
+          description,
+          startDate: new Date(startDate),
+          dueDate: new Date(dueDate),
+          status: 'Active', // Default status
+          tasks: [], // You can add task references later
+          department,
+          client,
+          priority,
+          members // Ensure this is an array of user IDs/names
+      });
+
+      console.log('Project created successfully:', project);
+
+      // Emit a socket event for have real-time updates
+      if ((req as any).io) {
+          (req as any).io.emit('project_created', project);
+      }
+
+      res.status(201).json(project);
+  } catch (error: any) {
+      console.error('Error creating project:', error);
+      res.status(400).json({ message: 'Error creating project', error: error.message });
   }
-  // Generate a UUID for the project_id
-  const project_id = uuidv4();
-
-  // Create a new project
-  const project = await Project.create({
-    project_id: project_id,
-    name,
-    description,
-    startDate: new Date(startDate),
-    dueDate: new Date(dueDate),
-    status: 'Active', // Default status
-    tasks: [], // You can add task references later
-  });
-
-  console.log('Project created successfully:', project);
-
-  // Emit a socket event for have real-time updates
-  if ((req as any).io) {
-    (req as any).io.emit('project_created', project);
-  }
-
-  res.status(201).json(project);
-} catch (error: any) {
-  console.error('Error creating project:', error);
-  res.status(400).json({ message: 'Error creating project', error: error.message });
-}
 };
 
 
@@ -244,39 +249,39 @@ export const getProject = async (req: Request, res: Response): Promise<void> => 
 // Update project
 export const updateProject = async (req: Request, res: Response): Promise<void> => {
   try {
-    console.log('Updating project:', req.params.project_id);
-    
-    const allowedUpdates = ['name', 'description', 'startDate', 'dueDate', 'status'];
-    const updates = Object.keys(req.body);
-    const isValidOperation = updates.every(update => allowedUpdates.includes(update));
+      console.log('Updating project:', req.params.project_id);
 
-    if (!isValidOperation) {
-      res.status(400).json({ message: 'Invalid updates!' });
-      return;
-    }
+      const allowedUpdates = ['name', 'description', 'startDate', 'dueDate', 'status', 'department', 'client', 'priority', 'members'];
+      const updates = Object.keys(req.body);
+      const isValidOperation = updates.every(update => allowedUpdates.includes(update));
 
-    const project = await Project.findOneAndUpdate( // Find and update by project_id
-      { project_id: req.params.project_id },
-      req.body,
-      { new: true, runValidators: true }
-  );
-    
-    if (!project) {
-      console.log('Project not found:', req.params.project_id);
-      res.status(404).json({ message: 'Project not found' });
-      return;
-    }
-    
-    // Emit socket event for real-time updates
-    if ((req as any).io) {
-      (req as any).io.emit('project_updated', project);
-    }
-    
-    console.log('Project updated successfully:', project);
-    res.status(200).json(project);
+      if (!isValidOperation) {
+          res.status(400).json({ message: 'Invalid updates!' });
+          return;
+      }
+
+      const project = await Project.findOneAndUpdate( // Find and update by project_id
+          { project_id: req.params.project_id },
+          req.body,
+          { new: true, runValidators: true }
+      );
+
+      if (!project) {
+          console.log('Project not found:', req.params.project_id);
+          res.status(404).json({ message: 'Project not found' });
+          return;
+      }
+
+      // Emit socket event for real-time updates
+      if ((req as any).io) {
+          (req as any).io.emit('project_updated', project);
+      }
+
+      console.log('Project updated successfully:', project);
+      res.status(200).json(project);
   } catch (error: any) {
-    console.error('Error updating project:', error);
-    res.status(400).json({ message: 'Error updating project', error: error.message });
+      console.error('Error updating project:', error);
+      res.status(400).json({ message: 'Error updating project', error: error.message });
   }
 };
 // Delete project

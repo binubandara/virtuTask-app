@@ -8,6 +8,9 @@ export interface IProject extends Document {
   dueDate: Date;
   status: string;
   tasks: mongoose.Types.ObjectId[];
+  department: string; 
+  members: string[];
+  priority: string;
 }
 
 const ProjectSchema: Schema = new Schema({
@@ -17,7 +20,13 @@ const ProjectSchema: Schema = new Schema({
   startDate: { type: Date, required: true },
   dueDate: { type: Date, required: true },
   status: { type: String, default: 'Active' },
-  tasks: [{ type: String, ref: 'Task' }] 
+  tasks: [{ type: String, ref: 'Task' }],
+  department: { type: String, required: true } ,
+  clientId: { type: String, required: true },
+  members: [{ type: String, required: true }],  
+  priority: { type: String, enum: ['High', 'Medium', 'Low'], default: 'Medium' },
+
+  
 });
 
 export const Project = mongoose.model<IProject>('Project', ProjectSchema);
