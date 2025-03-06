@@ -115,7 +115,7 @@ export const calculateAndAwardRewards = async (memberId: string): Promise<IRewar
       rewardType: "Game Time",
       rewardAmount: minutesReward,
       description: `Reward for productivity on ${new Date().toLocaleDateString()}`,
-      name: "Productivity Reward",
+      name: "Game Time Reward",
       points: totalScore
     };
 
@@ -127,26 +127,108 @@ export const calculateAndAwardRewards = async (memberId: string): Promise<IRewar
   }
 };
 
+
+// Calculate Monthly Gym Membership Rewards
+const calculateMonthlyGymMembership = async (memberId: string): Promise<IReward | null> => {
+  try {
+    if (!memberId || !mongoose.isValidObjectId(memberId)) {
+      console.error('Invalid memberId');
+      throw new Error('Invalid memberId');
+    }
+
+    const member = await TeamMember.findById(memberId);
+    if (!member) {
+      console.error('Member not found');
+      throw new Error('Member not found');
+    }
+
+    // Get the start and end dates of the current month
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+    // Find productivity data for the member within the current month
+    const productivityData = await ProductivityData.find({
+      memberId: member._id,
+      date: { $gte: startOfMonth, $lte: endOfMonth }
+    });
+
+    if (!productivityData || productivityData.length === 0) {
+      console.warn('No productivity data found for this member this month');
+      return null;
+    }
+
+    let monthlyScore = 0;
+    for (const data of productivityData) {
+      monthlyScore += data.productivity_score;
+    }
+
+    const requiredMonthlyScoreForGymMembership = 1000;  // Required monthly score to get this reward
+    if (monthlyScore >= requiredMonthlyScoreForGymMembership) {
+      const rewardData = {
+        memberId: member._id,
+        date: new Date(),
+        rewardType: "Gym Membership",
+        rewardAmount: 1, // Or anything that reflects to the user that they have the reward
+        description: `Gym membership awarded for total productivity of ${monthlyScore.toFixed(2)} points in ${startOfMonth.toLocaleDateString('default', { month: 'long', year: 'numeric' })}`,
+        name: "Monthly Gym Membership",
+        points: monthlyScore
+      };
+
+      const newReward = await Reward.create(rewardData);
+      return newReward;
+    } else {
+      console.log(`Member did not meet the required monthly score for gym membership: ${monthlyScore.toFixed(2)} / ${requiredMonthlyScoreForGymMembership}`);
+      return null;
+    }
+  } catch (error) {
+    console.error('Error calculating and awarding gym membership:', error);
+    throw error;
+  }
+};
+
 // Trigger reward calculation for a member
 export const triggerRewardCalculation = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { memberId } = req.params;
-    const newReward = await calculateAndAwardRewards(memberId);
-    if (newReward) {
+
+    // Calculate and award game time reward
+    const gameTimeReward = await calculateAndAwardRewards(memberId);
+
+    // Calculate and award gym membership reward
+    const gymMembershipReward = await calculateMonthlyGymMembership(memberId);
+
+    const rewards = [];
+
+    if (gameTimeReward) {
+      rewards.push({
+        name: gameTimeReward.name,
+        points: gameTimeReward.points,
+        rewardAmount: gameTimeReward.rewardAmount, // Include rewardAmount in the response
+        description: gameTimeReward.description,
+        date: gameTimeReward.date,
+        _id: gameTimeReward._id,
+      });
+    }
+
+    if (gymMembershipReward) {
+      rewards.push({
+        name: gymMembershipReward.name,
+        points: gymMembershipReward.points,
+        rewardAmount: gymMembershipReward.rewardAmount, // Include rewardAmount in the response
+        description: gymMembershipReward.description,
+        date: gymMembershipReward.date,
+        _id: gymMembershipReward._id,
+      });
+    }
+
+    if (rewards.length > 0) {
       res.status(200).json({
-        message: 'Reward calculated and awarded successfully!',
-        reward: {
-          name: newReward.name,
-          points: newReward.points,
-          rewardAmount: newReward.rewardAmount, // Include rewardAmount in the response
-          description: newReward.description,
-          date: newReward.date,
-          _id: newReward._id,
-          
-        }
+        message: 'Rewards calculated and awarded successfully!',
+        rewards: rewards  // Return an array of rewards
       });
     } else {
-      res.status(200).json({ message: 'No reward given!', reward: newReward });
+      res.status(200).json({ message: 'No rewards given!', rewards: [] }); // Return an empty array
     }
   } catch (error) {
     console.error('Error triggering reward calculation:', error);
