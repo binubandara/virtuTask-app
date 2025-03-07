@@ -173,10 +173,10 @@ export const createProject = async (req: Request, res: Response): Promise<void> 
   try {
       console.log('Creating new project:', req.body);
 
-      // Validate required fields
-      const { name, description, startDate, dueDate, department, client, priority, members } = req.body;
-      if (!name || !startDate || !dueDate || !description || !department || !client || !members || !priority) {
-          res.status(400).json({ message: 'Name, description, start date, due date, department, client, priority, and members are required' });
+      // Validate required fields, now you should add the client id and remove client
+      const { name, description, startDate, dueDate, department, priority, members, clientId } = req.body;
+      if (!name || !startDate || !dueDate || !description || !department || !priority || !members) {
+          res.status(400).json({ message: 'Name, description, start date, due date, department, priority, and members are required' });
           return;
       }
 
@@ -193,9 +193,9 @@ export const createProject = async (req: Request, res: Response): Promise<void> 
           status: 'Active', // Default status
           tasks: [], // You can add task references later
           department,
-          client,
           priority,
-          members // Ensure this is an array of user IDs/names
+          members, 
+          clientId 
       });
 
       console.log('Project created successfully:', project);
@@ -251,7 +251,7 @@ export const updateProject = async (req: Request, res: Response): Promise<void> 
   try {
       console.log('Updating project:', req.params.project_id);
 
-      const allowedUpdates = ['name', 'description', 'startDate', 'dueDate', 'status', 'department', 'client', 'priority', 'members'];
+      const allowedUpdates = ['name', 'description', 'startDate', 'dueDate', 'status', 'department', 'clientId', 'priority', 'members'];
       const updates = Object.keys(req.body);
       const isValidOperation = updates.every(update => allowedUpdates.includes(update));
 

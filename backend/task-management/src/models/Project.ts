@@ -8,25 +8,26 @@ export interface IProject extends Document {
   dueDate: Date;
   status: string;
   tasks: mongoose.Types.ObjectId[];
-  department: string; 
+  department: string;
   members: string[];
   priority: string;
+  clientId: string | null;  // Allow null
 }
 
 const ProjectSchema: Schema = new Schema({
-  project_id: { type: String, required: true, unique: true }, 
+  project_id: { type: String, required: true, unique: true },
   name: { type: String, required: true },
   description: { type: String, required: true },
   startDate: { type: Date, required: true },
   dueDate: { type: Date, required: true },
   status: { type: String, default: 'Active' },
   tasks: [{ type: String, ref: 'Task' }],
-  department: { type: String, required: true } ,
-  clientId: { type: String, required: true },
-  members: [{ type: String, required: true }],  
+  department: { type: String, required: true },
+  clientId: { type: String , default: null},
+  members: [{ type: String, required: true }],
   priority: { type: String, enum: ['High', 'Medium', 'Low'], default: 'Medium' },
 
-  
+
 });
 
 export const Project = mongoose.model<IProject>('Project', ProjectSchema);
