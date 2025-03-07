@@ -44,11 +44,11 @@
 
 .settings-box-heading {
   font-size: 1.2rem;
-  font-weight: bold;
+  font-weight: 500;
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  margin-bottom: 1rem;
+  margin-bottom: .2rem;
 }
 
 .theme-toggle {
