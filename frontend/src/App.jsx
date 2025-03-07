@@ -1,3 +1,4 @@
+import React from "react";
 import { useContext, useEffect } from "react";
 import { SettingContext } from "./context/SettingsContext";
 import SetPomodoro from "./component/SetPomodoro";
