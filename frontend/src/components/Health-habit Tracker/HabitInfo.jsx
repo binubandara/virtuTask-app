@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './HabitInfo.css';
 
-const HabitInfo = ({ habit, onClose, color }) => {
+const HabitInfo = ({ habit, onClose, color, borderColor }) => {
   const [currentSubIndex, setCurrentSubIndex] = useState(0);
   const subTilesPerView = 2;
 
@@ -12,8 +12,16 @@ const HabitInfo = ({ habit, onClose, color }) => {
   const handleNextSub = () => {
     setCurrentSubIndex(prev => (prev >= habit.subItems.length - subTilesPerView ? 0 : prev + subTilesPerView));
   };
+  
+  const itemWidth = 100 / subTilesPerView;
+  const translation = currentSubIndex * (itemWidth + 1.5); // 1.5% gap compensation
 
-  const visibleSubItems = habit.subItems.slice(currentSubIndex, currentSubIndex + subTilesPerView);
+  const adjustColor = (hex, amount) => {
+    if (!hex) return '#ffffff'; // Fallback for undefined colors
+    return '#' + hex.replace(/^#/, '').replace(/../g, color => 
+      ('0' + Math.min(255, Math.max(0, parseInt(color, 16) + amount)).toString(16)).substr(-2)
+    );
+  };
 
   return (
     <div className="habit-info-overlay">
@@ -31,30 +39,57 @@ const HabitInfo = ({ habit, onClose, color }) => {
           </button>
 
           <div className="habit-info-sub-carousel">
-            <div className="habit-info-sub-carousel-inner">
-              {visibleSubItems.map((subItem) => (
+            <div 
+              className="habit-info-sub-carousel-inner"
+              // In HabitInfo.jsx update transform calculation
+              style={{
+                transform: `translateX(calc(-${currentSubIndex * (100 / subTilesPerView)}%))`,
+                transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)'
+              }}
+              >
+              
+              {habit.subItems.map((subItem) => (
                 <div 
                   className="habit-info-sub-tile" 
                   key={subItem.id}
-                  style={{ backgroundColor: color,borderColor: color }} // Apply the color here
+                  style={{ 
+                    backgroundColor: color,
+                    borderColor: color,
+                    '--scroll-thumb': adjustColor(borderColor, -30),  // Darker borderColor
+                    '--scroll-track': adjustColor(borderColor, 44) 
+                  }}
                 >
                   <div 
                     className="habit-info-sub-tile-image"
                     style={{ backgroundImage: `url(${subItem.image})` }}
                   />
                   <div className="habit-info-sub-tile-content">
-                    <h3>{subItem.header}</h3>
+                    <h3 style={{ borderColor: borderColor }} >{subItem.header}</h3>
                     {subItem.sections?.map((section, index) => (
                       <div key={index} className="habit-info-content-section">
                         {section.title && <h4>{section.title}</h4>}
-                        <ul>
-                          {Array.isArray(section.health_habit_content) 
-                            ? section.health_habit_content.map((item, i) => (
-                                <li key={i}>{item}</li>
-                              ))
-                            : <li>{section.health_habit_content}</li>
-                          }
-                        </ul>
+                      <ul>
+                        {(Array.isArray(section.health_habit_content) 
+                          ? section.health_habit_content
+                          : [section.health_habit_content]
+                        ).map((item, i) => {
+                          const hasEmoji = /(\p{Emoji_Presentation})/u.test(item);
+                          return (
+                            <li key={i} className={hasEmoji ? "with-emoji" : ""}>
+                              {hasEmoji ? (
+                                <>
+                                  <span className="emoji-wrapper">
+                                    {item.match(/(\p{Emoji_Presentation})/u)[0]}
+                                  </span>
+                                  {item.replace(/(\p{Emoji_Presentation})/u, '').trim()}
+                                </>
+                              ) : (
+                                item
+                              )}
+                            </li>
+                          );
+                        })}
+</ul>
                       </div>
                     ))}
                   </div>
