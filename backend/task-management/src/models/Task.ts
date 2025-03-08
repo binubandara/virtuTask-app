@@ -14,7 +14,12 @@ interface IAssignee {
   initial: string;
   avatarColor: string;
 }
-
+export interface IAttachment {
+  filename: string;
+  filePath: string;
+  fileSize: number;
+  fileType: string;
+}
 interface ITask extends Document {
   task_id: string;
   name: string;
@@ -27,6 +32,7 @@ interface ITask extends Document {
   comments: IComment[];
   createdAt: Date;
   updatedAt: Date;
+  attachments: IAttachment[];
 }
 
 const CommentSchema: Schema = new Schema({
@@ -54,7 +60,13 @@ const TaskSchema: Schema = new Schema({
   project_id: { type: String, required: true }, // Ensure this is a string
   comments: [CommentSchema],
   createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now }
+  updatedAt: { type: Date, default: Date.now },
+  attachments: [{
+    filename: { type: String },
+    filePath: { type: String },
+    fileSize: { type: Number },
+    fileType: { type: String },
+  }],
 });
 
 export const Task = mongoose.model<ITask>('Task', TaskSchema);

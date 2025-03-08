@@ -1,5 +1,5 @@
 import express from "express";
-import { getTasks, createTask, updateTask, deleteTask, getTask, createProject,getProjects,getProject,updateProject, deleteProject,updateAssigneeStatus} from '../controllers/taskController';
+import { getTasks, createTask, updateTask, deleteTask, getTask, createProject,getProjects,getProject,updateProject, deleteProject,updateAssigneeStatus,uploadFile} from '../controllers/taskController';
 
 const router = express.Router();
 
@@ -159,5 +159,10 @@ router.patch('/tasks/:task_id/update-status', async (req, res) => {
   }
   }
   });
+
+  
+// File upload route
+router.post('/tasks/:task_id/upload', uploadFile);
+
     
 export default router;

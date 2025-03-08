@@ -1,8 +1,14 @@
 import { Request, Response } from 'express';
+
+interface MulterRequest extends Request {
+  file?: Express.Multer.File;
+}
 import {Task} from '../models/Task';
 import { Project } from '../models/Project';
 import { v4 as uuidv4 } from 'uuid';
 import mongoose from 'mongoose';
+import multer from 'multer';
+import path from 'path';
 
 
 // Get all tasks for a specific project 
@@ -370,3 +376,60 @@ export const updateAssigneeStatus = async (req: Request, res: Response): Promise
       res.status(500).json({ message: 'Error updating assignee status', error: error.message });
   }
 };
+
+
+// --- Multer Configuration ---
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+      cb(null, 'uploads/');
+  },
+  filename: (req, file, cb) => {
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({
+  storage: storage,
+  fileFilter: function (req, file, cb) {
+      const filetypes = /jpeg|jpg|png|gif|pdf|doc|docx/;
+      const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+      const mimetype = filetypes.test(file.mimetype);
+
+      if (mimetype && extname) {
+          return cb(null, true);
+      } else {
+          cb(new Error('Only images (jpeg, jpg, png, gif), PDFs, and Word documents are allowed!'));
+      }
+  }
+});
+
+export const uploadFile = [upload.single('file'), async (req: MulterRequest, res: Response): Promise<void> => {
+  try {
+      if (!req.file) {
+          res.status(400).json({ message: 'No file uploaded' });
+          return;
+      }
+
+      const task = await Task.findOne({ task_id: req.params.task_id });
+
+      if (!task) {
+          res.status(404).json({ message: 'Task not found' });
+          return;
+      }
+
+      task.attachments.push({
+          filename: req.file.originalname,
+          filePath: req.file.path,
+          fileSize: req.file.size,
+          fileType: req.file.mimetype
+      });
+
+      await task.save();
+
+      res.status(200).json({ message: 'File uploaded successfully', filename: req.file.originalname, filePath: req.file.path });
+  } catch (error: any) {
+      console.error('Error uploading file:', error);
+      res.status(500).json({ message: 'Error uploading file', error: error.message });
+  }
+}];
