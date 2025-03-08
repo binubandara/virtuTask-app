@@ -73,8 +73,11 @@
   border-radius: 20px;
   overflow: hidden;
   padding: 1.2rem;
-  font-size: 1rem;
-  color: #34495e;
+  font-size: 0.6rem;
+  color: inherit;
+  font-weight: 500;
+  
+  /* Match border to background */
 }
 .habit-info-sub-tile-image {
   height: 150px;
@@ -120,17 +123,23 @@
   height: calc(100% - 170px); /* 150px image + 20px margin */
   overflow-y: auto;
   color: inherit;
+  color: #34495e; /* Explicit color definition */
+  font-weight: 500;
 }
 
 .habit-info-content-section {
   margin: 1.0rem 0;
+  color: #2c3e50; /* Darker color for headings */
+  margin: 0 0 0.5rem 0;
+  font-size: 0.6rem;
+  font-weight: 500;
 }
 
 .habit-info-content-section h4 {
   color: #263645;
   margin: 0 0 0.5rem 0;
   font-size: 1.1rem;
-  font-weight: 549;
+  font-weight: 550;
 }
 
 .habit-info-content-section ul {
@@ -142,6 +151,8 @@
   margin-bottom: 1px;
   line-height: 1.2;
   color:inherit;
+  font-size: 1rem;
+  list-style-type: disc;
 }
 
 .habit-info-sub-tile-content h3 {

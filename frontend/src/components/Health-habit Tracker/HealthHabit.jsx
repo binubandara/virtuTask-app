@@ -35,7 +35,7 @@ const HealthHabit = () => {
               'Improves lung capacity (Mayo Clinic)'
             ] }
         ]},
-        { id: 1, 
+        { id: 2, 
           header: 'Posture Alignment', 
           image: ergonomicsImage, 
           sections: [

@@ -46,11 +46,14 @@ const HabitInfo = ({ habit, onClose, color }) => {
                     <h3>{subItem.header}</h3>
                     {subItem.sections?.map((section, index) => (
                       <div key={index} className="habit-info-content-section">
-                        <h4>{section.title}</h4>
+                        {section.title && <h4>{section.title}</h4>}
                         <ul>
-                          {section.health_habit_content.map((item, i) => (
-                            <li key={i}>{item}</li>
-                          ))}
+                          {Array.isArray(section.health_habit_content) 
+                            ? section.health_habit_content.map((item, i) => (
+                                <li key={i}>{item}</li>
+                              ))
+                            : <li>{section.health_habit_content}</li>
+                          }
                         </ul>
                       </div>
                     ))}
