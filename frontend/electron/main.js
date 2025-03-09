@@ -2,7 +2,7 @@ const { app, BrowserWindow } = require('electron');
 const path = require('path');
 const url = require('url');
 
-// Manually check if in development
+
 const isDev = process.env.NODE_ENV === 'development' || 
   process.env.NODE_ENV === undefined && !app.isPackaged;
 
