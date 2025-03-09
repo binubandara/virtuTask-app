@@ -16,11 +16,12 @@ app.use("/api/tasks", taskRoutes);
 app.use("/api/focus", focusRoutes);
 
 // Connect to MongoDB and Start Server
-mongoose.connect(process.env.MONGO_URI)
+mongoose.connect("mongodb://127.0.0.1:27017/virtuTaskDB")
   .then(() => {
     app.listen(process.env.PORT, () => {
       console.log(`✅ Server running on port ${process.env.PORT}`);
     });
   })
   .catch(err => console.log("❌ DB Connection Error:", err));
+
 

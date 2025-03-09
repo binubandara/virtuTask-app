@@ -5,7 +5,7 @@
   "type": "module",
   "main": "electron/main.js",
   "scripts": {
-    "dev": "vite --open",
+    "dev": "concurrently \"yarn start\" \"cd ../frontend && yarn start\"",
     "start": "vite",
     "build": "vite build",
     "lint": "eslint .",
