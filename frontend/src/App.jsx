@@ -66,6 +66,7 @@ function App() {
                 key={pomodoro}
                 timer={pomodoro}
                 animate={startAnimate}
+                taskId={executing.taskId}
               />
             </div>
           </div>

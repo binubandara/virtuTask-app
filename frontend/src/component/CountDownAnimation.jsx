@@ -1,9 +1,11 @@
 import React, { useContext } from "react";
 import { CountdownCircleTimer } from "react-countdown-circle-timer";
 import { SettingContext } from "../context/SettingsContext";
+import { TaskContext } from "../context/TaskContext"; // Import Task Context
 
-const CountdownAnimation = ({ timer = 20, animate = true }) => {
+const CountdownAnimation = ({ taskId, timer = 20, animate = true }) => {
   const { stopTimer } = useContext(SettingContext);
+  const { logFocusSession } = useContext(TaskContext); // Get function from context
 
   return (
     <CountdownCircleTimer
@@ -15,6 +17,12 @@ const CountdownAnimation = ({ timer = 20, animate = true }) => {
       trailColor="#151932"
       onComplete={() => {
         stopTimer();
+        
+        // Log the completed focus session
+        if (taskId) {
+          logFocusSession(taskId, timer);
+        }
+
         return { shouldRepeat: false };
       }}
     >

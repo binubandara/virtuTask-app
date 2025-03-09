@@ -1,30 +1,83 @@
-import React, { createContext, useState } from "react";
+import React, { createContext, useState, useEffect } from "react";
+import axios from "axios";
 
 // Create the context
 export const TaskContext = createContext();
 
+const API_URL = "http://localhost:5000/api/tasks";
+const FOCUS_API = "http://localhost:5000/api/focus";
+
 export const TaskProvider = ({ children }) => {
-  const [tasks, setTasks] = useState([
-    { id: 1, name: "CS02_Prototype", completed: false },
-    
-  ]);
+  const [tasks, setTasks] = useState([]);
 
-  const addTask = (task) => {
-    setTasks([...tasks, { ...task, id: Date.now(), completed: false }]);
-  };
-  
-  const toggleTaskCompletion = (taskId) => {
-    setTasks(tasks.map((task) => 
-      task.id === taskId ? { ...task, completed: !task.completed } : task
-    ));
+  // Fetch tasks from backend on load
+  useEffect(() => {
+    const fetchTasks = async () => {
+      try {
+        const response = await axios.get(API_URL);
+        setTasks(response.data);
+      } catch (error) {
+        console.error("Error fetching tasks:", error);
+      }
+    };
+
+    fetchTasks();
+  }, []);
+
+  // Add new task (send to backend)
+  const addTask = async (task) => {
+    try {
+      const response = await axios.post(API_URL, task);
+      setTasks([...tasks, response.data]);
+    } catch (error) {
+      console.error("Error adding task:", error);
+    }
   };
 
-  const deleteTask = (taskId) => {
-    setTasks(tasks.filter((task) => task.id !== taskId));
+  // Toggle task completion (update in backend)
+  const toggleTaskCompletion = async (taskId) => {
+    try {
+      const taskToUpdate = tasks.find((task) => task.id === taskId);
+      const updatedTask = { ...taskToUpdate, completed: !taskToUpdate.completed };
+
+      await axios.put(`${API_URL}/${taskId}`, updatedTask);
+
+      setTasks(tasks.map((task) => (task.id === taskId ? updatedTask : task)));
+    } catch (error) {
+      console.error("Error updating task:", error);
+    }
+  };
+
+  // Delete task (remove from backend)
+  const deleteTask = async (taskId) => {
+    try {
+      await axios.delete(`${API_URL}/${taskId}`);
+      setTasks(tasks.filter((task) => task.id !== taskId));
+    } catch (error) {
+      console.error("Error deleting task:", error);
+    }
+  };
+
+  // Log focus session
+  const logFocusSession = async (taskId, duration) => {
+    try {
+      await axios.post(FOCUS_API, { taskId, duration });
+      console.log("Focus session logged for task:", taskId);
+    } catch (error) {
+      console.error("Error logging focus session:", error);
+    }
   };
 
   return (
-    <TaskContext.Provider value={{ tasks, addTask, toggleTaskCompletion, deleteTask }}>
+    <TaskContext.Provider
+      value={{
+        tasks,
+        addTask,
+        toggleTaskCompletion,
+        deleteTask,
+        logFocusSession,
+      }}
+    >
       {children}
     </TaskContext.Provider>
   );
