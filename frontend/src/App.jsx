@@ -10,6 +10,7 @@ import TaskForm from "./components/Task-management/TaskForm";
 import TaskInformation from "./components/Task-management/TaskInformation";
 import HealthHabit from "./components/Health-habit Tracker/HealthHabit";
 import HabitInfo from "./components/Health-habit Tracker/HabitInfo";
+import MyTasks from "./components/Task-management-E/MyTasks";
 
 
 
@@ -27,6 +28,7 @@ function App() {
                 <Route path="/task-info" element={<TaskInformation />} />
                 <Route path="/health-habit" element={<HealthHabit />} />
                 <Route path="/habit-info" element={<HabitInfo />} />
+                <Route path="/my-tasks" element={<MyTasks />} />
                 
                 
             </Routes>

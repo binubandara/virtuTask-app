@@ -1,30 +1,37 @@
 import React, { useState } from 'react';
 import './HealthHabit.css';
 import HabitInfo from './HabitInfo';
+import postureImage_0 from '../../assets/posture0.jpg';
 import postureImage_b from '../../assets/5674009.jpg';
 import postureImage_d from '../../assets/Instruction for correct pose during office work.jpg';
 import postureImage_e from '../../assets/3823107.jpg';
 import postureImage_j from '../../assets/vect3.jpg';
+import hydrationImage_0 from '../../assets/water0.jpg';
 import hydrationImage_a from '../../assets/water.jpg';
 import hydrationImage_b from '../../assets/w.jpg';
 import hydrationImage_c from '../../assets/w3.jpg';
 import hydrationImage_d from '../../assets/w4.jpg';
+import eyeImage_0 from '../../assets/eye0.jpg';
 import eyeImage_a from '../../assets/eye1.jpg';
 import eyeImage_b from '../../assets/eye2.jpg';
 import eyeImage_c from '../../assets/eye3.jpg';
 import eyeImage_d from '../../assets/eye4.jpg';
+import mentalImage_0 from '../../assets/mental0.jpg';
 import mentalImage_a from '../../assets/mental1.jpg';
 import mentalImage_b from '../../assets/mental2.jpg';
 import mentalImage_c from '../../assets/mental3.jpg';
 import mentalImage_d from '../../assets/mental4.jpg';
+import screenImage_0 from '../../assets/screen0.jpg';
 import screenImage_a from '../../assets/screen1.png';
 import screenImage_b from '../../assets/screen2.jpg';
 import screenImage_c from '../../assets/screen3.jpg';
 import screenImage_d from '../../assets/screen4.jpg';
+import mindImage_0 from '../../assets/mind0.jpg';
 import mindImage_a from '../../assets/mind1.jpg';
 import mindImage_b from '../../assets/mind2.jpg';
 import mindImage_c from '../../assets/mind3.jpg';
 import mindImage_d from '../../assets/mind4.jpg';
+import socialImage_0 from '../../assets/social0.jpg';
 import socialImage_a from '../../assets/social1.jpg';
 import socialImage_b from '../../assets/social2.jpg';
 import socialImage_c from '../../assets/social3.jpg';
@@ -38,7 +45,7 @@ const HealthHabit = () => {
   const gap = 16; // Reduced gap between tiles
 
   const tiles = [
-    { id: 1, title: 'Posture', image: 'placeholder.jpg',color: '#fcf0f2', borderColor: '#fec7d2' , // Light blue
+    { id: 1, title: 'Posture', image: postureImage_0,color: '#fcf0f2', borderColor: '#fec7d2' , // Light blue
       subItems: [
         { id: 1, 
           header: 'Posture Alignment', 
@@ -126,7 +133,7 @@ const HealthHabit = () => {
         ]}
       ]
     },
-    { id: 2, title: 'Hydration', image: 'placeholder.jpg',color: '#e2eafc',borderColor: '#b7cdff',// Light pink
+    { id: 2, title: 'Hydration', image: hydrationImage_0 ,color: '#e2eafc',borderColor: '#b7cdff',// Light pink
       subItems: [
         { id: 1, 
           header: 'Hydration Essentials', 
@@ -219,7 +226,7 @@ const HealthHabit = () => {
         ]}
       ]
     },
-    { id: 3, title: 'Eye Health', image: 'placeholder.jpg', color: 'rgba(253, 247, 217, 0.88)', borderColor: '#ffee9b',// Light yellow
+    { id: 3, title: 'Eye Health', image: eyeImage_0 , color: 'rgba(253, 247, 217, 0.88)', borderColor: '#ffee9b',// Light yellow
       subItems: [
         { id: 1, 
           header: 'Eye Care Essentials', 
@@ -311,7 +318,7 @@ const HealthHabit = () => {
         ]}
       ]
     },
-    { id: 4, title: 'Mental Health Breaks', image: 'placeholder.jpg', color: '#f1e3fc', borderColor: '#d9a9fe', // Light purple
+    { id: 4, title: 'Mental Health Breaks', image: mentalImage_0 , color: '#f1e3fc', borderColor: '#d9a9fe', // Light purple
       subItems:  [
         { id: 1, 
           header: 'The Power of Mental Health Breaks', 
@@ -405,7 +412,7 @@ const HealthHabit = () => {
         ]}
       ]
     },
-    { id: 5, title: 'Screen Time Management', image: 'placeholder.jpg', color: 'rgba(216, 243, 220, 0.95)', borderColor: '#a2dfab', // Light green
+    { id: 5, title: 'Screen Time Management', image: screenImage_0 , color: 'rgba(216, 243, 220, 0.95)', borderColor: '#a2dfab', // Light green
       subItems:  [
         { id: 1, 
           header: 'Smart Screen Time for Remote Work', 
@@ -499,7 +506,7 @@ const HealthHabit = () => {
         ]}
       ]
     },
-    { id: 6, title: 'Mindfulness', image: 'placeholder.jpg', color: 'rgba(255, 234, 220, 0.89)', borderColor: '#ffcba8',// Light orange
+    { id: 6, title: 'Mindfulness', image: mindImage_0 , color: 'rgba(255, 234, 220, 0.89)', borderColor: '#ffcba8',// Light orange
       subItems: [
         { id: 1, 
           header: 'Cultivate Mindfulness, Elevate Focus', 
@@ -588,7 +595,7 @@ const HealthHabit = () => {
         ]}
       ]
     },
-    { id: 7, title: 'Social Connection', image: 'placeholder.jpg', color: 'rgba(205, 255, 253, 0.75)', borderColor: '#7cf0ec',// Light cyan
+    { id: 7, title: 'Social Connection', image: socialImage_0 , color: 'rgba(205, 255, 253, 0.75)', borderColor: '#7cf0ec',// Light cyan
       subItems: [
         { id: 1, 
           header: 'Stay Connected, Stay Energized', 
@@ -686,6 +693,26 @@ const HealthHabit = () => {
   const handleNext = () => {
     setCurrentIndex(prev => (prev >= tiles.length - tilesPerView ? 0 : prev + 1));
   };
+  const [tasks, setTasks] = useState([]);
+  const [inputText, setInputText] = useState('');
+
+  const handleAddTask = (e) => {
+    e.preventDefault();
+    if (inputText.trim()) {
+      setTasks([...tasks, { 
+        id: Date.now(), 
+        text: inputText, 
+        completed: false 
+      }]);
+      setInputText('');
+    }
+  };
+
+  const toggleTask = (taskId) => {
+    setTasks(tasks.map(task => 
+      task.id === taskId ? { ...task, completed: !task.completed } : task
+    ));
+  };
 
   return (
     <div className="health-habit-container">
@@ -727,7 +754,44 @@ const HealthHabit = () => {
         >
           ›
         </button>
+      </div>  
+      <div className="checklist-container">
+      <div className="checklist-header">
+        <h2>Checklist</h2>
+        <div className="checklist-divider"></div>
       </div>
+      
+      <form onSubmit={handleAddTask} className="checklist-input-group">
+        <input
+          type="text"
+          value={inputText}
+          onChange={(e) => setInputText(e.target.value)}
+          placeholder="Add a new habit to track..."
+          className="checklist-input"
+        />
+        <button type="submit" className="checklist-add-button">
+          Add Task
+        </button>
+      </form>
+      
+      <ul className="checklist-items">
+        {tasks.map(task => (
+          <li key={task.id} className="checklist-item">
+            <label className="checklist-label">
+              <input
+                type="checkbox"
+                checked={task.completed}
+                onChange={() => toggleTask(task.id)}
+                className="checklist-checkbox"
+              />
+              <span className={`task-text ${task.completed ? 'completed' : ''}`}>
+                {task.text}
+              </span>
+            </label>
+          </li>
+        ))}
+      </ul>
+    </div>
       {selectedHabit && (
         <HabitInfo 
           habit={selectedHabit} 
