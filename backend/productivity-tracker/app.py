@@ -98,7 +98,7 @@ def verify_token():
     except Exception as e:
         logger.error(f"Unexpected error in token verification: {str(e)}", exc_info=True)
         return jsonify({"status": "error", "message": "Internal Server Error", "error": str(e)}), 500
-    
+
 
 def verify_token():
     """
