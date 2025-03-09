@@ -27,9 +27,7 @@ function createWindow() {
   mainWindow.loadURL(startUrl);
 
   // Open DevTools in development mode
-  if (isDev) {
-    mainWindow.webContents.openDevTools();
-  }
+  if (isDev) {}
 }
 
 app.whenReady().then(() => {
