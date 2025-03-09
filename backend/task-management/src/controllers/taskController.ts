@@ -9,7 +9,7 @@ import { v4 as uuidv4 } from 'uuid';
 import mongoose from 'mongoose';
 import multer from 'multer';
 import path from 'path';
-
+import fs from 'fs';
 
 // Get all tasks for a specific project 
 export const getTasks = async (req: Request, res: Response): Promise<void> => {
@@ -149,6 +149,30 @@ export const deleteTask = async (req: Request, res: Response): Promise<void> => 
   } catch (error: any) {
     console.error('Error deleting task:', error);
     res.status(400).json({ message: 'Error deleting task', error: error.message });
+  }
+};
+
+// Get all tasks for a specific project
+export const getTasksByProject = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { project_id } = req.params;
+
+    if (!project_id) {
+      res.status(400).json({ message: 'Project ID is required' });
+      return;
+    }
+
+    console.log(`Fetching tasks for project: ${project_id}`);
+
+    const tasks = await Task.find({ project_id: project_id })
+      .sort({ createdAt: -1 })
+      .populate('comments');
+
+    console.log(`Successfully fetched ${tasks.length} tasks for project: ${project_id}`);
+    res.status(200).json(tasks);
+  } catch (error: any) {
+    console.error(`Error fetching tasks for project ${req.params.project_id}:`, error);
+    res.status(500).json({ message: `Error fetching tasks for project ${req.params.project_id}`, error: error.message });
   }
 };
 
@@ -312,22 +336,19 @@ try {
   console.error('Error deleting project:', error);
   res.status(400).json({ message: 'Error deleting project', error: error.message });
 }
-};
-// Helper function to determine overall task status
+};// Helper function to determine overall task status
 const determineOverallTaskStatus = (assigneeStatuses: string[]): string => {
-  if (assigneeStatuses.every(status => status === 'Completed')) {
-      return 'Completed';
-  }
-  if (assigneeStatuses.some(status => status === 'In Progress')) {
-      return 'In Progress';
-  }
-  return 'Pending';
+    if (assigneeStatuses.every(status => status === 'Completed')) {
+        return 'Completed';
+    }
+    if (assigneeStatuses.some(status => status === 'In Progress')) {
+        return 'In Progress';
+    }
+    return 'Pending';
 };
-
-// Update assignee and task status
 export const updateAssigneeStatus = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { status, assigneeId } = req.body;
+      const { status, assigneeId } = req.body;
 
       // Validate input
       if (!status || !assigneeId) {
@@ -337,7 +358,7 @@ export const updateAssigneeStatus = async (req: Request, res: Response): Promise
 
       console.log("Received status update request:", { status, assigneeId });
 
-      const task = await Task.findOne({ task_id: req.params.id }); // Use findOne with task_id
+      const task = await Task.findOne({ task_id: req.params.task_id }); // Use findOne with task_id
       if (!task) {
           res.status(404).json({ message: 'Task not found' });
           return;
@@ -346,11 +367,13 @@ export const updateAssigneeStatus = async (req: Request, res: Response): Promise
       console.log("Task found:", task);
 
       // Update the specific assignee's status
-      const assignee = task.assignees.find(a => a.task_id.toString() === assigneeId);
-      if (!assignee) {
-          res.status(404).json({ message: 'Assignee not found' });
-          return;
-      }
+       const assignee = task.assignees.find(a => a._id.toString() === assigneeId);
+        console.log("Assignee Found:", assignee)
+
+        if (!assignee) {
+            res.status(404).json({ message: 'Assignee not found' });
+            return;
+        }
 
       console.log("Assignee before update:", assignee);
       assignee.status = status;
@@ -376,8 +399,6 @@ export const updateAssigneeStatus = async (req: Request, res: Response): Promise
       res.status(500).json({ message: 'Error updating assignee status', error: error.message });
   }
 };
-
-
 // --- Multer Configuration ---
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -419,6 +440,7 @@ export const uploadFile = [upload.single('file'), async (req: MulterRequest, res
       }
 
       task.attachments.push({
+          _id: new mongoose.Types.ObjectId(),
           filename: req.file.originalname,
           filePath: req.file.path,
           fileSize: req.file.size,
@@ -433,3 +455,142 @@ export const uploadFile = [upload.single('file'), async (req: MulterRequest, res
       res.status(500).json({ message: 'Error uploading file', error: error.message });
   }
 }];
+export const getAttachment = async (req: Request, res: Response): Promise<void> => {
+  try {
+      const { task_id, attachment_id } = req.params;
+
+      const task = await Task.findOne({ task_id: task_id });
+
+      if (!task) {
+          res.status(404).json({ message: 'Task not found' });
+          return;
+      }
+
+      const attachment = task.attachments.find(attachment => attachment._id.toString() === attachment_id);
+
+      if (!attachment) {
+          res.status(404).json({ message: 'Attachment not found' });
+          return;
+      }
+      if (!fs.existsSync(attachment.filePath)) {
+        res.status(500).json({message: 'File not found on server'});
+        return;
+      }
+
+      // Determine Content-Type based on file type
+      let contentType = 'application/octet-stream';
+      if (attachment.fileType) {
+          contentType = attachment.fileType;
+      }
+
+      res.setHeader('Content-Type', contentType);
+      res.status(200).sendFile(attachment.filePath, { root: '.' });  // The key is the root
+
+  } catch (error: any) {
+      console.error('Error fetching attachment:', error);
+      res.status(500).json({ message: 'Error fetching attachment', error: error.message });
+  }
+};
+
+export const deleteAttachment = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { task_id, attachment_id } = req.params;
+
+    const task = await Task.findOne({ task_id: task_id });
+
+    if (!task) {
+      res.status(404).json({ message: 'Task not found' });
+      return;
+    }
+
+    const attachment = task.attachments.find(attachment => attachment._id.toString() === attachment_id);
+
+    if (!attachment) {
+      res.status(404).json({ message: 'Attachment not found' });
+      return;
+    }
+
+    // Delete the file from the file system
+    fs.unlink(attachment.filePath, (err) => {
+      if (err) {
+        console.error("Error deleting file:", err);
+        // Log the error, but don't block the deletion from the database.
+      }
+    });
+
+    // Remove the attachment from the task's attachments array
+    task.attachments = task.attachments.filter(attachment => attachment._id.toString() !== attachment_id);
+
+    await task.save();
+
+    res.status(200).json({ message: 'Attachment deleted successfully' });
+
+    // Emit socket event for real-time updates
+    if ((req as any).io) {
+        (req as any).io.emit('task_attachment_deleted', { taskId: task_id, attachmentId: attachment_id });
+    }
+
+  } catch (error: any) {
+    console.error('Error deleting attachment:', error);
+    res.status(500).json({ message: 'Error deleting attachment', error: error.message });
+  }
+};
+
+// Function to update an attachment (replace file and update metadata)
+export const updateAttachment = async (req: Request, res: Response): Promise<void> => {
+  upload.single('file')(req, res, async (err) => {
+    try {
+      if (err) {
+        console.error("Multer error:", err);
+        res.status(400).json({ message: 'Error uploading file', error: err.message });
+        return;
+      }
+
+      const { task_id, attachment_id } = req.params;
+
+      const task = await Task.findOne({ task_id: task_id });
+
+      if (!task) {
+        res.status(404).json({ message: 'Task not found' });
+        return;
+      }
+
+      const attachment = task.attachments.find(attachment => attachment._id.toString() === attachment_id);
+
+      if (!attachment) {
+        res.status(404).json({ message: 'Attachment not found' });
+        return;
+      }
+
+      // Check if a new file was uploaded
+      if (req.file) {
+        // Delete the old file
+        fs.unlink(attachment.filePath, (unlinkErr) => {
+          if (unlinkErr) {
+            console.error("Error deleting old file:", unlinkErr);
+            // Log the error, but don't block the update.
+          }
+        });
+
+        // Update attachment information with the new file details
+        attachment.filename = req.file.originalname;
+        attachment.filePath = req.file.path;
+        attachment.fileSize = req.file.size;
+        attachment.fileType = req.file.mimetype;
+      }
+
+      await task.save();
+
+      res.status(200).json({ message: 'Attachment updated successfully', attachment });
+
+      // Emit socket event for real-time updates
+      if ((req as any).io) {
+        (req as any).io.emit('task_attachment_updated', { taskId: task_id, attachment: attachment });
+      }
+
+    } catch (error: any) {
+      console.error('Error updating attachment:', error);
+      res.status(500).json({ message: 'Error updating attachment', error: error.message });
+    }
+  });
+};

@@ -6,20 +6,23 @@ interface IComment extends Document {
   createdAt: Date;
 }
 
-interface IAssignee {
-  task_id: string;
+interface IAssignee extends Document {
+  _id: mongoose.Types.ObjectId;
   status: string;
   name: string;
   userId: string;
   initial: string;
   avatarColor: string;
 }
+
 export interface IAttachment {
+  _id: mongoose.Types.ObjectId; // Add this line
   filename: string;
   filePath: string;
   fileSize: number;
   fileType: string;
 }
+
 interface ITask extends Document {
   task_id: string;
   name: string;
@@ -62,6 +65,7 @@ const TaskSchema: Schema = new Schema({
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
   attachments: [{
+    _id: { type: mongoose.Types.ObjectId, required: true }, // Add this line
     filename: { type: String },
     filePath: { type: String },
     fileSize: { type: Number },

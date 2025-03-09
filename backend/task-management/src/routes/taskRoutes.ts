@@ -1,8 +1,8 @@
 import express from "express";
-import { getTasks, createTask, updateTask, deleteTask, getTask, createProject,getProjects,getProject,updateProject, deleteProject,updateAssigneeStatus,uploadFile} from '../controllers/taskController';
-
+import { getTasks, createTask, updateTask, deleteTask, getTask,getTasksByProject, createProject,getProjects,getProject,updateProject, deleteProject,updateAssigneeStatus,uploadFile,getAttachment,deleteAttachment, updateAttachment} from '../controllers/taskController';
 const router = express.Router();
 
+router.get('/projects/:project_id/tasks', getTasksByProject);
 
 // Get all tasks
 router.get("/tasks", async (req, res) => {
@@ -163,6 +163,16 @@ router.patch('/tasks/:task_id/update-status', async (req, res) => {
   
 // File upload route
 router.post('/tasks/:task_id/upload', uploadFile);
+
+// Route for getting an attachment file
+router.get('/tasks/:task_id/attachments/:attachment_id', getAttachment);
+
+// Route for deleting an attachment file
+router.delete('/tasks/:task_id/attachments/:attachment_id', deleteAttachment);
+
+// Route for updating an attachment file
+router.patch('/tasks/:task_id/attachments/:attachment_id', updateAttachment);
+
 
     
 export default router;
