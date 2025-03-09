@@ -27,12 +27,12 @@ export const TaskProvider = ({ children }) => {
   // Add new task (send to backend)
   const addTask = async (task) => {
     try {
-      const response = await axios.post(API_URL, task);
+      const response = await axios.post("http://localhost:5000/api/tasks", task);
       setTasks([...tasks, response.data]);
     } catch (error) {
-      console.error("Error adding task:", error);
+      console.error("Error adding task:", error.response ? error.response.data : error.message);
     }
-  };
+  };  
 
   // Toggle task completion (update in backend)
   const toggleTaskCompletion = async (taskId) => {

@@ -11,13 +11,17 @@ exports.getTasks = async (req, res) => {
 
 exports.addTask = async (req, res) => {
   try {
+    console.log("Received task:", req.body);  
     const task = new Task(req.body);
     await task.save();
+    console.log("Task Saved to DB:", task);
     res.json(task);
   } catch (error) {
+    console.error("Error saving task:", error);
     res.status(400).json({ error: error.message });
   }
 };
+
 
 exports.updateTask = async (req, res) => {
   try {
