@@ -11,6 +11,11 @@ import json
 import zipfile
 from datetime import datetime
 
+
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
 # Configure logging for detailed tracking and debugging
 logging.basicConfig(
     level=logging.DEBUG, 
@@ -28,57 +33,137 @@ CORS(app, supports_credentials=True, origins=["http://localhost:5173"])
 # Initialize the productivity tracker without an employee ID
 tracker = ProductivityTracker()
 
-# Authentication and Token Verification Endpoints
 @app.route('/verify-token', methods=['POST'])
 def verify_token():
     """
-    Verify user authentication token and set employee ID
-    
-    Expects a JSON payload with a token
-    Returns success/error based on token verification
+    Verify user authentication token and set employee ID.
+
+    Expects a JSON payload with a token.
+    Returns success/error based on token verification.
     """
     try:
-        # Extract token from request
-        data = request.get_json()
-        token = data.get('token')
-        
-        if not token:
+        # Ensure request has JSON data
+        data = request.get_json(silent=True)
+        if not data or 'token' not in data:
+            logger.warning("Token missing in request")
             return jsonify({
                 "status": "error",
                 "message": "Token is required"
             }), 400
-        
-        # Verify token with external authentication service
-        response = requests.post('http://localhost:5001/api/auth/verify-token', 
-                                 json={'token': token})
-        
+
+        token = data['token']
+
+        # Call external authentication service
+        auth_url = 'http://localhost:5001/api/auth/verify-token'
+        try:
+            response = requests.post(auth_url, json={'token': token}, timeout=5)
+            response.raise_for_status()  # This will raise an error for non-2xx responses
+        except requests.exceptions.RequestException as req_err:
+            logger.error(f"Failed to reach auth service: {req_err}")
+            return jsonify({
+                "status": "error",
+                "message": "Authentication service unavailable"
+            }), 503  # 503: Service Unavailable
+
+        # Check authentication response
         if response.status_code != 200:
+            logger.warning(f"Invalid token: {response.text}")
             return jsonify({
                 "status": "error",
                 "message": "Invalid token"
             }), 401
-        
-        # Extract employee ID from verified token
+
+        # Extract employee ID
         user_data = response.json()
         employee_id = user_data.get('employeeId')
-        
+
         if not employee_id:
+            logger.warning("User does not have an employee ID")
             return jsonify({
                 "status": "error",
                 "message": "User does not have an employee ID"
             }), 400
-        
-        # Set employee ID in tracker and session
+
+        # Set employee ID in session and tracker
         tracker.set_employee_id(employee_id)
         session['employee_id'] = employee_id
-        
+
+        logger.info(f"Token verified for employee {employee_id}")
+
         return jsonify({
             "status": "success",
             "message": f"Verified as employee {employee_id}"
         })
+
     except Exception as e:
-        logger.error(f"Error in token verification: {str(e)}", exc_info=True)
-        return jsonify({"error": str(e)}), 500
+        logger.error(f"Unexpected error in token verification: {str(e)}", exc_info=True)
+        return jsonify({"status": "error", "message": "Internal Server Error", "error": str(e)}), 500
+    
+
+def verify_token():
+    """
+    Verify user authentication token and set employee ID.
+
+    Expects a JSON payload with a token.
+    Returns success/error based on token verification.
+    """
+    try:
+        # Ensure request has JSON data
+        data = request.get_json(silent=True)
+        if not data or 'token' not in data:
+            logger.warning("Token missing in request")
+            return jsonify({
+                "status": "error",
+                "message": "Token is required"
+            }), 400
+
+        token = data['token']
+
+        # Call external authentication service
+        auth_url = 'http://localhost:5001/api/auth/verify-token'
+        try:
+            response = requests.post(auth_url, json={'token': token}, timeout=5)
+            response.raise_for_status()  # This will raise an error for non-2xx responses
+        except requests.exceptions.RequestException as req_err:
+            logger.error(f"Failed to reach auth service: {req_err}")
+            return jsonify({
+                "status": "error",
+                "message": "Authentication service unavailable"
+            }), 503  # 503: Service Unavailable
+
+        # Check authentication response
+        if response.status_code != 200:
+            logger.warning(f"Invalid token: {response.text}")
+            return jsonify({
+                "status": "error",
+                "message": "Invalid token"
+            }), 401
+
+        # Extract employee ID
+        user_data = response.json()
+        employee_id = user_data.get('employeeId')
+
+        if not employee_id:
+            logger.warning("User does not have an employee ID")
+            return jsonify({
+                "status": "error",
+                "message": "User does not have an employee ID"
+            }), 400
+
+        # Set employee ID in session and tracker
+        tracker.set_employee_id(employee_id)
+        session['employee_id'] = employee_id
+
+        logger.info(f"Token verified for employee {employee_id}")
+
+        return jsonify({
+            "status": "success",
+            "message": f"Verified as employee {employee_id}"
+        })
+
+    except Exception as e:
+        logger.error(f"Unexpected error in token verification: {str(e)}", exc_info=True)
+        return jsonify({"status": "error", "message": "Internal Server Error", "error": str(e)}), 500
 
 # Authentication Middleware
 @app.before_request
