@@ -1,20 +1,10 @@
 import React, { useState } from 'react';
 import './HealthHabit.css';
 import HabitInfo from './HabitInfo';
-import ergonomicsImage from '../../assets/Home-Office-Ergonomics.png';
-import postureImage_a from '../../assets/2211.i126.043.P.m005.c33.office workplace stretches exercises set.jpg';
 import postureImage_b from '../../assets/5674009.jpg';
-import postureImage_c from '../../assets/5502121.jpg';
 import postureImage_d from '../../assets/Instruction for correct pose during office work.jpg';
 import postureImage_e from '../../assets/3823107.jpg';
-import postureImage_f from '../../assets/3663857.jpg';
-import postureImage_g from '../../assets/Remote team-pana.png';
-import postureImage_h from '../../assets/Remote team-rafiki.png';
-import postureImage_i from '../../assets/Remote team-bro.png';
 import postureImage_j from '../../assets/vect3.jpg';
-import postureImage_k from '../../assets/vect1.jpg';
-import postureImage_l from '../../assets/vest2.jpg';
-import postureImage_m from '../../assets/5482221.jpg';
 import hydrationImage_a from '../../assets/water.jpg';
 import hydrationImage_b from '../../assets/w.jpg';
 import hydrationImage_c from '../../assets/w3.jpg';
@@ -27,6 +17,18 @@ import mentalImage_a from '../../assets/mental1.jpg';
 import mentalImage_b from '../../assets/mental2.jpg';
 import mentalImage_c from '../../assets/mental3.jpg';
 import mentalImage_d from '../../assets/mental4.jpg';
+import screenImage_a from '../../assets/screen1.png';
+import screenImage_b from '../../assets/screen2.jpg';
+import screenImage_c from '../../assets/screen3.jpg';
+import screenImage_d from '../../assets/screen4.jpg';
+import mindImage_a from '../../assets/mind1.jpg';
+import mindImage_b from '../../assets/mind2.jpg';
+import mindImage_c from '../../assets/mind3.jpg';
+import mindImage_d from '../../assets/mind4.jpg';
+import socialImage_a from '../../assets/social1.jpg';
+import socialImage_b from '../../assets/social2.jpg';
+import socialImage_c from '../../assets/social3.jpg';
+import socialImage_d from '../../assets/social4.jpg';
 
 
 const HealthHabit = () => {
@@ -217,7 +219,7 @@ const HealthHabit = () => {
         ]}
       ]
     },
-    { id: 3, title: 'Eye Health', image: 'placeholder.jpg', color: 'rgba(253, 247, 217, 0.88)', borderColor: '#f3de77',// Light yellow
+    { id: 3, title: 'Eye Health', image: 'placeholder.jpg', color: 'rgba(253, 247, 217, 0.88)', borderColor: '#ffee9b',// Light yellow
       subItems: [
         { id: 1, 
           header: 'Eye Care Essentials', 
@@ -363,7 +365,7 @@ const HealthHabit = () => {
           sections: [
           { title: '💡 Daily Habits:', 
             health_habit_content: [
-              '✔ Step outside for 2 minutes of fresh air.',
+              'Step outside for 2 minutes of fresh air.',
               'Stretch or do light movement to release tension.',
               'Hydrate—drink a glass of water to refresh your body & mind.'
             ] },
@@ -375,7 +377,7 @@ const HealthHabit = () => {
             ] },
             { title: '🛠 Workspace Integration:', 
               health_habit_content: [
-                ' Use an on-screen break reminder to nudge you to step away.',
+                'Use an on-screen break reminder to nudge you to step away.',
                 'Keep a stress ball or fidget tool on your desk.',
                 'Switch tasks—doing something different for a few minutes refreshes your brain.'
             ] }
@@ -406,111 +408,273 @@ const HealthHabit = () => {
     { id: 5, title: 'Screen Time Management', image: 'placeholder.jpg', color: 'rgba(216, 243, 220, 0.95)', borderColor: '#a2dfab', // Light green
       subItems:  [
         { id: 1, 
-          header: 'The Power of Mental Health Breaks', 
-          image: mentalImage_a, 
+          header: 'Smart Screen Time for Remote Work', 
+          image: screenImage_a, 
           sections: [
-          { health_habit_content: ['Recharge Your Mind, Boost Your Productivity'] },
+          { health_habit_content: ['Balance Your Screen Time, Boost Your Well-being'] },
 
           { title: '✅ What to Do', 
             health_habit_content: [
-              'Take 5-10 minute breaks every hour to reset your focus and reduce stress.',
-              'Step away from screens and engage in mindful activities like deep breathing, stretching, or listening to music.',
-              'Use microbreaks—a 60-second pause to relax your mind without disrupting workflow.'
+              'Follow the 20-20-20 Rule: Every 20 minutes, look 20 feet away for 20 seconds.',
+              'Reduce unnecessary screen exposure by prioritizing tasks and using blue light filters.',
+              'Alternate screen-based tasks with offline activities to minimize strain.'
             ] },
           { title: '✅ How to Implement:', 
             health_habit_content: [
-              'Set reminders using apps like Break Timer or Mindful Breaks.',
-              'Try guided 2-minute meditations using apps like Headspace or Calm.',
-              'Use the Pomodoro Technique (25 min work, 5 min break) for structured rest.'
+              'Enable digital wellness tools like Screen Time (Apple), Digital Wellbeing (Android), or TimeOut (Mac) to track usage.',
+              'Use dark mode and night shift settings to reduce eye strain.',
+              'Take handwritten notes instead of typing when possible.'
             ] },
           { title: '✅ Science Behind It:', 
             health_habit_content: [
-              'Short breaks reduce stress hormones by 30% and boost creativity & problem-solving (American Psychological Association).'
+              'Excessive screen time is linked to 40% higher risk of digital eye strain and increased mental fatigue (American Optometric Association).'
             ] }
         ]},
         { id: 2, 
           header: 'Why It Matters', 
-          image: mentalImage_b, 
+          image: screenImage_b, 
           sections: [
-            { health_habit_content: ['Prevent Burnout & Stay Motivated'] },
+            { health_habit_content: ['📉 Reduce Fatigue & Protect Your Eyes'] },
   
-            { title: '🚨 Risks of Skipping Breaks:', 
+            { title: '🚨 The Risks of Too Much Screen Time:', 
               health_habit_content: [
-                'Increased anxiety & irritability from continuous work.',
-                'Higher risk of burnout—remote workers often work longer hours than in-office employees.',
-                'Decision fatigue—constant focus leads to poor judgment and decreased productivity.'
+                'Digital Eye Strain (DES) – 60% of remote workers report dry, irritated eyes and headaches.',
+                'Disrupted Sleep – Blue light suppresses melatonin by 50%, leading to poor sleep quality.',
+                'Increased Mental Exhaustion – Continuous screen use can reduce focus and productivity.'
               ] },
             { title: '🧠 Cognitive Benefits:', 
               health_habit_content: [
-                'Short breaks improve concentration by 45% (Harvard Business Review).',
-                'Stepping away from work enhances memory and problem-solving skills.'
+                'Information overload from constant screen exposure can reduce concentration.',
+                'Studies show remote workers spend 30% longer on screens compared to office workers.'
               ] },
             { title: '📊 Remote Work Reality:', 
               health_habit_content: [
-                '70% of remote employees experience stress due to lack of boundaries between work & home (Workplace Wellness Report).',
-                'Employees who take regular breaks report 30% higher job satisfaction.'
+                '85% of remote employees feel they spend too much time on screens (Remote Work Wellness Report).',
+                'Workers who manage screen time effectively report 25% higher productivity and fewer headaches.'
               ] }
         ]},
         { id: 3, 
-          header: ' Simple Ways to Take Effective Breaks', 
-          image: mentalImage_c, 
+          header: 'Healthy Screen Habits for Remote Work', 
+          image: screenImage_c, 
           sections: [
-          { title: '💡 Daily Habits:', 
+          { title: '📅 Daily Habits:', 
             health_habit_content: [
-              '✔ Step outside for 2 minutes of fresh air.',
-              'Stretch or do light movement to release tension.',
-              'Hydrate—drink a glass of water to refresh your body & mind.'
+              'Follow a screen-free morning routine before starting work.',
+              'Schedule “off-screen” breaks—step away every hour to reduce fatigue.',
+              'Blink more often to prevent dry eyes (reminder: blink 15 times per minute!).'
             ] },
-          { title: '🧘 Mindfulness & Relaxation:', 
+          { title: '👓 Eye Protection Tips:', 
             health_habit_content: [
-              'Try box breathing: Inhale 4 sec, hold 4 sec, exhale 4 sec, hold 4 sec.',
-              'Listen to relaxing music or ambient sounds.',
-              'Read something non-work-related for a mental reset'
+              'Adjust screen brightness to match ambient lighting.',
+              'Position your screen an arm’s length away and at eye level.',
+              'Use blue-light blocking glasses or computer screen filters for protection.'
             ] },
             { title: '🛠 Workspace Integration:', 
               health_habit_content: [
-                ' Use an on-screen break reminder to nudge you to step away.',
-                'Keep a stress ball or fidget tool on your desk.',
-                'Switch tasks—doing something different for a few minutes refreshes your brain.'
+                'Set up screen reminders using apps like F.lux or Eye Care 20 20 20.',
+                'Keep a notepad nearby to switch to handwriting for brainstorming.',
+                'Use voice typing tools to reduce constant screen exposure.'
             ] }
         ]},
         { id: 4, 
-          header: 'Long-Term Benefits of Mental Health Breaks', 
-          image:mentalImage_d, 
+          header: 'Long-Term Benefits of Screen Time Management ', 
+          image:screenImage_d, 
           sections: [
-          { health_habit_content: ['Better Mental Health, Better Work Performance'] },
-          { title: '💙 Health Benefits Over Time:', 
+          { health_habit_content: ['Protect Your Eyes, Boost Productivity'] },
+          { title: '📈 Health Benefits Over Time:', 
             health_habit_content: [
-              'Lower stress levels and improved emotional resilience.',
-              'Better mood & increased motivation throughout the day.',
-              'Improved sleep—breaks reduce overstimulation from constant screen exposure.'
+              'Reduced eye strain and fewer headaches.',
+              'Better sleep quality by limiting blue light exposure.',
+              'Lower stress levels—less digital overload improves mental clarity.'
             ] },
-          { title: '📈 Boosts Productivity & Focus:', 
+          { title: '💼 Work Performance Gains::', 
             health_habit_content: [
-              'Employees who take breaks report 50% higher engagement at work.',
-              'Regular breaks increase creativity and problem-solving by allowing the brain to reset.'
+              'Employees with structured screen breaks report 30% better focus.',
+              'Less screen exposure means improved posture and reduced tension in the neck & shoulders.'
             ] },
           { title: '💡 Final Tip:', 
             health_habit_content: [
-              'Breaks aren’t wasted time—they make you more productive, creative, and mentally strong. Take intentional pauses to work smarter, not harder!'
+              'Mindful screen use isn’t about less productivity—it’s about better efficiency. Manage your screen time wisely and work smarter, not harder'
             ] }
         ]}
       ]
     },
-    { id: 6, title: 'Social Interaction', image: 'placeholder.jpg', color: '#ffebcd', borderColor: '#ffa500',// Light orange
+    { id: 6, title: 'Mindfulness', image: 'placeholder.jpg', color: 'rgba(255, 234, 220, 0.89)', borderColor: '#ffcba8',// Light orange
       subItems: [
-        { id: 1, title: 'Stretching 1', health_habit_content: 'Neck alignment exercise', image: 'sub1.jpg' },
-        { id: 2, title: 'Stretching 2', health_habit_content: 'Shoulder roll technique', image: 'sub2.jpg' },
-        { id: 3, title: 'Stretching 3', health_habit_content: 'Neck alignment exercise', image: 'sub3.jpg' },
-        { id: 4, title: 'Stretching 4', health_habit_content: 'Shoulder roll technique', image: 'sub4.jpg' }
+        { id: 1, 
+          header: 'Cultivate Mindfulness, Elevate Focus', 
+          image: mindImage_a, 
+          sections: [
+          { health_habit_content: [' Stay Present, Reduce Stress, Work Better'] },
+
+          { title: '✅ What to Do', 
+            health_habit_content: [
+              'Practice mindful breathing before meetings or deep-focus tasks.',
+              'Use 5-minute mindfulness breaks to reset between work sessions.',
+              'Engage in body scans to release tension from prolonged sitting.'
+            ] },
+          { title: '✅ How to Implement:', 
+            health_habit_content: [
+              'Use apps like Headspace or Calm for guided mindfulness exercises.',
+              'Set a mindfulness reminder every few hours to check in with yourself.',
+              'Try the "5-4-3-2-1" grounding technique: Notice 5 things you see, 4 things you feel, 3 things you hear, 2 things you smell, and 1 thing you taste.'
+            ] },
+          { title: '✅ Science Behind It:', 
+            health_habit_content: [
+              'Mindfulness reduces stress hormones by 31% and improves focus by 14% (American Psychological Association).'
+            ] }
+        ]},
+        { id: 2, 
+          header: 'Why It Matters', 
+          image: mindImage_b, 
+          sections: [
+            { health_habit_content: ['Less Stress, More Clarity'] },
+  
+            { title: '🚨 Risks of a Distracted Mind:', 
+              health_habit_content: [
+                'Higher stress & burnout – Constant multitasking leads to mental fatigue.',
+                'Lower productivity – A cluttered mind reduces efficiency and focus.',
+                'Increased anxiety – Lack of mindfulness can amplify negative thoughts.'
+              ] },
+            { title: '📊 The Reality of Remote Work:', 
+              health_habit_content: [
+                '70% of remote workers struggle with mental distractions (Forbes).',
+                'Regular mindfulness practice boosts decision-making skills by 20%.'
+              ] }
+        ]},
+        { id: 3, 
+          header: 'Simple Mindfulness Practices for Work', 
+          image: mindImage_c, 
+          sections: [
+          { title: '🕰 Daily & Weekly Habits:', 
+            health_habit_content: [
+              'Start your workday with 2 minutes of deep breathing.',
+              'Pause before reacting—take a breath before responding to emails.',
+              'Use a mindful transition between tasks (stretch, breathe, or walk).'
+            ] },
+          { title: '💡 Mindful Workflows:', 
+            health_habit_content: [
+              'Single-tasking: Work on one thing at a time for better concentration.',
+              'Mindful notifications: Turn off unnecessary alerts and check messages intentionally.',
+              'Micro-meditations: Take 3 deep breaths before switching tasks.'
+            ] },
+            { title: '🏡 Offline Mindfulness Integration:', 
+              health_habit_content: [
+                'Eat lunch mindfully—focus on textures, flavors, and the experience.',
+                'Step outside for fresh air and pay attention to nature.',
+                'Journal for 5 minutes about your thoughts, emotions, or goals.'
+            ] }
+        ]},
+        { id: 4, 
+          header: 'Long-Term Benefits of Mindfulness ', 
+          image:mindImage_d, 
+          sections: [
+          { health_habit_content: ['Think Clearer, Work Smarter, Feel Better'] },
+          { title: '📈 Health & Work Benefits:', 
+            health_habit_content: [
+              'Lower stress & improved emotional resilience.',
+              'Better concentration & reduced mental fatigue.',
+              'Enhanced work-life balance & overall happiness..'
+            ] },
+          { title: '💼 Career & Productivity Gains:', 
+            health_habit_content: [
+              'Mindfulness boosts creativity & problem-solving by 22%.',
+              'Mindful employees are 31% more engaged at work.'
+            ] },
+          { title: '💡 Final Tip:', 
+            health_habit_content: [
+              'Incorporate mindfulness into your daily routine—it’s not about stopping thoughts, but about noticing them and staying present.'
+            ] }
+        ]}
       ]
     },
-    { id: 7, title: 'Mindfulness', image: 'placeholder.jpg', color: '#f0f8ff', borderColor: '#00bfff',// Light cyan
+    { id: 7, title: 'Social Connection', image: 'placeholder.jpg', color: 'rgba(205, 255, 253, 0.75)', borderColor: '#7cf0ec',// Light cyan
       subItems: [
-        { id: 1, title: 'Mindfulness 1', health_habit_content: 'Neck alignment exercise', image: 'sub1.jpg' },
-        { id: 2, title: 'Mindfulness 2', health_habit_content: 'Shoulder roll technique', image: 'sub2.jpg' },
-        { id: 3, title: 'Mindfulness 3', health_habit_content: 'Neck alignment exercise', image: 'sub3.jpg' },
-        { id: 4, title: 'Mindfulness 4', health_habit_content: 'Shoulder roll technique', image: 'sub4.jpg' }
+        { id: 1, 
+          header: 'Stay Connected, Stay Energized', 
+          image: socialImage_a, 
+          sections: [
+          { health_habit_content: ['Strengthen Social Bonds, Enhance Well-being'] },
+
+          { title: '✅ What to Do', 
+            health_habit_content: [
+              'Schedule virtual coffee chats or casual check-ins with colleagues.',
+              'Join online communities, Slack groups, or interest-based forums to stay socially engaged.',
+              'Plan in-person meetups or coworking sessions with nearby remote workers.'
+            ] },
+          { title: '✅ How to Implement:', 
+            health_habit_content: [
+              'Use apps like Donut (Slack plugin) to match with teammates for virtual hangouts.',
+              'Set a "social break" reminder to chat with a friend or colleague.',
+              'Join a remote team-building activity (e.g., trivia, gaming, or online workshops).'
+            ] },
+          { title: '✅ Science Behind It:', 
+            health_habit_content: [
+              'Regular social interactions reduce stress, boost mood, and improve workplace collaboration by 20% (Harvard Business Review).'
+            ] }
+        ]},
+        { id: 2, 
+          header: 'Why It Matters', 
+          image: socialImage_b, 
+          sections: [
+            { health_habit_content: ['Combat Isolation & Stay Engaged'] },
+  
+            { title: '🚨 Risks of Social Disconnection:', 
+              health_habit_content: [
+                'Increased stress & burnout – Lack of interaction can heighten anxiety and decrease motivation.',
+                'Lower job satisfaction – Feeling disconnected leads to reduced engagement & teamwork.',
+                'Reduced creativity – Collaboration sparks ideas, but isolation can limit innovation.'
+              ] },
+            { title: '📊 The Reality of Remote Work:', 
+              health_habit_content: [
+                '67% of remote workers feel lonely at least once a week (Buffer Remote Work Report).',
+                'Employees with strong social connections are 21% more productive and happier at work.'
+              ] }
+        ]},
+        { id: 3, 
+          header: 'Simple Ways to Build Connection', 
+          image: socialImage_c, 
+          sections: [
+          { title: '📅 Daily & Weekly Habits:', 
+            health_habit_content: [
+              'Start meetings with a casual icebreaker or a fun question.',
+              'Join a virtual coworking session for motivation.',
+              'Check in with a colleague or friend just to chat, not about work..'
+            ] },
+          { title: '💡 Building Remote-Friendly Bonds:', 
+            health_habit_content: [
+              'Use tools like Gather.Town or SpatialChat for a virtual office vibe.',
+              'Plan a "no-work" chat session in your team’s calendar.',
+              'Engage in social Slack channels (#pets, #hobbies, #music).'
+            ] },
+            { title: '🏡 Offline Social Integration:', 
+              health_habit_content: [
+                'Go outside for social interactions—grab coffee with a friend.',
+                'Attend local networking events or coworking meetups.',
+                'Volunteer or join a hobby group to balance online and real-life connections.'
+            ] }
+        ]},
+        { id: 4, 
+          header: 'Long-Term Benefits of Staying Social ', 
+          image:socialImage_d, 
+          sections: [
+          { health_habit_content: ['Better Mood, Stronger Teams, More Fun!'] },
+          { title: '📈 Health & Work Benefits:', 
+            health_habit_content: [
+              'Lower stress levels and increased job satisfaction.',
+              'Stronger teamwork & collaboration skills.',
+              'Higher motivation & reduced burnout.'
+            ] },
+          { title: '💼 Career & Productivity Gains:', 
+            health_habit_content: [
+              'Employees who regularly socialize report 25% higher engagement at work.',
+              'Meaningful social interactions increase resilience & adaptability in remote work.'
+            ] },
+          { title: '💡 Final Tip:', 
+            health_habit_content: [
+              'Remote work doesn’t have to mean isolation—stay socially connected, and work will feel more enjoyable and energizing!'
+            ] }
+        ]}
       ]
     }
   ];
