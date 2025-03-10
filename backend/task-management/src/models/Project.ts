@@ -9,9 +9,10 @@ export interface IProject extends Document {
   status: string;
   tasks: mongoose.Types.ObjectId[];
   department: string;
-  members: string[];
+  members: mongoose.Types.ObjectId[];
   priority: string;
   clientId: string | null;  // Allow null
+  createdBy: mongoose.Types.ObjectId;   // Added User Id for authentication
 }
 
 const ProjectSchema: Schema = new Schema({
@@ -23,10 +24,14 @@ const ProjectSchema: Schema = new Schema({
   status: { type: String, default: 'Active' },
   tasks: [{ type: String, ref: 'Task' }],
   department: { type: String, required: true },
-  clientId: { type: String , default: null},
-  members: [{ type: String, required: true }],
+  clientId: { type: String, default: null },
+  members: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   priority: { type: String, enum: ['High', 'Medium', 'Low'], default: 'Medium' },
-
+  createdBy: {                                        //ADDED TO SCHEMA
+    type: mongoose.Schema.Types.ObjectId,           //type objectid
+    ref: 'User',                                    //referes to user model
+    required: true                                 //is a required field
+  }
 
 });
 
