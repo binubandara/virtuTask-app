@@ -37,26 +37,42 @@ export const TaskProvider = ({ children }) => {
   // Toggle task completion (update in backend)
   const toggleTaskCompletion = async (taskId) => {
     try {
-      const taskToUpdate = tasks.find((task) => task.id === taskId);
+      console.log("Toggling Completion for:", taskId); 
+  
+      const taskToUpdate = tasks.find((task) => task._id === taskId);
+      if (!taskToUpdate) return console.error("Task not found in state");
+  
       const updatedTask = { ...taskToUpdate, completed: !taskToUpdate.completed };
-
-      await axios.put(`${API_URL}/${taskId}`, updatedTask);
-
-      setTasks(tasks.map((task) => (task.id === taskId ? updatedTask : task)));
+  
+      await axios.put(`http://localhost:5000/api/tasks/${taskId}`, updatedTask);
+      
+      setTasks((prevTasks) => prevTasks.map((task) => (task._id === taskId ? updatedTask : task)));
+  
+      console.log("Task Completion Toggled");
     } catch (error) {
-      console.error("Error updating task:", error);
+      console.error("Error updating task:", error.response ? error.response.data : error.message);
     }
   };
+  
+  
+  
 
   // Delete task (remove from backend)
   const deleteTask = async (taskId) => {
     try {
-      await axios.delete(`${API_URL}/${taskId}`);
-      setTasks(tasks.filter((task) => task.id !== taskId));
+      console.log("Deleting Task:", taskId);
+  
+      await axios.delete(`http://localhost:5000/api/tasks/${taskId}`);
+      
+      setTasks((prevTasks) => prevTasks.filter((task) => task._id !== taskId)); 
+  
+      console.log("Task Deleted Successfully");
     } catch (error) {
-      console.error("Error deleting task:", error);
+      console.error("Error deleting task:", error.response ? error.response.data : error.message);
     }
   };
+  
+  
 
   // Log focus session
   const logFocusSession = async (taskId, duration) => {
