@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Login from "./components/Login/Login"; 
 import Register from "./components/Login/Register"; 
@@ -15,15 +15,30 @@ import MyTasks from "./components/Task-management-E/MyTasks";
 
 
 function App() {
+    const [projects, setProjects] = useState([]);
+
+    useEffect(() => {
+        socket.connect();
+        
+        socket.on('projectsUpdated', (updatedProjects) => {
+          setProjects(updatedProjects);
+        });
+    
+        return () => {
+          socket.off('projectsUpdated');
+          socket.disconnect();
+        };
+      }, []);
+
     return (
         <Router>
             <Routes>
                 <Route path="/" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/password" element={<Password />} />
-                <Route path="/My-projects-manager" element={<MyProjectsManager />} />
+                <Route path="/My-projects-manager" element={<MyProjectsManager projects={projects} />}/>
                 <Route path="/Project-form" element={<ProjectForm />} />
-                <Route path="/task-manager/:projectId" element={<TaskManage />} /> {/* Fixed route */}
+                <Route path="/task-manager/:projectId" element={<TaskManage projects={projects} />} /> {/* Fixed route */}
                 <Route path="/TaskForm" element={<TaskForm />} />
                 <Route path="/task-info" element={<TaskInformation />} />
                 <Route path="/health-habit" element={<HealthHabit />} />

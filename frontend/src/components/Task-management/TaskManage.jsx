@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import socket from '../../socket';
 import './TaskManage.css';
 import TaskForm from './TaskForm';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -17,26 +18,37 @@ const STATUS_COLORS = {
   completed: '#28a46a'
 };
 
-const TaskManage = () => {
-  const { projectId } = useParams();
+const TaskManage = ({ projectId }) => {
   const navigate = useNavigate();
   const [tasks, setTasks] = useState([]);
   const [showTaskForm, setShowTaskForm] = useState(false);
-  const [currentProject, setCurrentProject] = useState({
-    priorityColor: '#e0e0e0',
-    priority: 'medium'
-  });
+  const [currentProject, setCurrentProject] = useState(null);
   const [editingTask, setEditingTask] = useState(null);
-  // Add this to your existing state declarations
   const [selectedTask, setSelectedTask] = useState(null);
-  const [selectedTaskId, setSelectedTaskId] = useState(null); // New state for dropdown
-
+  const [selectedTaskId, setSelectedTaskId] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const savedProjects = JSON.parse(localStorage.getItem('projects')) || [];
-    const project = savedProjects.find(p => p.id === Number(projectId));
+    socket.emit('joinProject', projectId);
     
-    if (project) {
+    socket.on('tasksUpdated', (updatedTasks) => {
+      setTasks(updatedTasks);
+    });
+
+    return () => {
+      socket.off('tasksUpdated');
+      socket.emit('leaveProject', projectId);
+    };
+  }, [projectId]);
+
+  useEffect(() => {
+    socket.emit('getProject', projectId, (project) => {
+      if (!project) {
+        alert('Project not found!');
+        navigate('/');
+        return;
+      }
+      
       setCurrentProject({
         id: project.id,
         projectName: project.projectname,
@@ -45,24 +57,16 @@ const TaskManage = () => {
         priority: project.priority || 'medium',
         priorityColor: PRIORITY_COLORS[project.priority] || '#e0e0e0'
       });
-      // Load tasks from the project's data
       setTasks(project.tasks || []);
-    }
-  }, [projectId]);
-
-  // Unified function to update tasks in state and localStorage
-  const updateTasks = (newTasks) => {
-    setTasks(newTasks);
-    
-    // Update localStorage projects
-    const savedProjects = JSON.parse(localStorage.getItem('projects')) || [];
-    const updatedProjects = savedProjects.map(p => {
-      if (p.id === Number(projectId)) {
-        return { ...p, tasks: newTasks };
-      }
-      return p;
+      setLoading(false);
     });
-    localStorage.setItem('projects', JSON.stringify(updatedProjects));
+  }, [projectId, navigate]);
+
+  const updateTasks = (newTasks) => {
+    socket.emit('updateTasks', {
+      projectId,
+      tasks: newTasks
+    });
   };
 
   const addTask = (taskData) => {
@@ -87,13 +91,8 @@ const TaskManage = () => {
     }
     setSelectedTaskId(null);
   };
-  
 
-  
   const handleBack = () => navigate(-1);
-
-  
-  // ... keep existing useEffect and other functions ...
 
   const TaskNameWithEdit = ({ task }) => (
     <td className='tname'>
@@ -105,8 +104,8 @@ const TaskManage = () => {
             setSelectedTaskId(task.id === selectedTaskId ? null : task.id);
           }}
         >
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 9h16.5m-16.5 6.75h16.5" />
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-6">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 9h16.5m-16.5 6.75h16.5" />
           </svg>
         </button>
         {selectedTaskId === task.id && (
@@ -137,6 +136,10 @@ const TaskManage = () => {
       </div>
     </td>
   );
+
+  if (loading) {
+    return <div className="loading-container">Loading project...</div>;
+  }
 
   return (
     <div className="task-manage-container">
@@ -184,7 +187,7 @@ const TaskManage = () => {
               </thead>
               <tbody>
                 {tasks.map(task => (
-                  <tr className="task-item" key={task.id}onClick={() => setSelectedTask(task)}>
+                  <tr className="task-item" key={task.id} onClick={() => setSelectedTask(task)}>
                     <TaskNameWithEdit task={task} />
                     <td className='task_assignee'>{task.assignee}</td>
                     <td className='task_due_date'>{task.dueDate}</td>
@@ -207,6 +210,7 @@ const TaskManage = () => {
           ) : <p className="no-tasks">No tasks available</p>}
         </div>
       </div>
+
       {selectedTask && (
         <TaskInformation 
           task={selectedTask} 

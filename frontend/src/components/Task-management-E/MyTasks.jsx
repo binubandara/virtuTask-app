@@ -36,12 +36,12 @@ const MyTasks = () => {
 
   return (
     <div className="mytasks-container">
-      <div className="header-section">
+      <div className="mytasks-header-section">
         <h1 className="mytasks-title">MY TASKS</h1>
         <div className="mytasks-underline"></div>
       </div>
 
-      <div className="controls-section">
+      <div className="mytasks-controls-section">
         <div className="mytasks-filters-container">
           <select className="mytasks-dropdown">
             <option>Project</option>
@@ -56,32 +56,32 @@ const MyTasks = () => {
         </button>
       </div>
 
-      <div className="task-list-section">
-        <h2 className="task-list-title">Task Title</h2>
-        <div className="task-list-container">
-          <div className="task-list-header">
-            <div className="task-column">Add Tasks</div>
-            <div className="status-column">Status</div>
+      <div className="mytasks-task-list-section">
+        <h2 className="mytasks-task-list-title">Task Title</h2>
+        <div className="mytasks-task-list-container">
+          <div className="mytasks-task-list-header">
+            <div className="mytasks-task-column">Add Tasks</div>
+            <div className="mytasks-status-column">Status</div>
           </div>
           
           {tasks.map(task => (
             <div 
               key={task.id} 
-              className={`task-item ${task.status.replace(' ', '-')}-bg`}
+              className={`mytasks-task-item ${task.status.replace(' ', '-')}-bg`}
             >
-              <div className="task-content">
-              <label className="custom-checkbox">
+              <div className="mytasks-task-content">
+              <label className="mytasks-custom-checkbox">
                     <input 
-                        type="checkbox" 
+                        type="mytasks-checkbox" 
                         checked={task.checked}
                         onChange={() => toggleCheck(task.id)}  // Connect the handler
                     />
-                    <span className="checkmark"></span>
+                    <span className="mytasks-checkmark"></span>
                 </label>
                 <span>{task.text}</span>
               </div>
               <button 
-                className={`status-button ${task.status.replace(' ', '-')}`}
+                className={`mytasks-status-button ${task.status.replace(' ', '-')}`}
                 onClick={() => toggleStatus(task.id)}
               >
                 {task.status}
@@ -89,14 +89,14 @@ const MyTasks = () => {
             </div>
           ))}
 
-          <div className="add-task-container">
+          <div className="mytasks-add-task-container">
             <input
-              type="text"
+              type="mytasks-text"
               value={newTask}
               onChange={(e) => setNewTask(e.target.value)}
               placeholder="Add new task"
             />
-            <button onClick={addTask} className="add-button">Add</button>
+            <button onClick={addTask} className="mytasks-add-button">Add</button>
           </div>
         </div>
       </div>

@@ -3,7 +3,7 @@
     padding: 20px;
   }
   
-  .header-section {
+  .mytasks-header-section {
     position: relative;
   }
   
@@ -21,7 +21,7 @@
     margin-bottom: 24px;
   }
   
-  .controls-section {
+  .mytasks-controls-section {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -63,28 +63,28 @@
     background-color: #3182ce;
   }
   
-  .task-list-section {
+  .mytasks-task-list-section {
     margin-top: 2rem;
   max-width: 720px; /* Fixed width container */
   }
-  .task-list-title {
+  .mytasks-task-list-title {
     margin-bottom: 1.5rem; /* Added space below title */
   }
   
-  .task-list-container {
+  .mytasks-task-list-container {
     border-left: 2px solid #48bb78; /* Green line indicator */
     padding-left: 1rem;
   }
   
   
-  .task-list-header {
+  .mytasks-task-list-header {
     display: flex;
     justify-content: space-between;
     margin-bottom: 1rem;
     font-weight: 600;
   }
   
-  .task-item {
+  .mytasks-task-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -94,19 +94,19 @@
     min-height: 32px; /* Reduced row height */
   }
   
-  .task-item.To-Do-bg { background-color: rgba(246, 173, 85, 0.1); }
-  .task-item.In-Progress-bg { background-color: rgba(66, 153, 225, 0.1); }
-  .task-item.Complete-bg { background-color: rgba(72, 187, 120, 0.1); }
-  .task-item.On-Hold-bg { background-color: rgba(160, 174, 192, 0.1); }
+  .mytasks-task-item.To-Do-bg { background-color: rgba(246, 173, 85, 0.1); }
+  .mytasks-task-item.In-Progress-bg { background-color: rgba(66, 153, 225, 0.1); }
+  .mytasks-task-item.Complete-bg { background-color: rgba(72, 187, 120, 0.1); }
+  .mytasks-task-item.On-Hold-bg { background-color: rgba(160, 174, 192, 0.1); }
   
-  .task-content {
+  .mytasks-task-content {
     display: flex;
     align-items: center;
     gap: 12px;
     height: 100%;
   }
   
-  .status-button {
+  .mytasks-status-button {
     padding: 4px 12px;
     border: none;
     border-radius: 12px;
@@ -115,41 +115,41 @@
     min-width: 100px; /* Consistent button width */
   }
   
-  .status-button.To-Do {
+  .mytasks-status-button.To-Do {
     background-color: #f6ad55;
     color: white;
   }
   
-  .status-button.In-Progress {
+  .mytasks-status-button.In-Progress {
     background-color: #4299e1;
     color: white;
   }
   
-  .status-button.Complete {
+  .mytasks-status-button.Complete {
     background-color: #48bb78;
     color: white;
   }
   
-  .status-button.On-Hold {
+  .mytasks-status-button.On-Hold {
     background-color: #a0aec0;
     color: white;
   }
   
-  .add-task-container {
+  .mytasks-add-task-container {
     display: flex;
     gap: 8px;
     margin-top: 1.0rem;
     max-width: 100%;
   }
   
-  .add-task-container input {
+  .mytasks-add-task-container input {
     flex-grow: 1;
     padding: 6px;
     border: 1px solid #cbd5e0;
     border-radius: 10px;
   }
   
-  .add-button {
+  .mytasks-add-button {
     background-color: #48bb78;
     color: white;
     border: none;
@@ -157,7 +157,7 @@
     border-radius: 9px;
     cursor: pointer;
   }
-  .custom-checkbox {
+  .mytasks-custom-checkbox {
     display: inline-block;
     position: relative;
     cursor: pointer;
@@ -165,7 +165,7 @@
     width: 18px;
   }
   
-  .custom-checkbox input {
+  .mytasks-custom-checkbox input {
     position: absolute;
     opacity: 0;
     cursor: pointer;
@@ -173,7 +173,7 @@
     width: 0;
   }
   
-  .checkmark {
+  .mytasks-checkmark {
     position: absolute;
     top: 0;
     left: 0;
@@ -184,13 +184,13 @@
     border-radius: 4px;
   }
   
-  .custom-checkbox input:checked ~ .checkmark {
+  .mytasks-custom-checkbox input:checked ~ .checkmark {
     background-color: #4299e1;
     border-color: #4299e1;
     transition: all 0.2s ease;
   }
   
-  .checkmark:after {
+  .mytasks-checkmark:after {
     content: "";
     position: absolute;
     display: none;
@@ -204,6 +204,6 @@
     transition: all 0.2s ease;
   }
   
-  .custom-checkbox input:checked ~ .checkmark:after {
+  .mytasks-custom-checkbox input:checked ~ .checkmark:after {
     display: block;
   }

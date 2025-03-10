@@ -17,20 +17,15 @@ const pencilSVG = (
   </svg>
 );
 
-function MyProjectsManager() {
+function MyProjectsManager({ projects, setProjects }) {
   const navigate = useNavigate();
   const [showForm, setShowForm] = useState(false);
-  const [projects, setProjects] = useState(() => {
-    const saved = localStorage.getItem('projects');
-    return saved ? JSON.parse(saved) : [];
-  });
   const [editingProject, setEditingProject] = useState(null);
   const [selectedProjectId, setSelectedProjectId] = useState(null);
   const colorPalette = ["#ffc8dd", "#bde0fe", "#a2d2ff", "#94d2bd","#e0b1cb","#adb5bd","#98f5e1","#f79d65","#858ae3","#c2dfe3","#ffccd5","#e8e8e4","#fdffb6","#f1e8b8","#d8e2dc","#fff0f3","#ccff66"];
 
   const saveProjects = (updatedProjects) => {
     setProjects(updatedProjects);
-    localStorage.setItem('projects', JSON.stringify(updatedProjects));
   };
   
   const addProject = (formData) => {
@@ -56,16 +51,6 @@ function MyProjectsManager() {
     setSelectedProjectId(null);
   };
 
-  // Load projects from localStorage on component mount
-  useEffect(() => {
-    const savedProjects = JSON.parse(localStorage.getItem('projects')) || [];
-    setProjects(savedProjects);
-  }, []);
-
-  // Save projects to localStorage whenever they change
-  useEffect(() => {
-    localStorage.setItem('projects', JSON.stringify(projects));
-  }, [projects]);
 
   
 
