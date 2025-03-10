@@ -6,6 +6,7 @@ const fs = require('fs');
 const tcpPortUsed = require('tcp-port-used');
 const kill = require('tree-kill');
 const { exec } = require('child_process');
+const { profile } = require('console');
 
 /**
  * Global storage for backend processes to enable centralized management
@@ -14,7 +15,9 @@ const { exec } = require('child_process');
 global.backendProcesses = {
   pythonTracker: null,
   authServer: null,
-  engagementHub: null
+  engagementHub: null,
+  profileBackend: null, 
+
 };
 
 /**
@@ -414,6 +417,105 @@ async function startEngagementHubServer() {
 }
 
 /**
+ * Start the Profile Backend
+ * @returns {Promise<ChildProcess>} The spawned Node.js profile backend process
+ */
+async function startProfileBackend() {
+  const port = 5003;
+  console.log(`Checking if port ${port} is in use...`);
+
+  try {
+    // Try to kill any process using our port
+    await killProcessOnPort(port);
+
+    // Wait for port to be free
+    const portFree = await waitForPortToBeFree(port, 5000);
+    if (!portFree) {
+      console.warn(`Port ${port} could not be freed, but continuing anyway...`);
+    }
+
+    console.log('Starting Profile Backend...');
+    let profileProcess;
+
+    if (!app.isPackaged) {
+      // Development mode - find server script
+      const possiblePaths = [
+        path.join(__dirname, '../../backend/profile/server.js'),
+        path.join(__dirname, '../backend/profile/server.js'),
+        path.join(process.cwd(), 'backend/profile/server.js'),
+      ];
+
+      let scriptPath = null;
+      for (const testPath of possiblePaths) {
+        console.log(`Checking for Profile Backend at: ${testPath}`);
+        if (fs.existsSync(testPath)) {
+          scriptPath = testPath;
+          break;
+        }
+      }
+
+      if (!scriptPath) {
+        throw new Error('Profile Backend script not found in any of the expected locations');
+      }
+
+      console.log(`Spawning Profile Backend from: ${scriptPath}`);
+
+      // Set environment variables
+      const env = {
+        ...process.env,
+        PROFILE_PORT: port,
+        MONGODB_URI: process.env.MONGODB_URI || 'mongodb://localhost:27017/yourdb',
+      };
+
+      profileProcess = spawn('node', [scriptPath], {
+        env,
+        cwd: path.dirname(scriptPath),
+      });
+    } else {
+      // Packaged app mode
+      const scriptPath = path.join(process.resourcesPath, 'backend', 'profile', 'server.js');
+      console.log(`Spawning Profile Backend from: ${scriptPath}`);
+
+      profileProcess = spawn('node', [scriptPath], {
+        env: {
+          ...process.env,
+          PROFILE_PORT: port,
+          MONGODB_URI: process.env.MONGODB_URI || 'mongodb://localhost:27017/yourdb',
+        },
+        cwd: path.join(process.resourcesPath, 'backend', 'profile'),
+      });
+    }
+
+    // Handle process stdout/stderr
+    profileProcess.stdout.on('data', (data) => {
+      console.log(`Profile Backend stdout: ${data}`);
+    });
+
+    profileProcess.stderr.on('data', (data) => {
+      console.error(`Profile Backend stderr: ${data}`);
+    });
+
+    // Handle process exit
+    profileProcess.on('exit', (code, signal) => {
+      console.log(`Profile Backend exited with code ${code} and signal ${signal}`);
+      if (global.backendProcesses.profileBackend === profileProcess) {
+        global.backendProcesses.profileBackend = null;
+      }
+    });
+
+    // Handle process error
+    profileProcess.on('error', (err) => {
+      console.error(`Failed to start Profile Backend: ${err.message}`);
+    });
+
+    return profileProcess;
+  } catch (error) {
+    console.error(`Failed to start Profile Backend: ${error.message}`);
+    throw error;
+  }
+}
+
+/**
  * Check if a server is reachable on a specific port
  * @param {number} port - Port to check
  * @param {number} timeoutMs - Maximum time to wait (default: 10000ms)
@@ -459,7 +561,8 @@ async function createWindow() {
   let backendsStarted = {
     python: false,
     auth: false,
-    hub: false
+    hub: false,
+    profile:false,
   };
 
   try {
@@ -644,6 +747,32 @@ ipcMain.on('restart-engagement-hub', async () => {
         console.error(`Failed to restart Engagement Hub: ${error.message}`);
         if (global.mainWindow && !global.mainWindow.isDestroyed()) {
           global.mainWindow.webContents.send('engagement-hub-error', error.message);
+        }
+      }
+    });
+  }
+});
+
+// Restart Profile Backend handler
+ipcMain.on('restart-profile-backend', async () => {
+  console.log('Restart Profile Backend request received');
+  
+  if (global.backendProcesses.profileBackend) {
+    kill(global.backendProcesses.profileBackend.pid, 'SIGTERM', async (err) => {
+      if (err) console.error(`Error killing Profile Backend: ${err.message}`);
+      
+      global.backendProcesses.profileBackend = null;
+      
+      try {
+        global.backendProcesses.profileBackend = await startProfileBackend();
+        
+        if (global.mainWindow && !global.mainWindow.isDestroyed()) {
+          global.mainWindow.webContents.send('profile-backend-restarted');
+        }
+      } catch (error) {
+        console.error(`Failed to restart Profile Backend: ${error.message}`);
+        if (global.mainWindow && !global.mainWindow.isDestroyed()) {
+          global.mainWindow.webContents.send('profile-backend-error', error.message);
         }
       }
     });

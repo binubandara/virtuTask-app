@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import profilePicDefault from '../../assets/profile.jpg';
-import { FaUser, FaEnvelope, FaPhone, FaCalendar, FaMapMarker, FaGlobe, FaVenusMars } from 'react-icons/fa'; 
-import './ProfilePage.css'; 
+import { FaUser, FaEnvelope, FaPhone, FaCalendar, FaMapMarker, FaGlobe, FaVenusMars } from 'react-icons/fa';
+import './ProfilePage.css';
 
 const ProfilePage = () => {
   const [profilePic, setProfilePic] = useState(null);
@@ -14,7 +14,7 @@ const ProfilePage = () => {
     address: '',
     country: '',
     city: '',
-    gender: ''
+    gender: '',
   });
 
   const handleFileChange = (e) => {
@@ -25,12 +25,50 @@ const ProfilePage = () => {
     const { name, value } = e.target;
     setFormData({
       ...formData,
-      [name]: value
+      [name]: value,
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Create a FormData object
+    const formDataObj = new FormData();
+    formDataObj.append('firstName', formData.firstName);
+    formDataObj.append('lastName', formData.lastName);
+    formDataObj.append('dateOfBirth', formData.dateOfBirth);
+    formDataObj.append('mobile', formData.mobile);
+    formDataObj.append('email', formData.email);
+    formDataObj.append('address', formData.address);
+    formDataObj.append('country', formData.country);
+    formDataObj.append('city', formData.city);
+    formDataObj.append('gender', formData.gender);
+
+    // Append the profile picture if it exists
+    if (profilePic) {
+      const file = await fetch(profilePic).then((res) => res.blob());
+      formDataObj.append('profilePic', file, 'profile.jpg');
+    }
+
+    try {
+      console.log('Saving profile...');
+      const response = await fetch('http://localhost:5003/api/profile', {
+        method: 'POST',
+        body: formDataObj,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to save profile');
+      }
+
+      const data = await response.json();
+      console.log('Profile saved:', data);
+      alert('Profile saved successfully!');
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      alert(`Error saving profile: ${error.message}`);
+    }
   };
 
   const filledFields = Object.values(formData).filter((value) => value !== '').length;
@@ -39,18 +77,13 @@ const ProfilePage = () => {
 
   return (
     <div className="profile-container">
-      <h1 className="profile-heading">
-        Edit Profile
-      </h1>
+      <h1 className="profile-heading">Edit Profile</h1>
 
       <div className="profile-section">
         <div className="profile-picture-section">
           <div className="profile-picture-container">
             <div className="profile-picture">
-              <img
-                src={profilePic || profilePicDefault}
-                alt="Profile"
-              />
+              <img src={profilePic || profilePicDefault} alt="Profile" />
               <div className="profile-picture-overlay">
                 <span>Change Photo</span>
               </div>
@@ -61,10 +94,7 @@ const ProfilePage = () => {
               className="hidden"
               id="profile-pic-upload"
             />
-            <label
-              htmlFor="profile-pic-upload"
-              className="profile-picture-upload"
-            >
+            <label htmlFor="profile-pic-upload" className="profile-picture-upload">
               Upload Photo
             </label>
           </div>
@@ -219,10 +249,7 @@ const ProfilePage = () => {
               </div>
             </div>
 
-            <button
-              type="submit"
-              className="profile-form-button"
-            >
+            <button type="submit" className="profile-form-button">
               Save
             </button>
           </form>

@@ -1,6 +1,3 @@
-const { contextBridge, ipcRenderer } = require('electron');
-
-// Expose IPC API to the renderer process
 contextBridge.exposeInMainWorld('electron', {
   // Python productivity tracker
   restartPython: () => ipcRenderer.send('restart-python'),
@@ -16,6 +13,11 @@ contextBridge.exposeInMainWorld('electron', {
   restartEngagementHub: () => ipcRenderer.send('restart-engagement-hub'),
   onEngagementHubRestarted: (callback) => ipcRenderer.on('engagement-hub-restarted', callback),
   onEngagementHubError: (callback) => ipcRenderer.on('engagement-hub-error', callback),
+  
+  // Profile backend
+  restartProfileBackend: () => ipcRenderer.send('restart-profile-backend'),
+  onProfileBackendRestarted: (callback) => ipcRenderer.on('profile-backend-restarted', callback),
+  onProfileBackendError: (callback) => ipcRenderer.on('profile-backend-error', callback),
   
   // General application status
   onBackendStatus: (callback) => ipcRenderer.on('backend-status', (_, status) => callback(status)),

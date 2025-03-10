@@ -34,6 +34,15 @@ const Settings = () => {
     navigate("/settings/privacy");
   };
 
+  // Handle logout
+  const handleLogout = () => {
+    
+    localStorage.removeItem("authToken"); 
+
+    // Redirect to the login page
+    navigate("/login");
+  };
+
   // Effect to toggle dark mode on the body
   useEffect(() => {
     if (darkMode) {
@@ -564,7 +573,7 @@ const Settings = () => {
             <button className="change-password-button">
               Change Password
             </button>
-            <button className="logout-button">
+            <button className="logout-button" onClick={handleLogout}>
               <FaPowerOff /> Log Out
             </button>
           </div>
