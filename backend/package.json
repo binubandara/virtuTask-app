@@ -10,9 +10,13 @@
     "mongoose": "^8.12.1"
   },
   "scripts": {
-    "start": "node server.js",
-    "dev": "concurrently \"yarn start\" \"cd ../frontend && yarn start\""
-  },
+  "start": "concurrently \"yarn backend\" \"yarn frontend\" \"yarn electron\"",
+  "backend": "cd ../backend && yarn start",
+  "frontend": "cd ../frontend && yarn start",
+  "electron": "yarn run electron ."
+}
+,
+
   "devDependencies": {
     "concurrently": "^9.1.2"
   }
