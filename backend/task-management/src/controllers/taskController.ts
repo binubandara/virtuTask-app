@@ -27,11 +27,32 @@ export const getTasks = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
-// Create new task under a specific project 
+
+// Create new task under a specific project
 export const createTask = async (req: Request, res: Response): Promise<void> => {
   try {
     console.log('Creating new task:', req.body);
-    
+
+    // **** START TEST CODE - REMOVE BEFORE DEPLOYMENT ****
+    const testUserId = '67cd3c865b9d52546d109fd6';
+
+    if (!mongoose.Types.ObjectId.isValid(testUserId)) {
+      res.status(400).json({ message: 'Invalid test user ID' });
+      return;
+    }
+
+    (req as any).user = { _id: new mongoose.Types.ObjectId(testUserId) };
+    // **** END TEST CODE - REMOVE BEFORE DEPLOYMENT ****
+
+    // Access the user's ObjectId from req.user._id
+    const userId = (req as any).user._id;
+
+    // Validate that the user is authenticated (check if userId exists)
+    if (!userId) {
+      res.status(401).json({ message: 'Unauthorized: User not authenticated' });
+      return;
+    }
+
     // Validate required fields
     const { name, dueDate, priority, status, assignees, project_id, description } = req.body;
     if (!name || !dueDate || !project_id) {
@@ -40,47 +61,50 @@ export const createTask = async (req: Request, res: Response): Promise<void> => 
     }
 
     // Validate assignees
-    if (!Array.isArray(assignees) || !assignees.every(assignee => typeof assignee === 'object')) {
-      res.status(400).json({ message: 'Assignees must be an array of objects' });
+    if (!Array.isArray(assignees)) {
+      res.status(400).json({ message: 'Assignees must be an array' });
       return;
     }
-    // Ensure each assignee has a status
-    const validatedAssignees = assignees.map(assignee => {
-      if (!assignee.status) {
-        assignee.status = 'Pending'; // Default status if not provided
+
+    // Validate the assignees array and each assignee's object format
+    for (const assignee of assignees) {
+      if (typeof assignee !== 'object' || !assignee.user || !mongoose.Types.ObjectId.isValid(assignee.user)) {
+        res.status(400).json({ message: 'Each assignee must have a valid user ObjectId' });
+        return;
       }
-      return assignee;
-    });
+      if (typeof assignee.status !== 'string') {
+        res.status(400).json({ message: 'Each assignee must have a valid status' });
+        return;
+      }
+    }
 
     // Validate project ID
-    const existingProject = await Project.findOne({ project_id: project_id }); // Ensure you are querying on the string field
-if (!existingProject) {
-  res.status(400).json({ message: 'Invalid project ID' });
-  return;
-}
+    const existingProject = await Project.findOne({ project_id: project_id });
+    if (!existingProject) {
+      res.status(400).json({ message: 'Invalid project ID' });
+      return;
+    }
 
-    // Generate a UUID for the task_id
+    // Create the task
     const task_id = uuidv4();
-
-    // Create a new task
     const task = await Task.create({
       task_id: task_id,
       name,
       dueDate: new Date(dueDate),
       priority: priority || 'Medium',
       status: status || 'Pending',
-      assignees: validatedAssignees,
+      assignees: assignees, // Correct!
       description: description || '',
-      project_id // Ensure this is a string
+      project_id,
+      createdBy: userId
     });
 
     console.log('Task created successfully:', task);
-    
-    // Emit socket event for real-time updates
+
     if ((req as any).io) {
       (req as any).io.emit('task_created', task);
     }
-    
+
     res.status(201).json(task);
   } catch (error: any) {
     console.error('Error creating task:', error);
@@ -88,13 +112,19 @@ if (!existingProject) {
   }
 };
 
-// Update task under a specific project 
+
+
+
+// Update task under a specific project
 export const updateTask = async (req: Request, res: Response): Promise<void> => {
   try {
     console.log('Updating task:', req.params.task_id);
-    
-    const allowedUpdates = ['name', 'description', 'priority', 'dueDate', 'assignees', 'status'];
+
+    const allowedUpdates = ['name', 'description', 'priority', 'dueDate', 'assignees', 'status', 'project_id'];
+    console.log('Allowed updates', allowedUpdates);  // Debug: Log the allowedUpdates array
+
     const updates = Object.keys(req.body);
+    console.log('Updates sent', updates); // Debug: Log the keys in the request body
     const isValidOperation = updates.every(update => allowedUpdates.includes(update));
 
     if (!isValidOperation) {
@@ -102,31 +132,59 @@ export const updateTask = async (req: Request, res: Response): Promise<void> => 
       return;
     }
 
-    const task = await Task.findOneAndUpdate(    // Find and update by task_id
+    // Check for invalid assignee
+    if (req.body.assignees) {
+      if (!Array.isArray(req.body.assignees)) {
+        res.status(400).json({ message: 'Assignees must be an array' });
+        return;
+      }
+
+      // Validate that each assignee is a valid user ObjectId
+      for (const assignee of req.body.assignees) {
+        if (typeof assignee !== 'object' || !assignee.user || !mongoose.Types.ObjectId.isValid(assignee.user)) {
+          res.status(400).json({ message: 'Each assignee must have a valid user ObjectId' });
+          return;
+        }
+        if (typeof assignee.status !== 'string') {
+          res.status(400).json({ message: 'Each assignee must have a valid status' });
+          return;
+        }
+      }
+    }
+
+    const task = await Task.findOneAndUpdate(
       { task_id: req.params.task_id },
       req.body,
       { new: true, runValidators: true }
-  );
-    
+    );
+
     if (!task) {
-      console.log('Task not found:', req.params.id);
+      console.log('Task not found:', req.params.task_id);
       res.status(404).json({ message: 'Task not found' });
       return;
     }
-    
-    // Emit socket event for real-time updates
-    if ((req as any).io) {
-      (req as any).io.emit('task_updated', task);
+
+    // Fetch the updated task after the update operation
+    const updatedTask = await Task.findOne({ task_id: req.params.task_id });
+
+    if (!updatedTask) {
+      console.log('Updated task not found after update operation:', req.params.task_id);
+      res.status(500).json({ message: 'Error fetching updated task' });
+      return;
     }
-    
-    console.log('Task updated successfully:', task);
-    res.status(200).json(task);
+
+    // Emit socket event for real-time updates - USE THE UPDATED TASK
+    if ((req as any).io) {
+      (req as any).io.emit('task_updated', updatedTask);
+    }
+
+    console.log('Task updated successfully:', updatedTask);
+    res.status(200).json(updatedTask);  // Send the updated task in the response
   } catch (error: any) {
     console.error('Error updating task:', error);
-    res.status(400).json({ message: 'Error updating task', error: error.message });
+    res.status(500).json({ message: 'Error updating task', error: error.message });
   }
 };
-
 // Delete task
 export const deleteTask = async (req: Request, res: Response): Promise<void> => {
   try {
