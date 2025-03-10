@@ -1,8 +1,14 @@
 import express from "express";
-import { getTasks, createTask, updateTask, deleteTask, getTask,getTasksByProject, createProject,getProjects,getProject,updateProject, deleteProject,updateAssigneeStatus,uploadFile,getAttachment,deleteAttachment, updateAttachment} from '../controllers/taskController';
+import { getTasks, createTask, updateTask, deleteTask, getTask,getTasksByProject,getProjectsForUser, createProject,getProject,updateProject, deleteProject,updateAssigneeStatus,uploadFile,getAttachment,deleteAttachment, updateAttachment} from '../controllers/taskController';
 const router = express.Router();
+// const { protect } = require('../middleware/authMiddleware'); 
+// // Apply the protect middleware BEFORE the createProject function
+// router.post('/projects', protect, createProject);
+
 
 router.get('/projects/:project_id/tasks', getTasksByProject);
+router.get('/projectsforuser',getProjectsForUser)
+router.get('/tasksforuser',getTasksByProject)
 
 // Get all tasks
 router.get("/tasks", async (req, res) => {
@@ -87,19 +93,19 @@ router.post("/projects", async (req, res) => {
   }
 });
 
-// Get all projects
-router.get("/projects", async (req, res) => {
-  try {
-    const projects = await getProjects(req, res);
-    res.json(projects);
-  } catch (error) {
-    if (error instanceof Error) {
-      res.status(500).json({ error: error.message });
-    } else {
-      res.status(500).json({ error: 'An unknown error occurred' });
-    }
-  }
-});
+// // Get all projects
+// router.get("/projects", async (req, res) => {
+//   try {
+//     const projects = await getProjects(req, res);
+//     res.json(projects);
+//   } catch (error) {
+//     if (error instanceof Error) {
+//       res.status(500).json({ error: error.message });
+//     } else {
+//       res.status(500).json({ error: 'An unknown error occurred' });
+//     }
+//   }
+// });
 
 // Get a single project by ID
 router.get("/projects/:project_id", async (req, res) => {

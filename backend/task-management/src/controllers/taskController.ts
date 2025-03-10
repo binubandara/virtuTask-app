@@ -203,10 +203,37 @@ export const createProject = async (req: Request, res: Response): Promise<void> 
   try {
       console.log('Creating new project:', req.body);
 
-      // Validate required fields, now you should add the client id and remove client
+      // **** START TEST CODE - REMOVE BEFORE DEPLOYMENT ****
+      const testUserId = '67cd3c865b9d52546d109fd6'; // Replace with a VALID ObjectId from your Users collection
+
+      if (!mongoose.Types.ObjectId.isValid(testUserId)) {
+          res.status(400).json({ message: 'Invalid test user ID' });
+          return;
+      }
+
+      (req as any).user = { _id: new mongoose.Types.ObjectId(testUserId) }; // Use a valid ObjectId
+      // **** END TEST CODE - REMOVE BEFORE DEPLOYMENT ****
+
+      // Access the user's ObjectId from req.user._id
+      const userId = (req as any).user._id;
+
+      // Validate that the user is authenticated (check if userId exists)
+      if (!userId) {
+          res.status(401).json({ message: 'Unauthorized: User not authenticated' });
+          return;
+      }
+
+      // Validate required fields
       const { name, description, startDate, dueDate, department, priority, members, clientId } = req.body;
+
       if (!name || !startDate || !dueDate || !description || !department || !priority || !members) {
           res.status(400).json({ message: 'Name, description, start date, due date, department, priority, and members are required' });
+          return;
+      }
+
+      // Validate that 'members' is an array of valid User ObjectIds
+      if (!Array.isArray(members) || !members.every(memberId => mongoose.Types.ObjectId.isValid(memberId))) {
+          res.status(400).json({ message: 'Members must be an array of valid User ObjectIds' });
           return;
       }
 
@@ -224,15 +251,27 @@ export const createProject = async (req: Request, res: Response): Promise<void> 
           tasks: [], // You can add task references later
           department,
           priority,
-          members, 
-          clientId 
+          members, // Assign the array of User ObjectIds
+          clientId,
+          createdBy: userId  //Set the user ID to know which user created
       });
 
       console.log('Project created successfully:', project);
 
-      // Emit a socket event for have real-time updates
+      // Emit Socket.IO events to notify frontends to update - SIMPLIFIED
       if ((req as any).io) {
-          (req as any).io.emit('project_created', project);
+          const io = (req as any).io;
+
+          // Notify everyone that a project was created (optional)
+          io.emit('project_created', project);
+
+          // Notify specific members that they were added to this project
+          members.forEach(memberId => {
+              io.emit(`project_members_updated:${project.project_id}`, {  // NOT user specific, rather project specific
+                  projectId: project.project_id,
+                  members: members // Send the entire updated members array
+              });
+          });
       }
 
       res.status(201).json(project);
@@ -241,8 +280,6 @@ export const createProject = async (req: Request, res: Response): Promise<void> 
       res.status(400).json({ message: 'Error creating project', error: error.message });
   }
 };
-
-
 // Get all projects
 export const getProjects = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -281,8 +318,11 @@ export const updateProject = async (req: Request, res: Response): Promise<void> 
   try {
       console.log('Updating project:', req.params.project_id);
 
-      const allowedUpdates = ['name', 'description', 'startDate', 'dueDate', 'status', 'department', 'clientId', 'priority', 'members'];
+      const allowedUpdates = ['name', 'description', 'startDate', 'dueDate', 'status', 'department', 'clientId', 'priority', 'members']; // Add any missing fields here
+      console.log('Allowed updates', allowedUpdates);  // Debug: Log the allowedUpdates array
+
       const updates = Object.keys(req.body);
+      console.log('Updates sent', updates); //Debug: Log the keys in the request body
       const isValidOperation = updates.every(update => allowedUpdates.includes(update));
 
       if (!isValidOperation) {
@@ -302,18 +342,35 @@ export const updateProject = async (req: Request, res: Response): Promise<void> 
           return;
       }
 
-      // Emit socket event for real-time updates
-      if ((req as any).io) {
-          (req as any).io.emit('project_updated', project);
+      // Fetch the UPDATED project after the update operation
+      const updatedProject = await Project.findOne({ project_id: req.params.project_id });
+
+      if (!updatedProject) {
+          console.log('Updated project not found after update operation:', req.params.project_id);
+          res.status(500).json({ message: 'Error fetching updated project' });  // or 404, depending on your preference
+          return;
       }
 
-      console.log('Project updated successfully:', project);
-      res.status(200).json(project);
+      // Emit socket event for real-time updates - USE THE UPDATED PROJECT
+      if ((req as any).io) {
+          (req as any).io.emit('project_updated', updatedProject);
+           updatedProject.members.forEach(memberId => {
+              (req as any).io.emit(`project_members_updated:${updatedProject.project_id}`, {  // NOT user specific, rather project specific
+                  projectId: updatedProject.project_id,
+                  members: updatedProject.members // Send the entire updated members array
+              });
+          });
+      }
+
+      console.log('Project updated successfully:', updatedProject);
+      res.status(200).json(updatedProject);  // Send the updated project in the response
   } catch (error: any) {
       console.error('Error updating project:', error);
       res.status(400).json({ message: 'Error updating project', error: error.message });
   }
 };
+
+
 // Delete project
 export const deleteProject = async (req: Request, res: Response): Promise<void> => {
 try {
@@ -367,7 +424,7 @@ export const updateAssigneeStatus = async (req: Request, res: Response): Promise
       console.log("Task found:", task);
 
       // Update the specific assignee's status
-       const assignee = task.assignees.find(a => a._id.toString() === assigneeId);
+       const assignee = task.assignees.find(a => a.user.toString() === assigneeId);
         console.log("Assignee Found:", assignee)
 
         if (!assignee) {
