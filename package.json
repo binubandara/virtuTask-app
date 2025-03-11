@@ -5,5 +5,11 @@
   "scripts": {
     "start": "yarn workspace backend start"
   },
-  "workspaces": ["backend", "frontend"]
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
 }
