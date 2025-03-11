@@ -2,6 +2,7 @@
     width: 100%;
     min-height: 100vh;
     padding: 2rem;
+    margin-top: 1em;
   }
   
   .settings-container.dark-mode {
@@ -13,7 +14,7 @@
     font-size: 2.3rem;
     font-weight: bold;
     margin-top: -1.5rem;
-    margin-bottom: 0.6rem;
+    margin-bottom: 1rem;
     text-align: left;
     margin-left: 1px;
   }
@@ -171,7 +172,7 @@
     width: 100%;
     max-width: 100%;
     margin: 0 auto;
-    margin-bottom: -2rem;
+    margin-bottom: 1rem;
   }
   
   .account-buttons {

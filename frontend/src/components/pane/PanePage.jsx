@@ -61,7 +61,7 @@ const PanePage = () => {
 
           {/* Project Management Routes */}
           <Route path="/my-projects-manager" element={<MyProjectsManager projects={projects} setProjects={setProjects} />} />
-          <Route path="/task-manager/:projectId" element={<TaskManage projects={projects} />} />
+          <Route path="/task-manager/:projectId" element={<TaskManage projects={projects} setProjects={setProjects} />} />
           <Route path="/task-form" element={<TaskForm />} />
           <Route path="/task-info" element={<TaskInformation />} />
           <Route path="/my-tasks" element={<MyTasks />} />
