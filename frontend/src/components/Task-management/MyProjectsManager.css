@@ -84,6 +84,15 @@
     cursor: pointer;
     
   }
+
+  .project-details h3{
+    font-size: 1.5em;
+  }
+
+  .project-details h4{ 
+    font-size: 1em;
+  }
+
   .project-details h3,.project-details h4{
     font-weight: 549;
   }
@@ -98,8 +107,7 @@
     display: flex;
     flex-wrap: wrap; 
     padding: 5px; 
-    margin-top: 160px;
-    margin-left: 7.5cm; 
+    margin-top: 160px; 
     gap: 20px; /* Adjust gap as necessary */
   }
   

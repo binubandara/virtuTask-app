@@ -1,8 +1,8 @@
 .task-manage-container {
-    margin-left: 7.5cm;
+    margin-left: 1cm;
 }
 .back-button{
-    margin-left: 6.7cm;
+    margin-left: 7cm;
     margin-top: 0.1cm;
 }
 /* Add these new rules */
@@ -113,7 +113,7 @@
     border-radius: 20px;
     cursor: pointer;
     transition: all 0.2s;
-    margin-left: 29cm;
+    margin-left: 28cm;
     margin-top: 15px;
    
 }
