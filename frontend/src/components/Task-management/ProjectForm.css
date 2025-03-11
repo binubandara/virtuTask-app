@@ -1,0 +1,175 @@
+/* Modal Overlay */
+.form-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(0);
+  }
+  .form-modal > * {
+    pointer-events: none;
+  }
+  
+  .projects-container {
+    background-color: white;
+    padding: 25px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+    width: 800px;
+    max-height: 90vh;
+    overflow-y: auto;
+    pointer-events: all;
+  }
+  .projects-container * {
+    pointer-events: all;
+  }
+  
+  .projects-container h1 {
+    color: #068ea3;
+    margin-bottom: 1.5rem;
+    font-size: 1.5rem;
+    font-weight: 548;
+  }
+  
+  .form-row {
+    display: flex;
+    gap: 2rem;
+    
+    padding-top:10px ;
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+  
+  
+  .right-form-column {
+    flex: 1;
+    width: 5px;
+    
+  }
+  .left-form-column  {
+    flex: 1;
+    width: 775px;
+    padding-bottom: 1px;
+    
+  }
+  
+  label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+    color: #555;
+    font-weight: 547;
+    
+  }
+  
+  input, textarea, .date-picker {
+    width: 100%;
+    padding: 0.5rem;
+    margin-bottom: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    border-radius: 18px;
+  }
+  
+  .textarea {
+    height:75.5px;
+    resize: vertical;
+  }
+  
+  .priority-buttons {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    width: 270px;
+    
+  }
+  
+  .priority-buttons button {
+    flex: 1;
+    padding: 0.5rem;
+    border: 10px;
+    border-radius: 35px;
+    cursor: pointer;
+    color: white;
+    transition: opacity 0.2s;
+    width: 200px;
+  }
+  .priority-buttons button:hover{
+    filter: brightness(90%);
+    color: rgb(14, 14, 14);
+  
+  }
+  
+  .priority-buttons button.active {
+    filter: brightness(110%);
+    transform: scale(1.05);
+    
+  }
+  
+  .high { background-color: #e62d2df3;  }
+  .medium { background-color: #f0ad27; }
+  .low { background-color: #14b655; }
+  
+  .form-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2px;
+    border-radius: 15spx;
+    
+    
+  }
+  .date-picker {
+    width: 230px; /* Adjust as needed */
+    border-radius: 25px;
+  }
+  
+  .form-btn {
+    padding: 0.8rem 1.5rem;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: filter 0.2s;  
+  }
+  
+  .reset { background-color: #4206a3; color: white; }
+  .create { background-color: #4206a3; color: white; }
+  
+  .form-btn:hover {
+    filter: brightness(90%);
+    
+  }
+  
+  .minus-icon {
+    position: absolute;
+    right: 385.5px;
+    top: 121px;
+    cursor: pointer;
+    width: 24px; /* Adjust size */
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: black; /* Ensure visibility */
+  }
+  .minus-icon:hover{
+    color: #068ea3;
+  }
+  
+  .svg-member-icon { 
+    position: absolute; 
+    right: 409.5px; /* Adjust alignment */
+    top: 493.5px; /* Center vertically */
+    transform: translateY(-50%);
+    width: 24px;
+    height: 24px;
+    color: black; /* Ensure it contrasts */
+  }

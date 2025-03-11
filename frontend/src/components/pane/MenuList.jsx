@@ -12,7 +12,7 @@ const MenuList = () => {
         navigate('/dashboard');
         break;
       case 'projects':
-        navigate('/projects');
+        navigate('/my-projects-manager');
         break;
       case 'myTask':
         navigate('/my-tasks');
@@ -23,9 +23,12 @@ const MenuList = () => {
       case 'settings':
         navigate('/settings');
         break;
-        case 'tool-1':
+      case 'tool-1':
         navigate('/engagement-hub');
         break;
+      case 'tool-3':
+        navigate('/health-habit-tracker');
+        break;  
       // Add cases for other menu items if needed
       default:
         break;
