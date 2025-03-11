@@ -2,9 +2,9 @@
 import { io } from 'socket.io-client';
 
 const socket = io('http://localhost:3001', {
-  autoConnect: false, // We'll manually connect in App.jsx
+  autoConnect: false,
   withCredentials: true,
-  transports: ['websocket'] // Force WebSocket transport
+  transports: ['websocket']
 });
 
 export default socket;
