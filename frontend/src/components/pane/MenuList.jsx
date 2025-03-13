@@ -1,5 +1,5 @@
 import { Menu } from 'antd';
-import { AppstoreOutlined, ProjectOutlined, BarsOutlined, HomeOutlined, SettingOutlined, CheckSquareOutlined, GlobalOutlined, ToolOutlined, TeamOutlined, AimOutlined, HeartOutlined } from '@ant-design/icons';
+import { AppstoreOutlined, ProjectOutlined, BarsOutlined, HomeOutlined, SettingOutlined, CheckSquareOutlined, GlobalOutlined, ToolOutlined, TeamOutlined, AimOutlined, HeartOutlined, SolutionOutlined, FundProjectionScreenOutlined, ProfileOutlined, FolderOpenOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 
 const MenuList = () => {
@@ -30,12 +30,11 @@ const MenuList = () => {
   return (
     <Menu mode="inline" className='sideBar' onClick={({ key }) => handleMenuClick(key)}>
       <Menu.Item style={{ marginTop: "12px", marginBottom: "10px" }} key="dashboard" icon={<BarsOutlined />}> Dashboard </Menu.Item>
-      <Menu.Item style={{ marginBottom: "10px" }} key="projects" icon={<ProjectOutlined />}> Projects </Menu.Item>
 
 
-      <Menu.SubMenu style={{ marginBottom: "10px" }} key="projects" icon={<ProjectOutlined />} title="Projects">
-        <Menu.Item style={{ marginBottom: "10px" }} key="p-1" icon={<TeamOutlined />}> Project Management </Menu.Item>
-        <Menu.Item style={{ marginBottom: "10px" }} key="p-2" icon={<AimOutlined />}> My Projects </Menu.Item>
+      <Menu.SubMenu style={{ marginBottom: "10px" }} key="projects" icon={<AppstoreOutlined />} title="Projects">
+        <Menu.Item style={{ marginBottom: "10px" }} key="p-1" icon={<SolutionOutlined />}> Project Management </Menu.Item>
+        <Menu.Item style={{ marginBottom: "10px" }} key="p-2" icon={<FolderOpenOutlined />}> My Projects </Menu.Item>
       </Menu.SubMenu>
 
       <Menu.Item style={{ marginBottom: "10px" }} key="myTask" icon={<CheckSquareOutlined />}> My Task </Menu.Item>
