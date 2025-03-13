@@ -16,8 +16,10 @@ const PanePage = () => {
     <Layout style={{ minHeight: '100vh' }}>
       <Sider theme="light" width={240}>
         <Logo />
-        <MenuList />  
-        <Profile />  
+        <div style={{ overflowY: 'auto', maxHeight: 'calc(100vh - 150px)' }}> {/* Scrollable container */}
+          <MenuList />  
+          <Profile />  
+        </div>
       </Sider>
       <Content >
         <Routes>
