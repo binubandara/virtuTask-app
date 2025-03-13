@@ -1,6 +1,3 @@
-
-
-/* Dashboard Container */
 .dashboard-container {
   position: relative;
   width: 100%;
@@ -10,18 +7,17 @@
   overflow: hidden;
 }
 
-/* Dashboard Heading */
 .dashboard-heading {
-  font-size: 2.5rem;
+  font-size: 2.2rem;
   font-weight: 700;
   color: #2d3748;
   margin-bottom: 1.5rem;
   text-align: center;
   text-transform: uppercase;
   letter-spacing: 1.5px;
+  margin-top: -1rem;
 }
 
-/* Button Container */
 .button-container {
   display: flex;
   justify-content: center;
@@ -29,11 +25,11 @@
   margin-bottom: 2rem;
 }
 
-/* Toggle Buttons */
 .toggle-btn {
   padding: 12px 24px;
   font-size: 1rem;
   font-weight: 600;
+  width: 11rem;
   border: none;
   border-radius: 8px;
   background-color: #4caf50;
@@ -49,7 +45,6 @@
   box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
 }
 
-/* Cities Grid */
 .cities {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -59,7 +54,6 @@
   align-items: center;
 }
 
-/* City Zone */
 .city-zone {
   display: flex;
   justify-content: center;
@@ -84,7 +78,6 @@
   box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2);
 }
 
-/* City Name */
 .city-name {
   font-size: 1.25rem;
   font-weight: 700;
@@ -93,7 +86,6 @@
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
 }
 
-/* City Time */
 .city-time {
   font-size: 1.1rem;
   font-weight: 600;
@@ -104,7 +96,6 @@
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
 }
 
-/* Day/Night Icon */
 .day-night-icon {
   position: absolute;
   bottom: -30px;
