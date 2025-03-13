@@ -6,7 +6,6 @@ const MenuList = () => {
   const navigate = useNavigate();
 
   const handleMenuClick = (key) => {
-    // Navigate to the corresponding route based on the key
     switch (key) {
       case 'dashboard':
         navigate('/pane/dashboard');
@@ -23,7 +22,6 @@ const MenuList = () => {
       case 'settings':
         navigate('/pane/settings');
         break;
-      // Add cases for other menu items if needed
       default:
         break;
     }
@@ -33,6 +31,13 @@ const MenuList = () => {
     <Menu mode="inline" className='sideBar' onClick={({ key }) => handleMenuClick(key)}>
       <Menu.Item style={{ marginTop: "12px", marginBottom: "10px" }} key="dashboard" icon={<BarsOutlined />}> Dashboard </Menu.Item>
       <Menu.Item style={{ marginBottom: "10px" }} key="projects" icon={<ProjectOutlined />}> Projects </Menu.Item>
+
+
+      <Menu.SubMenu style={{ marginBottom: "10px" }} key="projects" icon={<ProjectOutlined />} title="Projects">
+        <Menu.Item style={{ marginBottom: "10px" }} key="p-1" icon={<TeamOutlined />}> Project Management </Menu.Item>
+        <Menu.Item style={{ marginBottom: "10px" }} key="p-2" icon={<AimOutlined />}> My Projects </Menu.Item>
+      </Menu.SubMenu>
+
       <Menu.Item style={{ marginBottom: "10px" }} key="myTask" icon={<CheckSquareOutlined />}> My Task </Menu.Item>
       <Menu.Item style={{ marginBottom: "10px" }} key="global" icon={<GlobalOutlined />}> Global Time Sync </Menu.Item>
 

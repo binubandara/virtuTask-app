@@ -28,7 +28,6 @@ const Settings = () => {
     }));
   };
 
-  // Effect to toggle dark mode on the body
   useEffect(() => {
     if (darkMode) {
       document.body.classList.add("dark-mode");
@@ -39,14 +38,11 @@ const Settings = () => {
 
   return (
     <div className={`settings-container ${darkMode ? "dark-mode" : ""}`}>
-      {/* My Settings Heading */}
       <h1 className={`settings-heading ${darkMode ? "dark-mode" : ""}`}>
         My Settings
       </h1>
 
-      {/* Grid Layout for Setting Boxes */}
       <div className="settings-grid">
-        {/* Theme Settings */}
         <div className={`settings-box ${darkMode ? "dark-mode" : ""}`}>
           <h2 className="settings-box-heading">
             <FaPalette /> Theme Settings
@@ -60,7 +56,6 @@ const Settings = () => {
           </div>
         </div>
 
-        {/* Notifications */}
         <div className={`settings-box ${darkMode ? "dark-mode" : ""}`}>
           <h2 className="settings-box-heading">
             <FaBell /> Notifications Settings
@@ -86,9 +81,7 @@ const Settings = () => {
         </div>
       </div>
 
-      {/* Second Grid Row */}
       <div className="settings-grid">
-        {/* Time Zone Select */}
         <div className={`settings-box ${darkMode ? "dark-mode" : ""}`}>
           <h2 className="settings-box-heading">
             <FaGlobe /> Global Time Zone
@@ -500,7 +493,6 @@ const Settings = () => {
           </div>
         </div>
 
-        {/* Date and Time */}
         <div className={`settings-box ${darkMode ? "dark-mode" : ""}`}>
           <h2 className="settings-box-heading">
             <FaCalendarAlt /> Date & Time Format
@@ -530,7 +522,6 @@ const Settings = () => {
         </div>
       </div>
 
-      {/* Account Settings */}
       <div className="account-settings">
         <div className={`settings-box ${darkMode ? "dark-mode" : ""}`}>
           <h2 className="settings-box-heading">
