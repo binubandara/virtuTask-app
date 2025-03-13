@@ -23,6 +23,9 @@ const MenuList = () => {
       case 'settings':
         navigate('/pane/settings');
         break;
+      case 'tool-2':
+        navigate('/pane/rewards');
+        break;
       default:
         break;
     }
