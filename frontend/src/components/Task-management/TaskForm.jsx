@@ -51,7 +51,6 @@ const TaskForm = ({
   }
   const statusOptions = [
     { value: 'pending', label: 'Pending', color: 'var(--taskform-orange)' },
-    { value: 'on_hold', label: 'On-Hold', color: 'var(--taskform-ash)' },
     { value: 'in_progress', label: 'In-Progress', color: 'var(--taskform-blue)' },
     { value: 'completed', label: 'Completed', color: 'var(--taskform-green)' },
   ];

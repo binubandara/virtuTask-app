@@ -1,0 +1,48 @@
+.my-projects-container {
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 0 20px;
+  }
+  
+  .projects-title {
+    font-family: 'Arial', sans-serif;
+    font-size: 28px;
+    font-weight: 600;
+    color: #2d2d2d;
+    margin-bottom: 25px;
+  }
+  
+  .filters-container {
+    display: flex;
+    gap: 15px;
+  }
+  
+  .filter-dropdown {
+    padding: 10px 15px;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    font-family: 'Arial', sans-serif;
+    font-size: 14px;
+    color: #5a5a5a;
+    background-color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .filter-dropdown:hover {
+    border-color: #a0a0a0;
+  }
+  
+  .filter-dropdown:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.1);
+  }
+  
+  .filter-dropdown option {
+    padding: 8px;
+    background-color: white;
+  }
+  
+  .filter-dropdown option[disabled] {
+    color: #a0a0a0;
+  }
