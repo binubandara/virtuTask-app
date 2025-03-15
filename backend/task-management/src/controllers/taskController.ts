@@ -1,5 +1,4 @@
 import { Request, Response } from 'express';
-
 interface MulterRequest extends Request {
   file?: Express.Multer.File;
 }
@@ -10,65 +9,49 @@ import mongoose from 'mongoose';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
-
-// Get all tasks for a specific project 
-export const getTasks = async (req: Request, res: Response): Promise<void> => {
-  try {
-    console.log('Fetching all tasks...');
-    const tasks = await Task.find()
-      .sort({ createdAt: -1 })
-      .populate('comments');
-    
-    console.log(`Successfully fetched ${tasks.length} tasks`);
-    res.status(200).json(tasks);
-  } catch (error: any) {
-    console.error('Error fetching tasks:', error);
-    res.status(500).json({ message: 'Error fetching tasks', error: error.message });
-  }
-};
+import { io } from '../server'; 
 
 
-// Create new task under a specific project
+
+// Create new task under a project
 export const createTask = async (req: Request, res: Response): Promise<void> => {
   try {
     console.log('Creating new task:', req.body);
 
-    // **** START TEST CODE - REMOVE BEFORE DEPLOYMENT ****
-    const testUserId = '67cd3c865b9d52546d109fd6';
-
-    if (!mongoose.Types.ObjectId.isValid(testUserId)) {
-      res.status(400).json({ message: 'Invalid test user ID' });
-      return;
-    }
-
-    (req as any).user = { _id: new mongoose.Types.ObjectId(testUserId) };
-    // **** END TEST CODE - REMOVE BEFORE DEPLOYMENT ****
-
-    // Access the user's ObjectId from req.user._id
-    const userId = (req as any).user._id;
-
-    // Validate that the user is authenticated (check if userId exists)
-    if (!userId) {
+    // Access the user's ID from auth middleware
+    const userId = req.user?.id;
+    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
       res.status(401).json({ message: 'Unauthorized: User not authenticated' });
       return;
     }
 
-    // Validate required fields
-    const { name, dueDate, priority, status, assignees, project_id, description } = req.body;
-    if (!name || !dueDate || !project_id) {
-      res.status(400).json({ message: 'Name, due date, and project_id are required' });
+    // Get project_id from URL parameters
+    const project_id = req.params.project_id;
+    if (!project_id) {
+      res.status(400).json({ message: 'Project ID is required in the URL' });
       return;
     }
 
-    // Validate assignees
+    // Validate required fields from body
+    const { name, dueDate, priority, status, assignees, description } = req.body;
+    if (!name || !dueDate) {  // Removed project_id from body validation
+      res.status(400).json({ message: 'Name and due date are required' });
+      return;
+    }
+
+    // Validate assignees array
     if (!Array.isArray(assignees)) {
       res.status(400).json({ message: 'Assignees must be an array' });
       return;
     }
 
-    // Validate the assignees array and each assignee's object format
+    // Validate each assignee
     for (const assignee of assignees) {
-      if (typeof assignee !== 'object' || !assignee.user || !mongoose.Types.ObjectId.isValid(assignee.user)) {
+      if (
+        typeof assignee !== 'object' ||
+        !assignee.user ||
+        !mongoose.Types.ObjectId.isValid(assignee.user)
+      ) {
         res.status(400).json({ message: 'Each assignee must have a valid user ObjectId' });
         return;
       }
@@ -78,32 +61,30 @@ export const createTask = async (req: Request, res: Response): Promise<void> => 
       }
     }
 
-    // Validate project ID
-    const existingProject = await Project.findOne({ project_id: project_id });
+    // Verify project exists
+    const existingProject = await Project.findOne({ project_id });
     if (!existingProject) {
-      res.status(400).json({ message: 'Invalid project ID' });
+      res.status(404).json({ message: 'Project not found' });
       return;
     }
 
-    // Create the task
-    const task_id = uuidv4();
+    // Create task
     const task = await Task.create({
-      task_id: task_id,
+      task_id: uuidv4(),
       name,
       dueDate: new Date(dueDate),
       priority: priority || 'Medium',
       status: status || 'Pending',
-      assignees: assignees, // Correct!
+      assignees,
       description: description || '',
-      project_id,
-      createdBy: userId
+      project_id, // Now coming from URL params
+      createdBy: new mongoose.Types.ObjectId(userId),
     });
 
-    console.log('Task created successfully:', task);
-
-    if ((req as any).io) {
-      (req as any).io.emit('task_created', task);
-    }
+    // Notify assignees via WebSocket
+    assignees.forEach((assignee: any) => {
+      io.to(assignee.user).emit('task_created', task);
+    });
 
     res.status(201).json(task);
   } catch (error: any) {
@@ -115,405 +96,323 @@ export const createTask = async (req: Request, res: Response): Promise<void> => 
 
 
 
-// Update task under a specific project
-export const updateTask = async (req: Request, res: Response): Promise<void> => {
+// Get tasks for a user (where user is creator or assignee)
+export const getTasks = async (req: Request, res: Response): Promise<void> => {
   try {
-    console.log('Updating task:', req.params.task_id);
+    // 1. Get user ID from middleware
+    const userId = req.user?.id;
+    console.log('Fetching tasks for user:', userId);
 
-    const allowedUpdates = ['name', 'description', 'priority', 'dueDate', 'assignees', 'status', 'project_id'];
-    console.log('Allowed updates', allowedUpdates);  // Debug: Log the allowedUpdates array
-
-    const updates = Object.keys(req.body);
-    console.log('Updates sent', updates); // Debug: Log the keys in the request body
-    const isValidOperation = updates.every(update => allowedUpdates.includes(update));
-
-    if (!isValidOperation) {
-      res.status(400).json({ message: 'Invalid updates!' });
+    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+      res.status(401).json({ message: 'Invalid user credentials' });
       return;
     }
 
-    // Check for invalid assignee
-    if (req.body.assignees) {
-      if (!Array.isArray(req.body.assignees)) {
-        res.status(400).json({ message: 'Assignees must be an array' });
-        return;
-      }
+    // 2. Find tasks where the user is an assignee or the creator
+    const tasks = await Task.find({
+      $or: [
+        { 'assignees.user': userId },
+        { createdBy: userId }
+      ]
+    });
 
-      // Validate that each assignee is a valid user ObjectId
-      for (const assignee of req.body.assignees) {
-        if (typeof assignee !== 'object' || !assignee.user || !mongoose.Types.ObjectId.isValid(assignee.user)) {
-          res.status(400).json({ message: 'Each assignee must have a valid user ObjectId' });
-          return;
-        }
-        if (typeof assignee.status !== 'string') {
-          res.status(400).json({ message: 'Each assignee must have a valid status' });
-          return;
-        }
-      }
+    // 3. Send response
+    res.status(200).json(tasks);
+  } catch (error: any) {
+    console.error('Error fetching tasks:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+
+
+// Get task by ID
+export const getTaskById = async (req: Request, res: Response): Promise<void> => {
+  try {
+    // 1. Get user ID from middleware
+    const userId = req.user?.id;
+    console.log('Fetching task for user:', userId);
+
+    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+      res.status(401).json({ message: 'Invalid user credentials' });
+      return;
     }
 
-    const task = await Task.findOneAndUpdate(
-      { task_id: req.params.task_id },
-      req.body,
-      { new: true, runValidators: true }
-    );
+    // 2. Find the task by its `task_id`
+    const task = await Task.findOne({ task_id: req.params.task_id });
 
+    // 3. Check if the task exists
     if (!task) {
       console.log('Task not found:', req.params.task_id);
       res.status(404).json({ message: 'Task not found' });
       return;
     }
 
-    // Fetch the updated task after the update operation
-    const updatedTask = await Task.findOne({ task_id: req.params.task_id });
+    // 4. Check if the user is an assignee of the task or the creator
+    const isAssignee = task.assignees.some((assignee: any) => assignee.user.toString() === userId);
+    const isCreator = task.createdBy.toString() === userId;
 
-    if (!updatedTask) {
-      console.log('Updated task not found after update operation:', req.params.task_id);
-      res.status(500).json({ message: 'Error fetching updated task' });
+    if (!isAssignee && !isCreator) {
+      console.log('User is not authorized to access this task:', req.params.task_id);
+      res.status(403).json({ message: 'Forbidden: You do not have permission to access this task' });
       return;
     }
 
-    // Emit socket event for real-time updates - USE THE UPDATED TASK
-    if ((req as any).io) {
-      (req as any).io.emit('task_updated', updatedTask);
+    // 5. Send response
+    console.log('Task fetched successfully:', task);
+    res.status(200).json(task);
+  } catch (error: any) {
+    console.error('Error fetching task:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// Update a task (only the creator can update)
+export const updateTask = async (req: Request, res: Response): Promise<void> => {
+  try {
+    console.log('Updating task:', req.params.task_id);
+
+    // Access the user's ID from auth middleware
+    const userId = req.user?.id;
+    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+      res.status(401).json({ message: 'Unauthorized: User not authenticated' });
+      return;
     }
 
-    console.log('Task updated successfully:', updatedTask);
-    res.status(200).json(updatedTask);  // Send the updated task in the response
+    // Get project_id and task_id from URL parameters
+    const { project_id, task_id } = req.params;
+    if (!project_id || !task_id) {
+      res.status(400).json({ message: 'Project ID and Task ID are required in the URL' });
+      return;
+    }
+
+    // Validate required fields from body
+    const { name, dueDate, priority, status, assignees, description } = req.body;
+    if (!name || !dueDate) {
+      res.status(400).json({ message: 'Name and due date are required' });
+      return;
+    }
+
+    // Validate assignees array
+    if (!Array.isArray(assignees)) {
+      res.status(400).json({ message: 'Assignees must be an array' });
+      return;
+    }
+
+    // Validate each assignee
+    for (const assignee of assignees) {
+      if (
+        typeof assignee !== 'object' ||
+        !assignee.user ||
+        !mongoose.Types.ObjectId.isValid(assignee.user)
+      ) {
+        res.status(400).json({ message: 'Each assignee must have a valid user ObjectId' });
+        return;
+      }
+      if (typeof assignee.status !== 'string') {
+        res.status(400).json({ message: 'Each assignee must have a valid status' });
+        return;
+      }
+    }
+
+    // Verify task exists and user is the creator
+    const task = await Task.findOne({ task_id, project_id });
+    if (!task) {
+      res.status(404).json({ message: 'Task not found' });
+      return;
+    }
+    if (task.createdBy.toString() !== userId) {
+      res.status(403).json({ message: 'Forbidden: Only the creator can update this task' });
+      return;
+    }
+
+    // Update task fields
+    task.name = name;
+    task.dueDate = new Date(dueDate);
+    task.priority = priority || 'Medium';
+    task.status = status || 'Pending';
+    task.assignees = assignees;
+    task.description = description || '';
+
+    // Save updated task
+    const updatedTask = await task.save();
+
+    // Notify assignees via WebSocket
+    assignees.forEach((assignee: any) => {
+      io.to(assignee.user).emit('task_updated', updatedTask);
+    });
+
+    res.status(200).json(updatedTask);
   } catch (error: any) {
     console.error('Error updating task:', error);
     res.status(500).json({ message: 'Error updating task', error: error.message });
   }
 };
-// Delete task
-export const deleteTask = async (req: Request, res: Response): Promise<void> => {
-  try {
-    console.log('Deleting task:', req.params.id);
-    const task = await Task.findByIdAndDelete(req.params.task_id);
-    
-    if (!task) {
-      console.log('Task not found:', req.params.id);
-      res.status(404).json({ message: 'Task not found' });
-      return;
-    }
-    
-    // Emit socket event for real-time updates
-    if ((req as any).io) {
-      (req as any).io.emit('task_deleted', req.params.id);
-    }
-    
-    console.log('Task deleted successfully');
-    res.status(200).json({ message: 'Task deleted successfully' });
-  } catch (error: any) {
-    console.error('Error deleting task:', error);
-    res.status(400).json({ message: 'Error deleting task', error: error.message });
-  }
-};
 
-// Get all tasks for a specific project
+// Get tasks for a project
 export const getTasksByProject = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { project_id } = req.params;
+    // 1. Get project ID from params
+    const projectId = req.params.project_id;
+    console.log('Fetching tasks for project:', projectId);
 
-    if (!project_id) {
-      res.status(400).json({ message: 'Project ID is required' });
+    // 2. Get user ID from middleware (optional, if you need to verify project access)
+    const userId = req.user?.id;  // Assuming your auth middleware populates req.user
+    console.log('User ID:', userId);
+    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+      res.status(401).json({ message: 'Invalid user credentials' });
       return;
     }
 
-    console.log(`Fetching tasks for project: ${project_id}`);
-
-    const tasks = await Task.find({ project_id: project_id })
-      .sort({ createdAt: -1 })
-      .populate('comments');
-
-    console.log(`Successfully fetched ${tasks.length} tasks for project: ${project_id}`);
-    res.status(200).json(tasks);
-  } catch (error: any) {
-    console.error(`Error fetching tasks for project ${req.params.project_id}:`, error);
-    res.status(500).json({ message: `Error fetching tasks for project ${req.params.project_id}`, error: error.message });
-  }
-};
-
-/// Get single task
-export const getTask = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const task_id = req.params.task_id; // Extract task_id
-    console.log('Fetching task:', task_id);
-
-    const task = await Task.findOne({ task_id: task_id }).populate('comments');  // Use findOne and query by task_id
-
-    if (!task) {
-      console.log('Task not found:', task_id);
-      res.status(404).json({ message: 'Task not found' });
-      return;
-    }
-
-    console.log('Task fetched successfully:', task);
-    res.status(200).json(task);
-  } catch (error: any) {
-    console.error('Error fetching task:', error);
-    res.status(400).json({ message: 'Error fetching task', error: error.message });
-  }
-};
-
-// Create a new project
-export const createProject = async (req: Request, res: Response): Promise<void> => {
-  try {
-      console.log('Creating new project:', req.body);
-
-      // **** START TEST CODE - REMOVE BEFORE DEPLOYMENT ****
-      const testUserId = '67cd3c865b9d52546d109fd6'; // Replace with a VALID ObjectId from your Users collection
-
-      if (!mongoose.Types.ObjectId.isValid(testUserId)) {
-          res.status(400).json({ message: 'Invalid test user ID' });
-          return;
-      }
-
-      (req as any).user = { _id: new mongoose.Types.ObjectId(testUserId) }; // Use a valid ObjectId
-      // **** END TEST CODE - REMOVE BEFORE DEPLOYMENT ****
-
-      // Access the user's ObjectId from req.user._id
-      const userId = (req as any).user._id;
-
-      // Validate that the user is authenticated (check if userId exists)
-      if (!userId) {
-          res.status(401).json({ message: 'Unauthorized: User not authenticated' });
-          return;
-      }
-
-      // Validate required fields
-      const { name, description, startDate, dueDate, department, priority, members, clientId } = req.body;
-
-      if (!name || !startDate || !dueDate || !description || !department || !priority || !members) {
-          res.status(400).json({ message: 'Name, description, start date, due date, department, priority, and members are required' });
-          return;
-      }
-
-      // Validate that 'members' is an array of valid User ObjectIds
-      if (!Array.isArray(members) || !members.every(memberId => mongoose.Types.ObjectId.isValid(memberId))) {
-          res.status(400).json({ message: 'Members must be an array of valid User ObjectIds' });
-          return;
-      }
-
-      // Generate a UUID for the project_id
-      const project_id = uuidv4();
-
-      // Create a new project
-      const project = await Project.create({
-          project_id: project_id,
-          name,
-          description,
-          startDate: new Date(startDate),
-          dueDate: new Date(dueDate),
-          status: 'Active', // Default status
-          tasks: [], // You can add task references later
-          department,
-          priority,
-          members, // Assign the array of User ObjectIds
-          clientId,
-          createdBy: userId  //Set the user ID to know which user created
-      });
-
-      console.log('Project created successfully:', project);
-
-      // Emit Socket.IO events to notify frontends to update - SIMPLIFIED
-      if ((req as any).io) {
-          const io = (req as any).io;
-
-          // Notify everyone that a project was created (optional)
-          io.emit('project_created', project);
-
-          // Notify specific members that they were added to this project
-          members.forEach(memberId => {
-              io.emit(`project_members_updated:${project.project_id}`, {  // NOT user specific, rather project specific
-                  projectId: project.project_id,
-                  members: members // Send the entire updated members array
-              });
-          });
-      }
-
-      res.status(201).json(project);
-  } catch (error: any) {
-      console.error('Error creating project:', error);
-      res.status(400).json({ message: 'Error creating project', error: error.message });
-  }
-};
-// Get all projects
-export const getProjects = async (req: Request, res: Response): Promise<void> => {
-  try {
-    console.log('Fetching all projects...');
-    const projects = await Project.find().sort({ createdAt: -1 });
-    console.log(`Successfully fetched ${projects.length} projects`);
-    res.status(200).json(projects);
-  } catch (error: any) {
-    console.error('Error fetching projects:', error);
-    res.status(500).json({ message: 'Error fetching projects', error: error.message });
-  }
-};
-
-// Get a single project by ID
-export const getProject = async (req: Request, res: Response): Promise<void> => {
-  try {
-    console.log('Fetching project:', req.params.project_id);
-    const project = await Project.findOne({ project_id: req.params.project_id });
-    
-    if (!project) {
-      console.log('Project not found:', req.params.project_id);
+    // 3. Verify project exists
+    const existingProject = await Project.findOne({ project_id: projectId });
+    if (!existingProject) {
       res.status(404).json({ message: 'Project not found' });
       return;
     }
-    
-    console.log('Project fetched successfully:', project);
-    res.status(200).json(project);
+
+    // 4. Find tasks by projectId
+    const tasks = await Task.find({ project_id: projectId });
+
+    // 5. Check if tasks exist
+    if (!tasks || tasks.length === 0) {
+      res.status(404).json({ message: 'No tasks found for this project' });
+      return;
+    }
+
+    // 6. Send response
+    res.status(200).json(tasks);
+
   } catch (error: any) {
-    console.error('Error fetching project:', error);
-    res.status(500).json({ message: 'Error fetching project', error: error.message });
+    console.error('Error fetching tasks by project:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
-
-// Update project
-export const updateProject = async (req: Request, res: Response): Promise<void> => {
+// Delete task (only the creator can delete)
+export const deleteTask = async (req: Request, res: Response): Promise<void> => {
   try {
-      console.log('Updating project:', req.params.project_id);
+    console.log('Deleting task:', req.params.task_id);
 
-      const allowedUpdates = ['name', 'description', 'startDate', 'dueDate', 'status', 'department', 'clientId', 'priority', 'members']; // Add any missing fields here
-      console.log('Allowed updates', allowedUpdates);  // Debug: Log the allowedUpdates array
+    // Get the logged-in user's ID from the request (set by the `authMiddleware`)
+    const userId = req.user?.id;
 
-      const updates = Object.keys(req.body);
-      console.log('Updates sent', updates); //Debug: Log the keys in the request body
-      const isValidOperation = updates.every(update => allowedUpdates.includes(update));
+    // Validate that the user is authenticated
+    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+      res.status(401).json({ message: 'Unauthorized: User not authenticated' });
+      return;
+    }
 
-      if (!isValidOperation) {
-          res.status(400).json({ message: 'Invalid updates!' });
-          return;
-      }
+    // Fetch the task by its task_id
+    const task = await Task.findOne({ task_id: req.params.task_id });
 
-      const project = await Project.findOneAndUpdate( // Find and update by project_id
-          { project_id: req.params.project_id },
-          req.body,
-          { new: true, runValidators: true }
-      );
+    // Check if the task exists
+    if (!task) {
+      console.log('Task not found:', req.params.task_id);
+      res.status(404).json({ message: 'Task not found' });
+      return;
+    }
 
-      if (!project) {
-          console.log('Project not found:', req.params.project_id);
-          res.status(404).json({ message: 'Project not found' });
-          return;
-      }
+    // Check if the user is the creator of the task
+    const isCreator = task.createdBy.toString() === userId;
+    if (!isCreator) {
+      console.log('User is not authorized to delete this task:', req.params.task_id);
+      res.status(403).json({ message: 'Forbidden: Only the creator can delete this task' });
+      return;
+    }
 
-      // Fetch the UPDATED project after the update operation
-      const updatedProject = await Project.findOne({ project_id: req.params.project_id });
+    // Delete the task
+    const deletedTask = await Task.findOneAndDelete({ task_id: req.params.task_id });
 
-      if (!updatedProject) {
-          console.log('Updated project not found after update operation:', req.params.project_id);
-          res.status(500).json({ message: 'Error fetching updated project' });  // or 404, depending on your preference
-          return;
-      }
+    if (!deletedTask) {
+      console.log('Task not found after deletion attempt:', req.params.task_id);
+      res.status(500).json({ message: 'Error deleting task' });
+      return;
+    }
 
-      // Emit socket event for real-time updates - USE THE UPDATED PROJECT
-      if ((req as any).io) {
-          (req as any).io.emit('project_updated', updatedProject);
-           updatedProject.members.forEach(memberId => {
-              (req as any).io.emit(`project_members_updated:${updatedProject.project_id}`, {  // NOT user specific, rather project specific
-                  projectId: updatedProject.project_id,
-                  members: updatedProject.members // Send the entire updated members array
-              });
-          });
-      }
+    // Notify assignees via WebSocket
+    task.assignees.forEach((assignee: any) => {
+      io.to(assignee.user).emit('task_deleted', deletedTask);
+    });
 
-      console.log('Project updated successfully:', updatedProject);
-      res.status(200).json(updatedProject);  // Send the updated project in the response
+    console.log('Task deleted successfully:', deletedTask);
+    res.status(200).json({ message: 'Task deleted successfully' });
   } catch (error: any) {
-      console.error('Error updating project:', error);
-      res.status(400).json({ message: 'Error updating project', error: error.message });
+    console.error('Error deleting task:', error);
+    res.status(500).json({ message: 'Error deleting task', error: error.message });
   }
 };
 
 
-// Delete project
-export const deleteProject = async (req: Request, res: Response): Promise<void> => {
-try {
-  console.log('Deleting project:', req.params.project_id);
-  const project = await Project.findOneAndDelete({ project_id: req.params.project_id });  // Find and delete by project_id
-  if (!project) {
-    console.log('Project not found:', req.params.project_id);
-    res.status(404).json({ message: 'Project not found' });
-    return;
-  }
-  
-  // Emit socket event for real-time updates
-  if ((req as any).io) {
-    (req as any).io.emit('project_deleted', req.params.project_id);
-  }
-  
-  console.log('Project deleted successfully');
-  res.status(200).json({ message: 'Project deleted successfully' });
-} catch (error: any) {
-  console.error('Error deleting project:', error);
-  res.status(400).json({ message: 'Error deleting project', error: error.message });
-}
-};// Helper function to determine overall task status
+
+
+// Helper function to determine overall task status
 const determineOverallTaskStatus = (assigneeStatuses: string[]): string => {
-    if (assigneeStatuses.every(status => status === 'Completed')) {
-        return 'Completed';
-    }
-    if (assigneeStatuses.some(status => status === 'In Progress')) {
-        return 'In Progress';
-    }
-    return 'Pending';
-};
-export const updateAssigneeStatus = async (req: Request, res: Response): Promise<void> => {
+  if (assigneeStatuses.every(status => status === 'Completed')) {
+      return 'Completed';
+  }
+  if (assigneeStatuses.some(status => status === 'In Progress')) {
+      return 'In Progress';
+  }
+  return 'Pending';
+};export const updateAssigneeStatus = async (req: Request, res: Response): Promise<void> => {
   try {
-      const { status, assigneeId } = req.body;
+    const { project_id, task_id } = req.params;
+    const { status } = req.body;
 
-      // Validate input
-      if (!status || !assigneeId) {
-          res.status(400).json({ message: 'Status and assigneeId are required' });
-          return;
-      }
+    // Validate inputs
+    if (!status || !project_id || !task_id) {
+      res.status(400).json({ message: 'Status, project ID, and task ID are required' });
+      return;
+    }
 
-      console.log("Received status update request:", { status, assigneeId });
+    // Authentication check
+    const userId = req.user?.id;
+    if (!userId) {
+      res.status(401).json({ message: 'Unauthorized' });
+      return;
+    }
 
-      const task = await Task.findOne({ task_id: req.params.task_id }); // Use findOne with task_id
-      if (!task) {
-          res.status(404).json({ message: 'Task not found' });
-          return;
-      }
+    // Find task within project
+    const task = await Task.findOne({
+      task_id: task_id,
+      project_id: project_id
+    });
 
-      console.log("Task found:", task);
+    if (!task) {
+      res.status(404).json({ message: 'Task not found in project' });
+      return;
+    }
 
-      // Update the specific assignee's status
-       const assignee = task.assignees.find(a => a.user.toString() === assigneeId);
-        console.log("Assignee Found:", assignee)
+    // Find assignee in task
+    const assignee = task.assignees.find(a => a.user.toString() === userId);
+    if (!assignee) {
+      res.status(403).json({ message: 'You are not assigned to this task' });
+      return;
+    }
 
-        if (!assignee) {
-            res.status(404).json({ message: 'Assignee not found' });
-            return;
-        }
+    // Update status
+    assignee.status = status;
+    
+    // Update overall task status
+    const assigneeStatuses = task.assignees.map(a => a.status);
+    task.status = determineOverallTaskStatus(assigneeStatuses);
 
-      console.log("Assignee before update:", assignee);
-      assignee.status = status;
-      console.log("Assignee after update:", assignee);
+    // Save changes
+    const updatedTask = await task.save();
 
-      // Determine the overall task status based on assignee statuses
-      const assigneeStatuses = task.assignees.map(a => a.status);
-      task.status = determineOverallTaskStatus(assigneeStatuses);
+    // Real-time update
+    if (req.io) {
+      req.io.to(project_id).emit('task_status_updated', updatedTask);
+    }
 
-      console.log("Overall task status after update:", task.status);
-
-      const savedTask = await task.save(); // Save the updated task
-      console.log("Saved task:", savedTask);
-
-      // Emit socket event for real-time update
-      if ((req as any).io) {
-          (req as any).io.emit('task_status_updated', savedTask);
-      }
-
-      res.status(200).json(savedTask);
+    res.status(200).json(updatedTask);
   } catch (error: any) {
-      console.error("Error updating assignee status:", error); // Log error
-      res.status(500).json({ message: 'Error updating assignee status', error: error.message });
+    console.error('Update error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
+
+
 // --- Multer Configuration ---
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -540,70 +439,130 @@ const upload = multer({
   }
 });
 
-export const uploadFile = [upload.single('file'), async (req: MulterRequest, res: Response): Promise<void> => {
-  try {
+export const uploadFile = [
+  upload.single('file'),
+  async (req: MulterRequest, res: Response): Promise<void> => {
+    try {
+      // 1. File check
       if (!req.file) {
-          res.status(400).json({ message: 'No file uploaded' });
-          return;
-      }
-
-      const task = await Task.findOne({ task_id: req.params.task_id });
-
-      if (!task) {
-          res.status(404).json({ message: 'Task not found' });
-          return;
-      }
-
-      task.attachments.push({
-          _id: new mongoose.Types.ObjectId(),
-          filename: req.file.originalname,
-          filePath: req.file.path,
-          fileSize: req.file.size,
-          fileType: req.file.mimetype
-      });
-
-      await task.save();
-
-      res.status(200).json({ message: 'File uploaded successfully', filename: req.file.originalname, filePath: req.file.path });
-  } catch (error: any) {
-      console.error('Error uploading file:', error);
-      res.status(500).json({ message: 'Error uploading file', error: error.message });
-  }
-}];
-export const getAttachment = async (req: Request, res: Response): Promise<void> => {
-  try {
-      const { task_id, attachment_id } = req.params;
-
-      const task = await Task.findOne({ task_id: task_id });
-
-      if (!task) {
-          res.status(404).json({ message: 'Task not found' });
-          return;
-      }
-
-      const attachment = task.attachments.find(attachment => attachment._id.toString() === attachment_id);
-
-      if (!attachment) {
-          res.status(404).json({ message: 'Attachment not found' });
-          return;
-      }
-      if (!fs.existsSync(attachment.filePath)) {
-        res.status(500).json({message: 'File not found on server'});
+        res.status(400).json({ message: 'No file uploaded' });
         return;
       }
 
-      // Determine Content-Type based on file type
-      let contentType = 'application/octet-stream';
-      if (attachment.fileType) {
-          contentType = attachment.fileType;
+      // 2. Authentication check
+      const userId = req.user?.id;
+      if (!userId) {
+        res.status(401).json({ message: 'Unauthorized' });
+        return;
       }
 
-      res.setHeader('Content-Type', contentType);
-      res.status(200).sendFile(attachment.filePath, { root: '.' });  // The key is the root
+      // 3. Find task
+      const task = await Task.findOne({ task_id: req.params.task_id });
+      if (!task) {
+        res.status(404).json({ message: 'Task not found' });
+        return;
+      }
+
+      // 4. Authorization check (fixed comparison)
+      if (task.createdBy.toString() !== userId) {
+        console.log('Permission denied for user:', userId);
+        console.log('Task creator:', task.createdBy.toString());
+        res.status(403).json({ message: 'Forbidden: Only the task creator can upload attachments' });
+        return;
+      }
+
+      // 5. Add attachment
+      const attachment = {
+        _id: new mongoose.Types.ObjectId(),
+        filename: req.file.originalname,
+        filePath: req.file.path,
+        fileSize: req.file.size,
+        fileType: req.file.mimetype,
+      };
+      task.attachments.push(attachment);
+
+      // 6. Save changes
+      await task.save();
+
+      // 7. Notify assignees via WebSocket
+      task.assignees.forEach((assignee: any) => {
+        io.to(assignee.user).emit('task_attachment_uploaded', {
+          taskId: task.task_id,
+          attachment,
+        });
+      });
+
+      res.status(200).json({
+        message: 'File uploaded successfully',
+        filename: req.file.originalname,
+        filePath: req.file.path,
+      });
+    } catch (error: any) {
+      console.error('Upload error:', error);
+      res.status(500).json({ message: 'Server error', error: error.message });
+    }
+  },
+];
+
+export const getAttachment = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { task_id, attachment_id } = req.params;
+    const userId = req.user?.id; // Get from proper authentication middleware
+
+    // Validate authentication
+    if (!userId) {
+      res.status(401).json({ message: 'Unauthorized' });
+      return;
+    }
+
+    const task = await Task.findOne({ task_id });
+
+    if (!task) {
+      res.status(404).json({ message: 'Task not found' });
+      return;
+    }
+
+    // Check permissions (using proper ID comparison)
+    const isCreator = task.createdBy.toString() === userId;
+    const isAssignee = task.assignees.some(assignee => 
+      assignee.user.toString() === userId
+    );
+
+    console.log(`Permission check - User: ${userId}, Creator: ${task.createdBy}, Assignees: ${task.assignees.map(a => a.user)}`);
+
+    if (!isCreator && !isAssignee) {
+      res.status(403).json({ message: 'Forbidden: No access permissions' });
+      return;
+    }
+
+    // Find attachment
+    const attachment = task.attachments.find(a => 
+      a._id.toString() === attachment_id
+    );
+
+    if (!attachment) {
+      res.status(404).json({ message: 'Attachment not found' });
+      return;
+    }
+
+    // Validate file existence
+    if (!fs.existsSync(attachment.filePath)) {
+      res.status(410).json({ message: 'File no longer available' });
+      return;
+    }
+
+    
+    
+    res.sendFile(attachment.filePath, { root: process.cwd() }, (err) => {
+      if (err) console.error('File send error:', err);
+    });
 
   } catch (error: any) {
-      console.error('Error fetching attachment:', error);
-      res.status(500).json({ message: 'Error fetching attachment', error: error.message });
+    console.error('Error:', error);
+    res.status(500).json({ 
+      message: 'Server error',
+      error: error.message 
+    });
   }
 };
 
@@ -615,6 +574,13 @@ export const deleteAttachment = async (req: Request, res: Response): Promise<voi
 
     if (!task) {
       res.status(404).json({ message: 'Task not found' });
+      return;
+    }
+
+    // Check if the user is the task creator
+    const userId = req.user?.id;
+    if (task.createdBy.toString() !== userId) {
+      res.status(403).json({ message: 'Forbidden: Only the task creator can delete attachments' });
       return;
     }
 
@@ -641,17 +607,14 @@ export const deleteAttachment = async (req: Request, res: Response): Promise<voi
     res.status(200).json({ message: 'Attachment deleted successfully' });
 
     // Emit socket event for real-time updates
-    if ((req as any).io) {
-        (req as any).io.emit('task_attachment_deleted', { taskId: task_id, attachmentId: attachment_id });
-    }
-
+    task.assignees.forEach((assignee: any) => {
+      io.to(assignee.user).emit('task_attachment_deleted', { taskId: task_id, attachmentId: attachment_id });
+    });
   } catch (error: any) {
     console.error('Error deleting attachment:', error);
     res.status(500).json({ message: 'Error deleting attachment', error: error.message });
   }
 };
-
-// Function to update an attachment (replace file and update metadata)
 export const updateAttachment = async (req: Request, res: Response): Promise<void> => {
   upload.single('file')(req, res, async (err) => {
     try {
@@ -667,6 +630,13 @@ export const updateAttachment = async (req: Request, res: Response): Promise<voi
 
       if (!task) {
         res.status(404).json({ message: 'Task not found' });
+        return;
+      }
+
+      // Check if the user is the task creator
+      const userId = req.user?.id;
+      if (task.createdBy.toString() !== userId) {
+        res.status(403).json({ message: 'Forbidden: Only the task creator can update attachments' });
         return;
       }
 
@@ -699,13 +669,14 @@ export const updateAttachment = async (req: Request, res: Response): Promise<voi
       res.status(200).json({ message: 'Attachment updated successfully', attachment });
 
       // Emit socket event for real-time updates
-      if ((req as any).io) {
-        (req as any).io.emit('task_attachment_updated', { taskId: task_id, attachment: attachment });
-      }
-
+      task.assignees.forEach((assignee: any) => {
+        io.to(assignee.user).emit('task_attachment_updated', { taskId: task_id, attachment: attachment });
+      });
     } catch (error: any) {
       console.error('Error updating attachment:', error);
       res.status(500).json({ message: 'Error updating attachment', error: error.message });
     }
   });
 };
+
+
