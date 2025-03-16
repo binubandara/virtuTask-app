@@ -25,7 +25,7 @@ logger = logging.getLogger('productivity_api')
 
 # Initialize Flask application
 app = Flask(__name__)
-app.secret_key = 'your_secret_key_here'  # Required for session management
+app.secret_key = '123VirtuTask'  # Required for session management
 
 # Configure CORS to allow frontend access
 CORS(app, supports_credentials=True, origins=["http://localhost:5173"])
