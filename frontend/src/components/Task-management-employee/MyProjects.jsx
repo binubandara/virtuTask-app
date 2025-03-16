@@ -22,6 +22,9 @@ const MyProjects = () => {
           <option value="started">Started</option>
         </select>
       </div>
+      
+      {/* Divider line below filters */}
+      <div className="filters-divider"></div>
     </div>
   );
 };

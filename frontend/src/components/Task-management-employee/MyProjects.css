@@ -2,6 +2,7 @@
     max-width: 1200px;
     margin: 40px auto;
     padding: 0 20px;
+    margin-left: 7.5cm; /* Added left margin */
   }
   
   .projects-title {
@@ -15,18 +16,26 @@
   .filters-container {
     display: flex;
     gap: 15px;
+    margin-bottom: 15px; /* Space above divider */
   }
   
   .filter-dropdown {
     padding: 10px 15px;
     border: 1px solid #e0e0e0;
-    border-radius: 6px;
+    border-radius: 8px; /* Increased border radius */
     font-family: 'Arial', sans-serif;
     font-size: 14px;
     color: #5a5a5a;
     background-color: white;
     cursor: pointer;
     transition: all 0.2s ease;
+  }
+  
+  /* New divider line styling */
+  .filters-divider {
+    height: 1px;
+    background-color: #e0e0e0;
+    margin: 10px 0 25px 0;
   }
   
   .filter-dropdown:hover {
