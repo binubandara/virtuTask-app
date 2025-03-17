@@ -46,17 +46,65 @@ const authenticateUser = async (req, res, next) => {
   }
 };
 
+
+// function to get productivity score
+const getProductivityScore = async (employeeId, authToken) => {
+  try {
+    // Make the API request with the authorization header
+    const response = await axios.get(`http://localhost:5000/productivity-score/${employeeId}`, {
+      timeout: 5000,
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      }
+    });
+    
+    if (response.status === 200) {
+      return response.data.productivityScore || 0;
+    }
+    return 0;
+  } catch (error) {
+    console.error('Error fetching productivity score:', error);
+    return 0; // Default to 0 if there's an error
+  }
+};
+
+// Calculate game time based on productivity score
+const calculateGameTime = (productivityScore) => {
+  if (productivityScore >= 90) {
+    return 60 * 60; // 60 minutes in seconds
+  } else if (productivityScore >= 75) {
+    return 30 * 60; // 30 minutes in seconds
+  } else {
+    return 15 * 60; // 15 minutes in seconds
+  }
+};
+
+
 // API endpoint to check hub status
 router.get('/status', authenticateUser, async (req, res) => {
   try {
     const employeeId = req.employeeId;
     let userEngagement = await UserEngagement.findOne({ employeeId });
     
+    // Get token from authorization header
+    const authHeader = req.headers.authorization;
+    const token = authHeader.split(' ')[1];
+    
+    // Get productivity score with auth token
+    const productivityScore = await getProductivityScore(employeeId, token);
+    
+    // Calculate allowed game time based on productivity score
+    const totalAllowedTime = calculateGameTime(productivityScore);
+    
     // If no record exists, create one
     if (!userEngagement) {
       userEngagement = new UserEngagement({ employeeId });
       await userEngagement.save();
-      return res.json({ isEnabled: true, remainingTime: 30 * 60 });
+      return res.json({ 
+        isEnabled: true, 
+        remainingTime: totalAllowedTime,
+        productivityScore: productivityScore
+      });
     }
     
     // Check if it's a new day since last session
@@ -73,11 +121,14 @@ router.get('/status', authenticateUser, async (req, res) => {
       userEngagement.isEnabled = true;
       userEngagement.sessionDuration = 0;
       await userEngagement.save();
-      return res.json({ isEnabled: true, remainingTime: 30 * 60 });
+      return res.json({ 
+        isEnabled: true, 
+        remainingTime: totalAllowedTime,
+        productivityScore: productivityScore
+      });
     }
     
     // Calculate remaining time
-    const totalAllowedTime = 30 * 60; // 30 minutes in seconds
     const remainingTime = Math.max(0, totalAllowedTime - userEngagement.sessionDuration);
     
     // If no time left, disable the hub
@@ -88,13 +139,16 @@ router.get('/status', authenticateUser, async (req, res) => {
     
     res.json({
       isEnabled: userEngagement.isEnabled,
-      remainingTime: remainingTime
+      remainingTime: remainingTime,
+      productivityScore: productivityScore,
+      totalAllowedTime: totalAllowedTime
     });
   } catch (error) {
     console.error('Error fetching hub status:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
+
 
 // API endpoint to update hub status
 router.post('/status', authenticateUser, async (req, res) => {
@@ -134,6 +188,14 @@ router.post('/play-time', authenticateUser, async (req, res) => {
       return res.status(400).json({ error: 'Invalid played time value' });
     }
     
+    // Get token from authorization header
+    const authHeader = req.headers.authorization;
+    const token = authHeader.split(' ')[1];
+    
+    // Get productivity score and calculate allowed time
+    const productivityScore = await getProductivityScore(employeeId, token);
+    const totalAllowedTime = calculateGameTime(productivityScore);
+    
     let userEngagement = await UserEngagement.findOne({ employeeId });
     
     if (!userEngagement) {
@@ -147,7 +209,6 @@ router.post('/play-time', authenticateUser, async (req, res) => {
       userEngagement.sessionDuration = playedSeconds;
       
       // Check if time is up
-      const totalAllowedTime = 30 * 60; // 30 minutes in seconds
       if (playedSeconds >= totalAllowedTime) {
         userEngagement.isEnabled = false;
       }
@@ -158,7 +219,9 @@ router.post('/play-time', authenticateUser, async (req, res) => {
     res.json({ 
       success: true,
       isEnabled: userEngagement.isEnabled,
-      remainingTime: Math.max(0, 30 * 60 - playedSeconds)
+      remainingTime: Math.max(0, totalAllowedTime - playedSeconds),
+      productivityScore: productivityScore,
+      totalAllowedTime: totalAllowedTime
     });
   } catch (error) {
     console.error('Error updating play time:', error);

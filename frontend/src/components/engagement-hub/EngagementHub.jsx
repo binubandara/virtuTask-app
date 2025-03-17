@@ -13,7 +13,8 @@ const EngagementHub = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const timerRef = useRef(null);
   const navigate = useNavigate();
-  const totalAllowedTime = 30 * 60; // 30 minutes in seconds
+  const [productivityScore, setProductivityScore] = useState(0);
+  const [totalAllowedTime, setTotalAllowedTime] = useState(30 * 60);
   
   const games = [
     {
@@ -108,6 +109,8 @@ const EngagementHub = () => {
       const data = await engagementHubService.getHubStatus();
       setIsHubEnabled(data.isEnabled);
       setTimeRemaining(data.remainingTime || 0);
+      setProductivityScore(data.productivityScore || 0);
+      setTotalAllowedTime(data.totalAllowedTime || 30 * 60);
     } catch (error) {
       console.error('Error checking hub status:', error);
       
@@ -198,6 +201,16 @@ const EngagementHub = () => {
       }
       
       setError(error.userMessage || 'Failed to pause timer');
+    }
+  };
+
+  const getTimeTierMessage = (score) => {
+    if (score >= 90) {
+      return "You've earned 60 minutes of game time for your excellent productivity!";
+    } else if (score >= 75) {
+      return "You've earned 30 minutes of game time for your good productivity.";
+    } else {
+      return "You've earned 15 minutes of game time. Improve your productivity to earn more!";
     }
   };
 
@@ -357,22 +370,30 @@ const EngagementHub = () => {
         <div className="card">
           <div className="card-body">
             {isHubEnabled ? (
-              <div className="d-flex justify-content-between align-items-center">
-                <span>
-                  Time remaining: <strong>{formatTime(timeRemaining)}</strong>
-                  {isPlaying && <span className="badge bg-success ms-2">Active</span>}
-                </span>
-                <div className="progress" style={{ width: '70%', height: '20px' }}>
-                  <div 
-                    className="progress-bar bg-success" 
-                    role="progressbar" 
-                    style={{ width: `${(timeRemaining / totalAllowedTime) * 100}%` }}
-                    aria-valuenow={timeRemaining} 
-                    aria-valuemin="0" 
-                    aria-valuemax={totalAllowedTime}
-                  ></div>
+              <>
+                <div className="d-flex justify-content-between align-items-center">
+                  <span>
+                    Time remaining: <strong>{formatTime(timeRemaining)}</strong>
+                    {isPlaying && <span className="badge bg-success ms-2">Active</span>}
+                  </span>
+                  <div className="progress" style={{ width: '70%', height: '20px' }}>
+                    <div 
+                      className="progress-bar bg-success" 
+                      role="progressbar" 
+                      style={{ width: `${(timeRemaining / totalAllowedTime) * 100}%` }}
+                      aria-valuenow={timeRemaining} 
+                      aria-valuemin="0" 
+                      aria-valuemax={totalAllowedTime}
+                    ></div>
+                  </div>
                 </div>
-              </div>
+                <div className="mt-2">
+                  <div className="d-flex justify-content-between">
+                    <span>Productivity Score: <strong>{productivityScore.toFixed(1)}%</strong></span>
+                    <span>{getTimeTierMessage(productivityScore)}</span>
+                  </div>
+                </div>
+              </>
             ) : (
               <div className="alert alert-warning m-0">
                 The Engagement Hub is currently disabled. It will be available again tomorrow.

@@ -265,6 +265,46 @@ def get_daily_summary():
     except Exception as e:
         logger.error(f"Error in daily-summary: {str(e)}", exc_info=True)
         return jsonify({"error": str(e)}), 500
+    
+
+@app.route('/productivity-score/<employee_id>', methods=['GET'])
+def get_productivity_score(employee_id):
+    """
+    Get the productivity score for a specific employee
+    """
+    logger.info(f"API CALL: /productivity-score/{employee_id}")
+    try:
+        # Check if employee_id is valid
+        if not employee_id:
+            return jsonify({
+                "status": "error",
+                "message": "Employee ID is required"
+            }), 400
+        
+        # Query the daily_scores collection for today's score
+        today_start = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        
+        # Find the score for today for this employee
+        score_record = tracker.db['daily_scores'].find_one({
+            'date': today_start,
+            'employee_id': employee_id
+        })
+        
+        if not score_record:
+            return jsonify({
+                "productivityScore": 0,
+                "message": "No productivity data found for today"
+            })
+        
+        return jsonify({
+            "productivityScore": score_record.get('productivity_score', 0),
+            "totalProductiveTime": score_record.get('total_productive_time', 0),
+            "totalUnproductiveTime": score_record.get('total_unproductive_time', 0)
+        })
+    except Exception as e:
+        logger.error(f"Error retrieving productivity score: {str(e)}", exc_info=True)
+        return jsonify({"status": "error", "message": str(e)}), 500
+    
 
 @app.route('/test')
 def test():
