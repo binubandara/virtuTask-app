@@ -33,7 +33,7 @@ function App() {
                 <Route path="/health-habit" element={<HealthHabit />} />
                 <Route path="/habit-info" element={<HabitInfo />} />
                 <Route path="/my-tasks" element={<MyTasks />} />
-                <Route path="/my-projects" element={<MyProjects />} />
+                <Route path="/my-projects" element={<MyProjects projects={projects} />} />
                 <Route path="/my-tasks-employee" element={<MyTasksEmployee />} />
                 
                 

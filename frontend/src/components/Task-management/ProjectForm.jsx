@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import './ProjectForm.css';
 
-
-
 function ProjectForm({ closeForm, addProject, editProject, initialData, mode }) {
   const [formData, setFormData] = useState(initialData || {
     projectname: '',
@@ -11,7 +9,8 @@ function ProjectForm({ closeForm, addProject, editProject, initialData, mode }) 
     description: '',
     startDate: '',
     dueDate: '',
-    priority: 'medium'
+    priority: 'medium',
+    members: ''
   });
   
   const [originalData] = useState(initialData || {...formData});
@@ -27,7 +26,8 @@ function ProjectForm({ closeForm, addProject, editProject, initialData, mode }) 
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
+  
+    // VALIDATION FIRST
     const requiredFields = ['projectname', 'department', 'startDate', 'dueDate'];
     const missingFields = requiredFields.filter(field => !formData[field]);
     
@@ -35,28 +35,34 @@ function ProjectForm({ closeForm, addProject, editProject, initialData, mode }) 
       alert(`Missing required fields: ${missingFields.join(', ')}`);
       return;
     }
-
+  
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const startDate = new Date(formData.startDate);
     const dueDate = new Date(formData.dueDate);
-
+  
     if (dueDate < startDate) {
       alert('Due date must be after start date');
       return;
     }
-
+  
     if (dueDate < today) {
       alert('Due date cannot be in the past');
       return;
     }
-
+  
+    // PROCESS DATA AFTER VALIDATION
+    const processedData = {
+      ...formData,
+      members: formData.members.split(',').map(m => m.trim())
+    };
+  
     if (mode === 'edit') {
       if (window.confirm('Confirm project changes?')) {
-        editProject(formData);
+        editProject(processedData);
       }
     } else {
-      addProject(formData);
+      addProject(processedData);
     }
   };
 
@@ -193,12 +199,14 @@ function ProjectForm({ closeForm, addProject, editProject, initialData, mode }) 
               />
                <label htmlFor="members">Members</label>
               <div className="members-container">
-              <input 
-                type="search" 
-                name="members" 
-                className="members-input" 
-                placeholder="Search Member by ID"
-              />
+                <input 
+                  type="search" 
+                  name="members" 
+                  className="members-input" 
+                  placeholder="Search Member by Username"
+                  value={formData.members}
+                  onChange={handleChange}
+                />
               <div className="svg-member-icon">
                 <svg 
                   xmlns="http://www.w3.org/2000/svg" 

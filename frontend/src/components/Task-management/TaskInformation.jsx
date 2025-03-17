@@ -104,8 +104,6 @@ const TaskInformation = ({ task, onClose }) => {
         <h4 className="task-info-section-title">Description</h4>
         <textarea
           className="task-info-description-textarea"
-          value={task.description || ''}
-          readOnly
           placeholder="No description available"
         />
       </div>

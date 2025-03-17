@@ -17,12 +17,24 @@ const pencilSVG = (
   </svg>
 );
 
-function MyProjectsManager({ projects, setProjects }) {
+
+function MyProjectsManager() {  // Removed props destructuring
   const navigate = useNavigate();
   const [showForm, setShowForm] = useState(false);
   const [editingProject, setEditingProject] = useState(null);
   const [selectedProjectId, setSelectedProjectId] = useState(null);
   const colorPalette = ["#ffc8dd", "#bde0fe", "#a2d2ff", "#94d2bd","#e0b1cb","#adb5bd","#98f5e1","#f79d65","#858ae3","#c2dfe3","#ffccd5","#e8e8e4","#fdffb6","#f1e8b8","#d8e2dc","#fff0f3","#ccff66"];
+
+  // State initialization with localStorage
+  const [projects, setProjects] = useState(() => {
+    const saved = localStorage.getItem('projects');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  // Save to localStorage whenever projects change
+  useEffect(() => {
+    localStorage.setItem('projects', JSON.stringify(projects));
+  }, [projects]);
 
   const saveProjects = (updatedProjects) => {
     setProjects(updatedProjects);
@@ -51,9 +63,6 @@ function MyProjectsManager({ projects, setProjects }) {
     setSelectedProjectId(null);
   };
 
-
-  
-
   const getRandomColor = (() => {
     let lastUsedColors = new Set();
     return () => {
@@ -71,8 +80,9 @@ function MyProjectsManager({ projects, setProjects }) {
   const createProject = (formData) => ({
     id: Date.now(),
     ...formData,
+   // Convert to array
     color: getRandomColor(),
-    priority: formData.priority // Ensure priority is saved
+    priority: formData.priority
   });
   
   const truncateText = (text, maxLength = 50) => 

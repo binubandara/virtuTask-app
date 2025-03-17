@@ -14,7 +14,7 @@ function Login() {
 
         <div className="left-content">
           <h1>Streamline your remote work</h1>
-          <p>Start for free and experience smarter, more connected work</p>
+          <p>Start for free and experience smarter, more connected work......</p>
         </div>
       </div>
 

@@ -1,61 +1,31 @@
-/* General Button Styles */
-.button {
-  width: 100%;
-  background: white;
-  color: black;
-  padding: 14px;
-  border: 1px solid black;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 16px;
-  margin-bottom: 15px;
-  transition: background 0.3s ease, transform 0.1s;
-}
+/* Login.module.css */
 
-.button:hover {
-  background: black;
-  color: white;
-}
-
-.button:active {
-  background: #333;
-  color: white;
-  transform: scale(0.98);
-}
-
-/* Selected Button (Black by Default) */
-.button.selected {
-  background: black;
-  color: white;
-  border: none;
-}  
-/* Reset Default Styles */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: Arial, sans-serif;
-}
-
-/* Main Container */
 .container {
   display: flex;
   height: 100vh;
 }
 
 /* Left Section (Image & Text) */
-.left-section {
-  flex: 1.2; /* Takes more space than the right side */
+.leftSection {
+  flex: 1.2;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
 }
 
-
+.leftSection img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: -1;
+}
 
 /* Text Overlay */
-.left-content {
+.leftContent {
   position: absolute;
   text-align: center;
   color: white;
@@ -66,18 +36,18 @@
   border-radius: 10px;
 }
 
-.left-content h1 {
+.leftContent h1 {
   font-size: 2rem;
   margin-bottom: 10px;
 }
 
-.left-content p {
+.leftContent p {
   font-size: 1rem;
 }
 
 /* Right Section (Full-Width Login Form) */
-.right-section {
-  flex: 0.8; /* 40% width */
+.rightSection {
+  flex: 0.8;
   background: white;
   display: flex;
   align-items: center;
@@ -86,7 +56,7 @@
   padding: 50px;
 }
 
-.login-box {
+.loginBox {
   width: 100%;
   max-width: 500px;
   text-align: left;
@@ -96,26 +66,26 @@
 }
 
 /* Login Heading & Subtext */
-.login-box h2 {
+.loginBox h2 {
   font-size: 26px;
   margin-bottom: 10px;
 }
 
-.login-subtext {
+.loginSubtext {
   font-size: 16px;
   color: gray;
   margin-bottom: 20px;
 }
 
 /* Line-Style Inputs */
-.input-container {
+.inputContainer {
   width: 100%;
   margin-bottom: 15px;
   border-bottom: 2px solid #ccc;
   display: flex;
 }
 
-.input-line {
+.inputLine {
   width: 100%;
   border: none;
   outline: none;
@@ -125,7 +95,7 @@
 }
 
 /* Remember Me & Forgot Password */
-.login-options {
+.loginOptions {
   display: flex;
   justify-content: space-between;
   font-size: 14px;
@@ -133,18 +103,19 @@
   margin-bottom: 20px;
 }
 
-.forgot-password {
+.forgotPassword {
   text-decoration: none;
   color: blue;
 }
 
-.forgot-password:hover {
+.forgotPassword:hover {
   text-decoration: underline;
 }
+
 /* Login Button (Black Default - Selected) */
-.login-btn {
+.loginBtn {
   width: 100%;
-  background: black; /* Fully black by default */
+  background: black;
   color: white;
   padding: 14px;
   border: none;
@@ -155,19 +126,19 @@
   transition: background 0.3s ease, transform 0.1s;
 }
 
-.login-btn:hover {
-  background: #222; /* Slightly lighter black on hover */
+.loginBtn:hover {
+  background: #222;
 }
 
-.login-btn:active {
-  background: #333; /* Slightly lighter black on click */
+.loginBtn:active {
+  background: #333;
   transform: scale(0.98);
 }
 
 /* Register Button (White Default - Unselected) */
-.register-btn {
+.registerBtn {
   width: 100%;
-  background: white; /* White by default */
+  background: white;
   color: black;
   padding: 14px;
   border: 1px solid black;
@@ -178,19 +149,19 @@
   transition: background 0.3s ease, transform 0.1s;
 }
 
-.register-btn:hover {
-  background: black; /* Fully black on hover */
+.registerBtn:hover {
+  background: black;
   color: white;
 }
 
-.register-btn:active {
+.registerBtn:active {
   background: #333;
   color: white;
   transform: scale(0.98);
 }
 
 /* OR Divider */
-.or-divider {
+.orDivider {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -198,14 +169,14 @@
   margin-bottom: 20px;
 }
 
-.or-divider hr {
+.orDivider hr {
   width: 40%;
   border: none;
   height: 1px;
   background: #ccc;
 }
 
-.or-divider span {
+.orDivider span {
   margin: 0 10px;
   font-size: 14px;
   font-weight: bold;
@@ -213,7 +184,7 @@
 }
 
 /* Google Sign-In Button */
-.google-btn {
+.googleBtn {
   width: 100%;
   background: white;
   color: black;
@@ -225,20 +196,11 @@
   transition: background 0.3s ease, transform 0.1s;
 }
 
-.google-btn:hover {
+.googleBtn:hover {
   background: #f4f4f4;
 }
 
-.google-btn:active {
+.googleBtn:active {
   background: #ddd;
   transform: scale(0.98);
-}
-.left-section img {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  z-index: -1;
 }

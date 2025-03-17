@@ -1,39 +1,38 @@
-body {
-  overflow-x: hidden; /* Prevents horizontal scrolling */
-}
+/* Register.module.css */
 
-.register-body {
+.registerBody {
   background: rgb(214, 212, 212);
   min-height: 100vh;
-  width: 100vw;
+  width: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
+  padding: 40px 0;
 }
 
-.register-container {
+.registerContainer {
   background-color: #fff;
   border-radius: 25px;
   padding: 25px 30px;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
   width: 90%;
   max-width: 600px;
-  margin-top: 3.5cm; /* Added margin for separation */
+  margin: 20px 0;
 }
 
-.register-container h1 {
+.registerContainer h1 {
   font-size: x-large;
   text-align: center;
   color: #4206a3;
   margin-bottom: 20px;
 }
 
-.form-column {
+.formColumn {
   display: flex;
   flex-direction: column;
 }
 
-.register-container label {
+.registerContainer label {
   font-size: 15px;
   font-weight: bold;
   color: #555;
@@ -41,11 +40,11 @@ body {
   margin-bottom: 5px;
 }
 
-.register-container input, 
-.register-container select, 
-.register-container textarea {
+.formColumn input, 
+.formColumn select, 
+.formColumn textarea {
   width: 100%;
-  padding: 12px; /* Increased padding */
+  padding: 12px;
   border-radius: 15px;
   border: 1px solid #ccc;
   margin-bottom: 5px;
@@ -56,32 +55,33 @@ body {
   resize: vertical;
 }
 
-.about-textarea {
+.aboutTextarea {
   height: 120px;
 }
 
-/* Updated gender options styles */
-.gender-options {
+/* Gender options styles */
+.genderOptions {
   display: flex;
-  flex-direction: column;  /* Keeps options in a column */
-  align-items: flex-start; /* Align left */
-  margin: 10px 0; /* Removed gap */
+  flex-direction: column;
+  align-items: flex-start;
+  margin: 10px 0;
 }
 
-.gender-options label {
+.genderOptions label {
   display: flex;
   align-items: center;
   gap: 10px;
+  margin-top: 5px;
 }
 
-.form-buttons {
+.formButtons {
   display: flex;
   justify-content: space-between;
   gap: 15px;
   margin-top: 25px;
 }
 
-.form-btn {
+.formBtn {
   width: 100%;
   padding: 12px;
   font-size: 16px;
@@ -93,14 +93,10 @@ body {
   transition: background 0.3s ease;
 }
 
-.form-btn:hover {
+.formBtn:hover {
   background: #1d98c1;
 }
 
-.google-register-section {
+.googleRegisterSection {
   margin-top: 15px;
-}
-
-input[type="file"] {
-  padding: 5px;
 }
