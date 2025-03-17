@@ -33,7 +33,10 @@ const apiClient = axios.create({
 
 // Get auth token from local storage or cookies
 const getAuthToken = () => {
-    return localStorage.getItem('authToken') || '';
+    // Try all possible token keys in localStorage
+    return localStorage.getItem('userToken') || 
+           localStorage.getItem('token') || 
+           localStorage.getItem('authToken') || '';
 };
 
 // Request interceptor to log requests and add auth token

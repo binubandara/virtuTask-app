@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { engagementHubService } from './services/engagementHubService';
+import { useNavigate } from 'react-router-dom'; // Assuming you're using React Router
 
 const EngagementHub = () => {
   const [activeGame, setActiveGame] = useState(null);
@@ -9,8 +10,10 @@ const EngagementHub = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const timerRef = useRef(null);
-  const totalAllowedTime = 30 * 60;
+  const navigate = useNavigate();
+  const totalAllowedTime = 30 * 60; // 30 minutes in seconds
   
   const games = [
     {
@@ -33,9 +36,28 @@ const EngagementHub = () => {
     }
   ];
 
+  // Check authentication status
+  const checkAuthStatus = () => {
+    const token = localStorage.getItem('userToken') || 
+                  localStorage.getItem('token') || 
+                  localStorage.getItem('authToken');
+    
+    if (!token) {
+      setError('You must be logged in to access the Engagement Hub');
+      setIsAuthenticated(false);
+      // Redirect to login page
+      navigate('/login');
+      return false;
+    }
+    setIsAuthenticated(true);
+    return true;
+};
+
   // Check if hub is enabled when component mounts
   useEffect(() => {
-    checkHubStatus();
+    if (checkAuthStatus()) {
+      checkHubStatus();
+    }
     
     // Clean up timer when component unmounts
     return () => {
@@ -88,6 +110,14 @@ const EngagementHub = () => {
       setTimeRemaining(data.remainingTime || 0);
     } catch (error) {
       console.error('Error checking hub status:', error);
+      
+      // Handle authentication errors
+      if (error.response?.status === 401) {
+        setIsAuthenticated(false);
+        navigate('/login');
+        return;
+      }
+      
       setError(error.userMessage || 'Failed to check engagement hub status');
     } finally {
       setIsLoading(false);
@@ -96,6 +126,11 @@ const EngagementHub = () => {
 
   // Start the timer when a game is active
   const startTimer = async () => {
+    // First verify authentication
+    if (!isAuthenticated && !checkAuthStatus()) {
+      return;
+    }
+    
     setIsPlaying(true);
     
     // Notify the backend that a game session has started
@@ -103,6 +138,14 @@ const EngagementHub = () => {
       await engagementHubService.updateHubStatus(true);
     } catch (error) {
       console.error('Error starting timer:', error);
+      
+      // Handle authentication errors
+      if (error.response?.status === 401) {
+        setIsAuthenticated(false);
+        navigate('/login');
+        return;
+      }
+      
       setError(error.userMessage || 'Failed to start timer');
       return;
     }
@@ -128,6 +171,11 @@ const EngagementHub = () => {
 
   // Pause the timer when game is not active
   const pauseTimer = async () => {
+    // Verify authentication first
+    if (!isAuthenticated && !checkAuthStatus()) {
+      return;
+    }
+    
     setIsPlaying(false);
     
     // Clear the interval
@@ -141,12 +189,25 @@ const EngagementHub = () => {
       await engagementHubService.updatePlayTime(totalAllowedTime - timeRemaining);
     } catch (error) {
       console.error('Error pausing timer:', error);
+      
+      // Handle authentication errors
+      if (error.response?.status === 401) {
+        setIsAuthenticated(false);
+        navigate('/login');
+        return;
+      }
+      
       setError(error.userMessage || 'Failed to pause timer');
     }
   };
 
   // Disable the hub completely
   const disableHub = async () => {
+    // Verify authentication first
+    if (!isAuthenticated && !checkAuthStatus()) {
+      return;
+    }
+    
     try {
       await engagementHubService.updateHubStatus(false);
       setIsHubEnabled(false);
@@ -160,12 +221,25 @@ const EngagementHub = () => {
       }
     } catch (error) {
       console.error('Error disabling hub:', error);
+      
+      // Handle authentication errors
+      if (error.response?.status === 401) {
+        setIsAuthenticated(false);
+        navigate('/login');
+        return;
+      }
+      
       setError(error.userMessage || 'Failed to disable hub');
     }
   };
 
   // Start playing a game
   const startGame = async (game) => {
+    // Verify authentication first
+    if (!isAuthenticated && !checkAuthStatus()) {
+      return;
+    }
+    
     // If hub is not enabled, check if it can be enabled
     if (!isHubEnabled) {
       try {
@@ -178,6 +252,14 @@ const EngagementHub = () => {
         setTimeRemaining(status.remainingTime || 0);
       } catch (error) {
         console.error('Error checking hub status:', error);
+        
+        // Handle authentication errors
+        if (error.response?.status === 401) {
+          setIsAuthenticated(false);
+          navigate('/login');
+          return;
+        }
+        
         setError(error.userMessage || 'Failed to check engagement hub status');
         return;
       }
@@ -201,6 +283,24 @@ const EngagementHub = () => {
     // Return to game selection
     setActiveGame(null);
   };
+
+  // If not authenticated, show a login message
+  if (!isAuthenticated && !isLoading) {
+    return (
+      <div className="container py-5 text-center">
+        <div className="alert alert-warning mb-4">
+          <h4>Authentication Required</h4>
+          <p>You must be logged in to access the Engagement Hub.</p>
+          <button 
+            className="btn btn-primary"
+            onClick={() => navigate('/login')}
+          >
+            Go to Login
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
