@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const userEngagementSchema = new mongoose.Schema({
-  userId: {
+  employeeId: {
     type: String,
     required: true,
     unique: true

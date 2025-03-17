@@ -1,7 +1,6 @@
 import axios from 'axios';
 
 const isDev = process.env.NODE_ENV === 'development';
-// Update the port from 5000 to 5002
 const API_BASE_URL = isDev ? 'http://127.0.0.1:5002' : 'http://localhost:5002';
 
 // Logger helper
@@ -27,15 +26,24 @@ const apiClient = axios.create({
     baseURL: `${API_BASE_URL}/api/engagement-hub`,
     withCredentials: true,
     headers: {
-        'Content-Type': 'application/json',
-        'user-id': 'demo-user' // Including a default user ID for development
+        'Content-Type': 'application/json'
     },
     timeout: 10000 // 10 seconds
 });
 
-// Rest of your code remains the same...
-// Request interceptor to log requests
+// Get auth token from local storage or cookies
+const getAuthToken = () => {
+    return localStorage.getItem('authToken') || '';
+};
+
+// Request interceptor to log requests and add auth token
 apiClient.interceptors.request.use(config => {
+    // Add authorization header with token
+    const token = getAuthToken();
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+    
     // Log the request details
     logger.info(`REQUEST: ${config.method?.toUpperCase()} ${config.url}`, {
         headers: config.headers,
@@ -78,6 +86,12 @@ apiClient.interceptors.response.use(
             response: error.response?.data,
             status: error.response?.status
         });
+        
+        // Handle authentication errors
+        if (error.response?.status === 401) {
+            // Redirect to login page or show login modal
+            window.location.href = '/login';
+        }
         
         // Custom error messages based on error type
         let errorMessage = 'An unexpected error occurred with the Engagement Hub';
@@ -144,7 +158,10 @@ export const engagementHubService = {
             const testClient = axios.create({
                 baseURL: API_BASE_URL,
                 timeout: 5000,
-                withCredentials: true
+                withCredentials: true,
+                headers: {
+                    Authorization: `Bearer ${getAuthToken()}`
+                }
             });
             const response = await testClient.get('/');
             logger.debug('Connection test successful', response.data);
@@ -152,6 +169,6 @@ export const engagementHubService = {
         } catch (error) {
             logger.error('Connection test failed', error);
             return false;
-        }dddddd
+        }
     }
 };
