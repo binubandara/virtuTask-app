@@ -1,25 +1,60 @@
 const express = require('express');
 const router = express.Router();
 const UserEngagement = require('../models/UserEngagement');
+const axios = require('axios');
 
-// Middleware to get user ID from request
-// In a real app, this would come from authentication
-const getUserId = (req, res, next) => {
-  // For demo purposes, using a fixed user ID or from headers
-  // In production, get this from JWT token or session
-  req.userId = req.headers['user-id'] || 'demo-user';
-  next();
+// Middleware to authenticate user and get employee ID
+const authenticateUser = async (req, res, next) => {
+  try {
+    // Get token from Authorization header
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ message: 'Not authenticated. Please login first.' });
+    }
+    
+    const token = authHeader.split(' ')[1];
+    
+    // Verify token with authentication service
+    try {
+      const response = await axios.post('http://localhost:5001/api/auth/verify-token', 
+        { token },
+        { timeout: 5000 }
+      );
+      
+      if (response.status !== 200) {
+        return res.status(401).json({ message: 'Invalid token' });
+      }
+      
+      // Extract employee ID
+      const userData = response.data;
+      const employeeId = userData.employeeId;
+      
+      if (!employeeId) {
+        return res.status(400).json({ message: 'User does not have an employee ID' });
+      }
+      
+      // Set employee ID in request
+      req.employeeId = employeeId;
+      next();
+    } catch (error) {
+      console.error('Error verifying token:', error);
+      return res.status(503).json({ message: 'Authentication service unavailable' });
+    }
+  } catch (error) {
+    console.error('Authentication error:', error);
+    return res.status(500).json({ message: 'Server error' });
+  }
 };
 
 // API endpoint to check hub status
-router.get('/status', getUserId, async (req, res) => {
+router.get('/status', authenticateUser, async (req, res) => {
   try {
-    const userId = req.userId;
-    let userEngagement = await UserEngagement.findOne({ userId });
+    const employeeId = req.employeeId;
+    let userEngagement = await UserEngagement.findOne({ employeeId });
     
     // If no record exists, create one
     if (!userEngagement) {
-      userEngagement = new UserEngagement({ userId });
+      userEngagement = new UserEngagement({ employeeId });
       await userEngagement.save();
       return res.json({ isEnabled: true, remainingTime: 30 * 60 });
     }
@@ -62,15 +97,15 @@ router.get('/status', getUserId, async (req, res) => {
 });
 
 // API endpoint to update hub status
-router.post('/status', getUserId, async (req, res) => {
+router.post('/status', authenticateUser, async (req, res) => {
   try {
     const { isEnabled } = req.body;
-    const userId = req.userId;
+    const employeeId = req.employeeId;
     
-    let userEngagement = await UserEngagement.findOne({ userId });
+    let userEngagement = await UserEngagement.findOne({ employeeId });
     
     if (!userEngagement) {
-      userEngagement = new UserEngagement({ userId });
+      userEngagement = new UserEngagement({ employeeId });
     }
     
     userEngagement.isEnabled = isEnabled;
@@ -89,21 +124,21 @@ router.post('/status', getUserId, async (req, res) => {
   }
 });
 
-// NEW API endpoint to update play time
-router.post('/play-time', getUserId, async (req, res) => {
+// API endpoint to update play time
+router.post('/play-time', authenticateUser, async (req, res) => {
   try {
     const { playedSeconds } = req.body;
-    const userId = req.userId;
+    const employeeId = req.employeeId;
     
     if (typeof playedSeconds !== 'number' || playedSeconds < 0) {
       return res.status(400).json({ error: 'Invalid played time value' });
     }
     
-    let userEngagement = await UserEngagement.findOne({ userId });
+    let userEngagement = await UserEngagement.findOne({ employeeId });
     
     if (!userEngagement) {
       userEngagement = new UserEngagement({ 
-        userId,
+        employeeId,
         sessionDuration: playedSeconds,
         lastSessionStart: new Date()
       });

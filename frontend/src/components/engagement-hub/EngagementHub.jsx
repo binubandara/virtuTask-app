@@ -10,7 +10,7 @@ const EngagementHub = () => {
   const [error, setError] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const timerRef = useRef(null);
-  const totalAllowedTime = 30 * 60; // 30 minutes in seconds
+  const totalAllowedTime = 30 * 60;
   
   const games = [
     {
