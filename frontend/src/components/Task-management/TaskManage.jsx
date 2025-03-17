@@ -3,6 +3,7 @@ import './TaskManage.css';
 import TaskForm from './TaskForm';
 import { useParams, useNavigate } from 'react-router-dom';
 import TaskInformation from './TaskInformation';
+import { useLocation } from 'react-router-dom';
 
 const PRIORITY_COLORS = {
   high: '#ff4444',
@@ -17,7 +18,10 @@ const STATUS_COLORS = {
   completed: '#28a46a'
 };
 
-const TaskManage = ({ projects, setProjects }) => {
+const TaskManage = () => {
+  const location = useLocation();
+  const isFromMyProjects = location.state?.fromMyProjects || false;
+  const [isMembersHovered, setIsMembersHovered] = useState(false);
   const { projectId } = useParams();
   const navigate = useNavigate();
   const [tasks, setTasks] = useState([]);
@@ -31,30 +35,47 @@ const TaskManage = ({ projects, setProjects }) => {
   const [selectedTask, setSelectedTask] = useState(null);
   const [selectedTaskId, setSelectedTaskId] = useState(null); // New state for dropdown
 
+  const loadProjects = () => {
+    const saved = localStorage.getItem('projects');
+    return saved ? JSON.parse(saved) : [];
+  };
+
+  // Save projects to localStorage
+  const saveProjects = (updatedProjects) => {
+    localStorage.setItem('projects', JSON.stringify(updatedProjects));
+  };
 
   useEffect(() => {
+    const projects = loadProjects();
     const project = projects.find(p => p.id === Number(projectId));
+
     if (project) {
+      // SINGLE, CORRECT SETTER CALL
       setCurrentProject({
         id: project.id,
         projectName: project.projectname,
         startDate: project.startDate,
         dueDate: project.dueDate,
         priority: project.priority || 'medium',
-        priorityColor: PRIORITY_COLORS[project.priority] || '#e0e0e0'
+        priorityColor: PRIORITY_COLORS[project.priority] || '#e0e0e0',
+        members: project.members || [], // MUST INCLUDE MEMBERS
+        tasks: project.tasks || []
       });
       setTasks(project.tasks || []);
+    } else {
+      navigate('/my-projects-manager');
     }
-  }, [projectId, projects]);
+  }, [projectId, navigate]);
 
   const updateTasks = (newTasks) => {
+    const projects = loadProjects();
     const updatedProjects = projects.map(p => {
       if (p.id === Number(projectId)) {
         return { ...p, tasks: newTasks };
       }
       return p;
     });
-    setProjects(updatedProjects);
+    saveProjects(updatedProjects);
     setTasks(newTasks);
   };
 
@@ -91,49 +112,77 @@ const TaskManage = ({ projects, setProjects }) => {
   const TaskNameWithEdit = ({ task }) => (
     <td className='tname'>
       <div className="task-name-container">
-        <button 
-          className="task-edit-icon"
-          onClick={(e) => {
-            e.stopPropagation();
-            setSelectedTaskId(task.id === selectedTaskId ? null : task.id);
-          }}
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 9h16.5m-16.5 6.75h16.5" />
-          </svg>
-        </button>
-        {selectedTaskId === task.id && (
-          <div className="task-options-dropdown">
-            <div 
-              className="option"
+        {/* Only show edit controls if NOT coming from My Projects */}
+        {!isFromMyProjects && (
+          <>
+            <button 
+              className="task-edit-icon"
               onClick={(e) => {
                 e.stopPropagation();
-                setEditingTask(task);
-                setShowTaskForm(true);
-                setSelectedTaskId(null);
+                setSelectedTaskId(task.id === selectedTaskId ? null : task.id);
               }}
             >
-              Edit Task
-            </div>
-            <div 
-              className="option delete-option"
-              onClick={(e) => {
-                e.stopPropagation();
-                deleteTask(task.id);
-              }}
-            >
-              Delete Task
-            </div>
-          </div>
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-6">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 9h16.5m-16.5 6.75h16.5" />
+              </svg>
+            </button>
+  
+            {selectedTaskId === task.id && (
+              <div className="task-options-dropdown">
+                <div 
+                  className="option"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setEditingTask(task);
+                    setShowTaskForm(true);
+                    setSelectedTaskId(null);
+                  }}
+                >
+                  Edit Task
+                </div>
+                <div 
+                  className="option delete-option"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    deleteTask(task.id);
+                  }}
+                >
+                  Delete Task
+                </div>
+              </div>
+            )}
+          </>
         )}
         {task.taskName}
       </div>
     </td>
   );
+  if (!currentProject) {
+    return <div className="loading">Loading project...</div>;
+  }
 
   return (
     <div className="task-manage-container">
-      <button className="members-dropdown">Members ▼</button>
+      
+      <div className="members-container"
+          onMouseEnter={() => setIsMembersHovered(true)}
+          onMouseLeave={() => setIsMembersHovered(false)}>
+        <button className="members-dropdown">
+          Members ▼
+          
+        </button>
+        
+        {isMembersHovered && currentProject?.members?.length > 0 && (
+          <div className="members-list">
+            {currentProject.members.map((member, index) => (
+              <div key={index} className="member-item">
+                {member}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       <button onClick={handleBack} className="back-button">◄</button>
       
       <div className="header-section">
@@ -150,6 +199,7 @@ const TaskManage = ({ projects, setProjects }) => {
           }}>
             Tasks
           </h2>
+          {!isFromMyProjects && (
           <button 
             className="add-tasks-btn" 
             onClick={() => {
@@ -160,6 +210,7 @@ const TaskManage = ({ projects, setProjects }) => {
           >
             Add Tasks
           </button>
+          )}
         </div>
         <div className="underline" style={{ borderBottomColor: currentProject.priorityColor }}></div>
 

@@ -198,16 +198,16 @@ function ProjectForm({ closeForm, addProject, editProject, initialData, mode }) 
                 required
               />
                <label htmlFor="members">Members</label>
-              <div className="members-container">
+              <div className="projectform-members-container">
                 <input 
                   type="search" 
                   name="members" 
-                  className="members-input" 
+                  className="projectform-members-input" 
                   placeholder="Search Member by Username"
                   value={formData.members}
                   onChange={handleChange}
                 />
-              <div className="svg-member-icon">
+              <div className="projectform-svg-member-icon">
                 <svg 
                   xmlns="http://www.w3.org/2000/svg" 
                   fill="none" 

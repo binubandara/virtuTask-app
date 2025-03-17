@@ -121,7 +121,9 @@ const MyProjects = () => {
             <div 
               className="project-tile" 
               key={project.id}
-              onClick={() => navigate(`/task-manager/${project.id}`)}
+              onClick={() => navigate(`/task-manager/${project.id}`, { 
+                state: { fromMyProjects: true } 
+              })}
             >
               {/* Keep identical tile structure */}
               <div className="tile-content">
