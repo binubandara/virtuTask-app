@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { FaPalette, FaCalendarAlt, FaBell, FaLock, FaPowerOff, FaGlobe } from "react-icons/fa";
-import "./Settings.css"; // Import the CSS file
+import "./Settings.css";
 
 const Settings = () => {
   const [darkMode, setDarkMode] = useState(false);

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import ReactCountryFlag from "react-country-flag";
-import { FaSun, FaMoon } from "react-icons/fa"; // Import sun and moon icons
+import { FaSun, FaMoon } from "react-icons/fa"; 
 
 export default function CityTime({ city, is12HourFormat, showDayNightIcon }) {
     const [time, setTime] = useState(new Date());
