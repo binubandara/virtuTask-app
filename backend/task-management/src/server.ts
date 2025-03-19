@@ -4,6 +4,8 @@ import { Server } from "socket.io";
 import cors from "cors";
 import { connectDB } from "./config/database";
 import taskRoutes from "./routes/taskRoutes";
+import projectRoutes from "./routes/projectRoutes";
+import { authMiddleware } from './middleware/auth';
 import { socketHandler } from "./socket/socketHandler";
 import { errorHandler } from './middleware/errorHandler';
 import dotenv from 'dotenv';
@@ -29,9 +31,12 @@ app.set("io", io);
 
 // Connect to MongoDB
 connectDB();
-
+// Apply authMiddleware to ALL routes *before* registering projectRoutes
+app.use(authMiddleware);
 // Routes
 app.use("/api", taskRoutes);
+app.use("/api", projectRoutes);
+// app.use("/api", require("./routes/authRoutes"));
 
 // Error handling
 app.use(errorHandler);
@@ -43,3 +48,6 @@ const PORT = process.env.PORT || 5000;
 httpServer.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
+// Export io instance
+export { io };

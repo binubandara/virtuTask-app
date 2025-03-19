@@ -2,10 +2,10 @@ import express, { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import productivityRoutes from './routes/productivityRoutes';
-import teamMemberRoutes from './routes/teamMemberRoutes';
-import leaderboardRoutes from './routes/leaderboardRoutes'; 
-import rewardRoutes from './routes/rewardRoutes'; 
+
+import rewardRoutes from './routes/rewardRoutes';
+import { authMiddleware } from './middleware/authMiddleware'; // Import the authMiddleware
+
 // Load environment variables
 dotenv.config();
 
@@ -23,12 +23,15 @@ mongoose.connect(process.env.MONGODB_URI as string)
   .catch(err => console.error('MongoDB connection error:', err));
 
 // Routes
-app.use('/api/productivity', productivityRoutes);
-app.use('/api/teamMembers', teamMemberRoutes);
-app.use('/api/leaderboard', leaderboardRoutes); // Use leaderboard routes
-app.use('/api/rewards', rewardRoutes); // Use reward routes
 
-// Basic route
+
+
+// Apply authMiddleware to the reward routes
+app.use('/api', authMiddleware, rewardRoutes);
+
+app.use('/api', rewardRoutes);
+
+// Basic route (no authentication)
 app.get('/', (req: Request, res: Response) => {
   res.send('Productivity Reward System API is running');
 });
