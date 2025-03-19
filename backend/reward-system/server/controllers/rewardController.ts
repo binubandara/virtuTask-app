@@ -1,103 +1,49 @@
-import { Request, Response, NextFunction } from 'express';
-import Reward, { IReward } from '../models/Reward';
-import ProductivityData from '../models/ProductivityData';
-import TeamMember from '../models/TeamMember';
+import { Request, Response } from 'express';
 import mongoose from 'mongoose';
+import Reward from '../models/Reward'; // Adjust path to the correct location
 
-// Get all rewards
-export const getAllRewards = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+// Calculate and award rewards (PROTECTED endpoint)
+export const calculateGameRewards = async (req: Request, res: Response): Promise<void> => {
   try {
-    const rewards = await Reward.find();
-    res.status(200).json(rewards);
-  } catch (error) {
-    console.error('Error getting rewards:', error);
-    next(error);
-  }
-};
+    // 1. Authentication and Authorization
+    const employee_id = req.employee_id;  // Get employee_id from authMiddleware
 
-// Get a single reward by ID
-export const getRewardById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-  try {
-    const reward = await Reward.findById(req.params.id);
-    if (!reward) {
-      res.status(404).json({ message: 'Reward not found' });
+    if (!employee_id) {
+      console.error('Invalid employee_id:', employee_id);
+      res.status(401).json({ message: 'Unauthorized: Invalid user ID' });
       return;
     }
-    res.status(200).json(reward);
-  } catch (error) {
-    console.error('Error getting reward:', error);
-    next(error);
-  }
-};
 
-// Create a new reward
-export const createReward = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-  try {
-    const newReward: IReward = new Reward(req.body);
-    const savedReward = await newReward.save();
-    res.status(201).json(savedReward);
-  } catch (error) {
-    console.error('Error creating reward:', error);
-    next(error);
-  }
-};
-
-// Update an existing reward
-export const updateReward = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-  try {
-    const updatedReward = await Reward.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    if (!updatedReward) {
-      res.status(404).json({ message: 'Reward not found' });
+    // 2. Retrieve Productivity Data from "productivity_tracker" Collection
+    // Access the database and collection directly using mongoose.connection
+    if (!mongoose.connection.db) {
+      console.error('Database connection is not established');
+      res.status(500).json({ message: 'Database connection is not established' });
       return;
     }
-    res.status(200).json(updatedReward);
-  } catch (error) {
-    console.error('Error updating reward:', error);
-    next(error);
-  }
-};
+    const productivityCollection = mongoose.connection.db.collection('productivity_tracker'); // Replace 'productivity_tracker' with your actual collection name
 
-// Delete a reward
-export const deleteReward = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-  try {
-    const deletedReward = await Reward.findByIdAndDelete(req.params.id);
-    if (!deletedReward) {
-      res.status(404).json({ message: 'Reward not found' });
-      return;
-    }
-    res.status(200).json({ message: 'Reward deleted' });
-  } catch (error) {
-    console.error('Error deleting reward:', error);
-    next(error);
-  }
-};
-
-// Calculate and award rewards
-export const calculateAndAwardRewards = async (memberId: string): Promise<IReward | null> => {
-  try {
-    if (!memberId || !mongoose.isValidObjectId(memberId)) {
-      console.error('Invalid memberId');
-      throw new Error('Invalid memberId');
-    }
-
-    const member = await TeamMember.findById(memberId);
-    if (!member) {
-      console.error('Member not found');
-      throw new Error('Member not found');
-    }
-
-    const productivityData = await ProductivityData.find({ memberId: memberId });
+    // Assuming you want data for the current employee
+    const productivityData = await productivityCollection.find({ employee_id: employee_id }).toArray();
 
     if (!productivityData || productivityData.length === 0) {
-      console.warn('No productivity data found for this member');
-      return null;
+      console.warn('No productivity data found for this member:', employee_id);
+      res.status(404).json({ message: 'No productivity data found' });
+      return;
     }
 
+    // 3. Calculate Total Score
     let totalScore = 0;
     for (const data of productivityData) {
-      totalScore += data.productivity_score;
+      if (data.productivity_score !== undefined && typeof data.productivity_score === 'number') {
+        totalScore += data.productivity_score;
+      } else {
+        console.warn(`Invalid productivity_score found in data:`, data);
+        // Handle invalid score appropriately (e.g., skip, return error, etc.)
+      }
     }
 
+    // 4. Determine Reward Amount (Game Time)
     let minutesReward = 0;
     if (totalScore >= 90) {
       minutesReward = 60;
@@ -105,12 +51,11 @@ export const calculateAndAwardRewards = async (memberId: string): Promise<IRewar
       minutesReward = 30;
     } else if (totalScore >= 50) {
       minutesReward = 15;
-    } else {
-      minutesReward = 0;
-    }
+    } // No "else", so the reward will be 0 if none of the conditions are met.
 
+    // 5. Create Reward Data
     const rewardData = {
-      memberId: member._id,
+      employee_id: employee_id, // Using employee_id from auth middleware
       date: new Date(),
       rewardType: "Game Time",
       rewardAmount: minutesReward,
@@ -119,119 +64,131 @@ export const calculateAndAwardRewards = async (memberId: string): Promise<IRewar
       points: totalScore
     };
 
+    // 6. Create and Save the Reward
     const newReward = await Reward.create(rewardData);
-    return newReward;
-  } catch (error) {
+
+    // 7. Send Response
+    res.status(201).json(newReward); // Send the newly created reward object
+
+  } catch (error: any) {
     console.error('Error calculating and awarding rewards:', error);
-    throw error;
+    res.status(500).json({ message: 'Failed to calculate and award rewards', error: error.message }); // Include error message
   }
 };
 
-
-// Calculate Monthly Gym Membership Rewards
-const calculateMonthlyGymMembership = async (memberId: string): Promise<IReward | null> => {
+// Get the most recent GAME TIME reward for an employee for today (PROTECTED endpoint)
+export const getGameTimeReward = async (req: Request, res: Response): Promise<void> => {
   try {
-    if (!memberId || !mongoose.isValidObjectId(memberId)) {
-      console.error('Invalid memberId');
-      throw new Error('Invalid memberId');
-    }
+      // 1. Authentication and Authorization
+      const employee_id = req.employee_id;  // Get employee_id from authMiddleware
 
-    const member = await TeamMember.findById(memberId);
-    if (!member) {
-      console.error('Member not found');
-      throw new Error('Member not found');
-    }
+      if (!employee_id) {
+          console.error('Unauthorized: Missing employee_id');
+           res.status(401).json({ message: 'Unauthorized: Missing employee ID' });
+           return;
+      }
 
-    // Get the start and end dates of the current month
-    const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      // 2. Get today's date (start and end)
+      const now = new Date();
+      const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1); // Up to, but not including, the next day
 
-    // Find productivity data for the member within the current month
-    const productivityData = await ProductivityData.find({
-      memberId: member._id,
-      date: { $gte: startOfMonth, $lte: endOfMonth }
-    });
+      // 3. Retrieve the most recent GAME TIME Reward from the Database for today
+      const reward = await Reward.findOne({
+          employee_id: employee_id,
+          rewardType: "Game Time",
+          date: { $gte: startOfDay, $lt: endOfDay }  // Find rewards within today's date range
+      })
+      .sort({ date: -1 })  // Sort by date in descending order (most recent first))
+      .limit(1); // Limit to 1 result (the most recent)
 
-    if (!productivityData || productivityData.length === 0) {
-      console.warn('No productivity data found for this member this month');
-      return null;
-    }
+      if (!reward) {
+          console.warn('No game time reward found for this employee today:', employee_id);
+           res.status(404).json({ message: 'No game time reward found for this employee today' });
+           return;
+      }
 
-    let monthlyScore = 0;
-    for (const data of productivityData) {
-      monthlyScore += data.productivity_score;
-    }
+      // 4. Send Response
+      res.status(200).json(reward); // Send the Game Time reward object
 
-    const requiredMonthlyScoreForGymMembership = 1000;  // Required monthly score to get this reward
-    if (monthlyScore >= requiredMonthlyScoreForGymMembership) {
-      const rewardData = {
-        memberId: member._id,
-        date: new Date(),
-        rewardType: "Gym Membership",
-        rewardAmount: 1, // Or anything that reflects to the user that they have the reward
-        description: `Gym membership awarded for total productivity of ${monthlyScore.toFixed(2)} points in ${startOfMonth.toLocaleDateString('default', { month: 'long', year: 'numeric' })}`,
-        name: "Monthly Gym Membership",
-        points: monthlyScore
-      };
-
-      const newReward = await Reward.create(rewardData);
-      return newReward;
-    } else {
-      console.log(`Member did not meet the required monthly score for gym membership: ${monthlyScore.toFixed(2)} / ${requiredMonthlyScoreForGymMembership}`);
-      return null;
-    }
-  } catch (error) {
-    console.error('Error calculating and awarding gym membership:', error);
-    throw error;
+  } catch (error: any) {
+      console.error('Error getting game time reward:', error);
+       res.status(500).json({ message: 'Failed to get game time reward', error: error.message });
+       return;
   }
 };
 
-// Trigger reward calculation for a member
-export const triggerRewardCalculation = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-  try {
-    const { memberId } = req.params;
+// Get a specific reward by ID (PROTECTED endpoint)
+export const getRewardById = async (req: Request, res: Response): Promise<void> => {
+    try {
+        // 1. Authentication and Authorization
+        const employee_id = req.employee_id;  // Get employee_id from authMiddleware
 
-    // Calculate and award game time reward
-    const gameTimeReward = await calculateAndAwardRewards(memberId);
+        if (!employee_id) {
+            console.error('Unauthorized: Missing employee_id');
+             res.status(401).json({ message: 'Unauthorized: Missing employee ID' });
+             return;
+        }
 
-    // Calculate and award gym membership reward
-    const gymMembershipReward = await calculateMonthlyGymMembership(memberId);
+        // 2. Get Reward ID from Request Parameters
+        const rewardId = req.params.id;
 
-    const rewards = [];
+        if (!rewardId || !mongoose.isValidObjectId(rewardId)) {
+            console.error('Invalid rewardId:', rewardId);
+             res.status(400).json({ message: 'Invalid reward ID format' });
+             return;
+        }
 
-    if (gameTimeReward) {
-      rewards.push({
-        name: gameTimeReward.name,
-        points: gameTimeReward.points,
-        rewardAmount: gameTimeReward.rewardAmount, // Include rewardAmount in the response
-        description: gameTimeReward.description,
-        date: gameTimeReward.date,
-        _id: gameTimeReward._id,
-      });
+        // 3. Retrieve Reward from the Database (Ensuring Ownership)
+        const reward = await Reward.findOne({
+            _id: rewardId,
+            employee_id: employee_id // Crucial: Ensure the reward belongs to the employee
+        });
+
+        if (!reward) {
+            console.warn(`Reward not found for employee ${employee_id} with ID ${rewardId}`);
+             res.status(404).json({ message: 'Reward not found' });
+              return; 
+        }
+
+        // 4. Send Response
+        res.status(200).json(reward);
+
+    } catch (error: any) {
+        console.error('Error getting reward by ID:', error);
+         res.status(500).json({ message: 'Failed to get reward', error: error.message });
+         return;  
     }
+};
 
-    if (gymMembershipReward) {
-      rewards.push({
-        name: gymMembershipReward.name,
-        points: gymMembershipReward.points,
-        rewardAmount: gymMembershipReward.rewardAmount, // Include rewardAmount in the response
-        description: gymMembershipReward.description,
-        date: gymMembershipReward.date,
-        _id: gymMembershipReward._id,
-      });
-    }
+// Get all rewards for an employee, sorted by date (most recent first) (PROTECTED endpoint)
+export const getAllRewardsForEmployee = async (req: Request, res: Response): Promise<void> => {
+    try {
+        // 1. Authentication and Authorization
+        const employee_id = req.employee_id;  // Get employee_id from authMiddleware
 
-    if (rewards.length > 0) {
-      res.status(200).json({
-        message: 'Rewards calculated and awarded successfully!',
-        rewards: rewards  // Return an array of rewards
-      });
-    } else {
-      res.status(200).json({ message: 'No rewards given!', rewards: [] }); // Return an empty array
+        if (!employee_id) {
+            console.error('Unauthorized: Missing employee_id');
+              res.status(401).json({ message: 'Unauthorized: Missing employee ID' });
+             return;
+        }
+
+        // 2. Retrieve Rewards from the Database, sorted by date (descending)
+        const rewards = await Reward.find({ employee_id: employee_id })
+                                   .sort({ date: -1 }); // Sort by date in descending order (most recent first)
+
+        if (!rewards || rewards.length === 0) {
+            console.warn('No rewards found for employee:', employee_id);
+              res.status(404).json({ message: 'No rewards found for this employee' });
+              return;
+        }
+
+        // 3. Send Response
+        res.status(200).json(rewards); // Send the array of reward objects
+
+    } catch (error: any) {
+        console.error('Error getting rewards:', error);
+          res.status(500).json({ message: 'Failed to get rewards', error: error.message });
+          return;
     }
-  } catch (error) {
-    console.error('Error triggering reward calculation:', error);
-    next(error);
-  }
 };
