@@ -17,6 +17,26 @@ const STATUS_COLORS = {
   in_progress: '#0d85fd',
   completed: '#28a46a'
 };
+const colorPalette = ["#ffc8dd", "#bde0fe", "#a2d2ff", "#94d2bd","#e0b1cb","#adb5bd","#98f5e1","#f79d65","#858ae3","#c2dfe3","#ffccd5","#e8e8e4","#fdffb6","#f1e8b8","#d8e2dc","#fff0f3","#ccff66"];
+
+const getMemberColor = (name) => {
+  const hash = name.split('').reduce((acc, char) => char.charCodeAt(0) + acc, 0);
+  return colorPalette[hash % colorPalette.length];
+};
+
+const MemberIcon = ({ member }) => {
+  const firstLetter = member.charAt(0).toUpperCase();
+  return (
+    <div 
+      className="member-icon-circle"
+      style={{ 
+        backgroundColor: getMemberColor(member),
+      }}
+    >
+      <span className="member-initial">{firstLetter}</span>
+    </div>
+  );
+};
 
 const TaskManage = () => {
   const location = useLocation();
@@ -48,9 +68,8 @@ const TaskManage = () => {
   useEffect(() => {
     const projects = loadProjects();
     const project = projects.find(p => p.id === Number(projectId));
-
+  
     if (project) {
-      // SINGLE, CORRECT SETTER CALL
       setCurrentProject({
         id: project.id,
         projectName: project.projectname,
@@ -58,27 +77,47 @@ const TaskManage = () => {
         dueDate: project.dueDate,
         priority: project.priority || 'medium',
         priorityColor: PRIORITY_COLORS[project.priority] || '#e0e0e0',
-        members: project.members || [], // MUST INCLUDE MEMBERS
+        members: project.members || [],
         tasks: project.tasks || []
       });
-      setTasks(project.tasks || []);
-    } else {
-      navigate('/my-projects-manager');
+  
+      // Apply task filtering for My Projects view
+      let filteredTasks = project.tasks || [];
+    if (isFromMyProjects) {
+      filteredTasks = filteredTasks.filter(task => 
+        task.assignees?.toLowerCase() // Plural + case-insensitive
+          .split(',')
+          .map(a => a.trim())
+          .includes('tharindy123') // Lowercase comparison
+      );
     }
-  }, [projectId, navigate]);
+    setTasks(filteredTasks);
+  }
+}, [projectId, navigate, isFromMyProjects])// Added isFromMyProjects to dependencies
 
+  // Update the updateTasks function to handle attachments
   const updateTasks = (newTasks) => {
     const projects = loadProjects();
     const updatedProjects = projects.map(p => {
       if (p.id === Number(projectId)) {
-        return { ...p, tasks: newTasks };
+        return { 
+          ...p, 
+          tasks: newTasks.map(task => ({
+            ...task,
+            attachments: task.attachments?.map(att => ({
+              id: att.id,
+              name: att.name,
+              file: att.file
+            })) || [],
+            comments: task.comments || []
+          }))
+        };
       }
       return p;
     });
     saveProjects(updatedProjects);
     setTasks(newTasks);
   };
-
   const addTask = (taskData) => {
     const newTask = { id: Date.now(), ...taskData };
     updateTasks([...tasks, newTask]);
@@ -168,18 +207,18 @@ const TaskManage = () => {
           onMouseEnter={() => setIsMembersHovered(true)}
           onMouseLeave={() => setIsMembersHovered(false)}>
         <button className="members-dropdown">
-          Members ▼
-          
+        <span>Members ▼</span>
         </button>
         
         {isMembersHovered && currentProject?.members?.length > 0 && (
           <div className="members-list">
-            {currentProject.members.map((member, index) => (
-              <div key={index} className="member-item">
-                {member}
-              </div>
-            ))}
-          </div>
+          {currentProject.members.map((member) => (
+            <div key={member} className="member-item">
+              <MemberIcon member={member} />
+              <span>{member}</span>
+            </div>
+          ))}
+        </div>
         )}
       </div>
 
@@ -230,7 +269,20 @@ const TaskManage = () => {
                 {tasks.map(task => (
                   <tr className="task-item" key={task.id}onClick={() => setSelectedTask(task)}>
                     <TaskNameWithEdit task={task} />
-                    <td className='task_assignee'>{task.assignee}</td>
+                    <td className='taskmanage-task_assignee'>
+                      <div className="taskmanage-assignee-icons-container">
+                        {task.assignees?.split(',').slice(0,4).map((assignee, index) => (
+                          <MemberIcon 
+                            key={assignee.trim()} 
+                            member={assignee.trim()}
+                            style={{ zIndex: 4 - index }}
+                          />
+                        ))}
+                        {task.assignees?.split(',').length > 4 && (
+                          <div className="extra-members">+{task.assignees.split(',').length - 4}</div>
+                        )}
+                      </div>
+                    </td>
                     <td className='task_due_date'>{task.dueDate}</td>
                     <td className='task_levels'>
                       <span className="priority-pill" 
@@ -253,10 +305,19 @@ const TaskManage = () => {
       </div>
       {selectedTask && (
         <TaskInformation 
-          task={selectedTask} 
-          onClose={() => setSelectedTask(null)} 
+          task={selectedTask}
+          onClose={() => setSelectedTask(null)}
+          isFromMyProjects={isFromMyProjects}
+          currentUser="Tharindy123"
+          onUpdateTask={(updatedTask) => {
+            const newTasks = tasks.map(t => 
+              t.id === updatedTask.id ? updatedTask : t
+            );
+            updateTasks(newTasks);
+          }}
         />
       )}
+
 
       {showTaskForm && (
         <div className="modal-overlay">
@@ -269,6 +330,7 @@ const TaskManage = () => {
             editTask={editTask}
             projectStartDate={currentProject.startDate}
             projectDueDate={currentProject.dueDate}
+            projectMembers={currentProject.members || []} // Add this line
             initialData={editingTask}
             mode={editingTask ? 'edit' : 'create'}
           />

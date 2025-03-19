@@ -18,11 +18,9 @@ const MyProjects = () => {
     const interval = setInterval(() => {
       const saved = localStorage.getItem('projects');
       if (saved) setProjects(JSON.parse(saved));
-    }, 500); // Check for updates every 500ms
-    
+    }, 500);
     return () => clearInterval(interval);
   }, []);
-
   const getDueDateDisplay = (dueDate) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -82,9 +80,18 @@ const MyProjects = () => {
   const truncateText = (text, maxLength = 50) => 
     text.length > maxLength ? `${text.substring(0, maxLength)}...` : text;
 
-  const userProjects = projects.filter(project => 
-    project.members?.includes('Tharindy123')
-  );
+  const userProjects = projects
+  .filter(project => project.members?.includes('Tharindy123'))
+  .map(project => ({
+    ...project,
+    tasks: (project.tasks || []).filter(task =>
+      task.assignee?.split(',')
+        .map(a => a.trim())
+        .includes('Tharindy123')
+    )
+  }));
+
+  console.log('Filtered tasks:', userProjects[0]?.tasks);
 
   
   

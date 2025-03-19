@@ -2,17 +2,25 @@ import React, { useState } from 'react';
 import './ProjectForm.css';
 
 function ProjectForm({ closeForm, addProject, editProject, initialData, mode }) {
-  const [formData, setFormData] = useState(initialData || {
-    projectname: '',
-    department: '',
-    client: '',
-    description: '',
-    startDate: '',
-    dueDate: '',
-    priority: 'medium',
-    members: ''
+  const [formData, setFormData] = useState(() => {
+    if (initialData) {
+      return {
+        ...initialData,
+        members: initialData.members?.join(', ') || '',
+      };
+    }
+    return {
+      projectname: '',
+      department: '',
+      client: '',
+      description: '',
+      startDate: '',
+      dueDate: '',
+      priority: 'medium',
+      members: ''
+    };
   });
-  
+
   const [originalData] = useState(initialData || {...formData});
 
   const handleChange = (e) => {
@@ -35,28 +43,29 @@ function ProjectForm({ closeForm, addProject, editProject, initialData, mode }) 
       alert(`Missing required fields: ${missingFields.join(', ')}`);
       return;
     }
-  
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const startDate = new Date(formData.startDate);
     const dueDate = new Date(formData.dueDate);
-  
+
     if (dueDate < startDate) {
       alert('Due date must be after start date');
       return;
     }
-  
+
     if (dueDate < today) {
       alert('Due date cannot be in the past');
       return;
     }
-  
+
     // PROCESS DATA AFTER VALIDATION
     const processedData = {
       ...formData,
-      members: formData.members.split(',').map(m => m.trim())
+      members: formData.members.split(',').map(m => m.trim()),
+      id: initialData?.id // Ensure ID preservation
     };
-  
+
     if (mode === 'edit') {
       if (window.confirm('Confirm project changes?')) {
         editProject(processedData);

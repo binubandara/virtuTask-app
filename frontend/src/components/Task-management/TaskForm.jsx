@@ -7,6 +7,7 @@ const TaskForm = ({
   editTask,
   projectStartDate, 
   projectDueDate,
+  projectMembers, // Added missing prop
   initialData,
   mode 
 }) => {
@@ -16,21 +17,43 @@ const TaskForm = ({
     priority: 'medium',
     startDate: '',
     dueDate: '',
+    assignees: initialData?.assignees || '',
   });
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!validateDates()) return;
-    
+
+    // Trim and filter empty values
+    const enteredAssignees = taskData.assignees
+      .split(',')
+      .map(a => a.trim())
+      .filter(a => a !== '');
+
+    // Validate against project members
+    const invalidAssignees = enteredAssignees
+      .filter(a => !projectMembers.includes(a));
+
+    if (invalidAssignees.length > 0) {
+      alert(`The following members are not part of the project:\n${invalidAssignees.join('\n')}\n\nPlease add them to the project first.`);
+      return;
+    }
+
+    const processedData = {
+      ...taskData,
+      assignees: enteredAssignees.join(', ') // Store as comma-separated string
+    };
+
     if (mode === 'edit') {
-      if (window.confirm('Are you sure you want to update this task?')) {
-        editTask(taskData);
+      if (window.confirm('Confirm task changes?')) {
+        editTask(processedData); // Fixed prop reference
       }
     } else {
-      addTask(taskData);
+      addTask(processedData); // Fixed prop reference
     }
   };
 
+  // Rest of the component remains the same...
   const handleReset = () => {
     const message = mode === 'edit' 
       ? 'Reset to original values?' 
@@ -46,9 +69,11 @@ const TaskForm = ({
       });
     }
   };
+
   const handleChange  = (e) => {
     setTaskData({ ...taskData, [e.target.name]: e.target.value });
-  }
+  };
+
   const statusOptions = [
     { value: 'pending', label: 'Pending', color: 'var(--taskform-orange)' },
     { value: 'in_progress', label: 'In-Progress', color: 'var(--taskform-blue)' },
@@ -60,6 +85,7 @@ const TaskForm = ({
     { value: 'medium', label: 'Medium', color: 'var(--taskform-yellow)' },
     { value: 'low', label: 'Low', color: 'var(--taskform-green)' },
   ];
+
   const validateDates = () => {
     const taskStart = new Date(taskData.startDate);
     const taskDue = new Date(taskData.dueDate);
@@ -93,24 +119,23 @@ const TaskForm = ({
   return (
     <div className="task-form-container">
       <button className="task-form-close" onClick={handleClose}>
-      
-            <svg 
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24" 
-              strokeWidth="1.5"
-              stroke="currentColor" 
-              className="size-6"
-              width="24" 
-              height="24"
-            >
-              <path 
-                strokeLinecap="round"
-                strokeLinejoin="round" 
-                d="M5 12h14" 
-              />
-            </svg>
-          </button>
+        <svg 
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24" 
+          strokeWidth="1.5"
+          stroke="currentColor" 
+          className="size-6"
+          width="24" 
+          height="24"
+        >
+          <path 
+            strokeLinecap="round"
+            strokeLinejoin="round" 
+            d="M5 12h14" 
+          />
+        </svg>
+      </button>
       <h3>{mode === 'edit' ? 'Edit Task' : 'Add New Task'}</h3>
         
       <form className="taskform" onSubmit={handleSubmit}>
@@ -181,43 +206,48 @@ const TaskForm = ({
             />
           </div>
           <div className="taskform-assignees-section">
-          <div className="taskform-icon-container">
-            <svg 
-              xmlns="http://www.w3.org/2000/svg" 
-              fill="none" 
-              viewBox="0 0 24 24" 
-              strokeWidth="1" 
-              stroke="currentColor" 
-              className="taskform-assignees-icon"
-            >
-              <path 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" 
-              />
-            </svg>
+            <div className="taskform-icon-container">
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                fill="none" 
+                viewBox="0 0 24 24" 
+                strokeWidth="1" 
+                stroke="currentColor" 
+                className="taskform-assignees-icon"
+              >
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" 
+                />
+              </svg>
+            </div>
+            <label>Assignees</label>
+            <input 
+              type="text" 
+              name="assignees"
+              className="taskform-assignees-input" 
+              placeholder="Comma-separated user IDs"
+              value={taskData.assignees || ''}
+              onChange={handleChange}
+            />
           </div>
-          <label>Assignees</label>
-          <input 
-            type="search" 
-            name="assignees" 
-            className="taskform-assignees-input" 
-            placeholder="Search Assignees by ID"
-          />
-        </div>
         </div>
         <div className="taskform-buttons">
-        <button 
-          type="button" 
-          className="taskform-reset-button" 
-          onClick={handleReset}
-        >
-          {mode === 'edit' ? 'Original Input' : 'Reset'}
-        </button>
-        <button type="submit" className="taskform-submit-button">
-          {mode === 'edit' ? 'Confirm Edit' : 'Add Task'}
-        </button>
-      </div>
+          <button 
+            type="button" 
+            className="taskform-reset-button" 
+            onClick={handleReset}
+          >
+            {mode === 'edit' ? 'Original Input' : 'Reset'}
+          </button>
+          <button 
+            type="submit" 
+            className="taskform-submit-button"
+          >
+            {mode === 'edit' ? 'Confirm Edit' : 'Add Task'}
+          </button>
+        </div>
       </form>
     </div>
   );
