@@ -125,16 +125,22 @@ function Login() {
             <hr /><span>OR</span><hr />
           </div>
 
+<<<<<<< Updated upstream
           <button className={styles.googleBtn}>
             Sign in with Google
           </button> */}
 =======
 
+=======
+>>>>>>> Stashed changes
           {/* <div className="or-divider">
             <hr /> <span>OR</span> <hr />
           </div>
 
           <button className="google-btn">Sign in with Google</button> */}
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
         </div>
       </div>

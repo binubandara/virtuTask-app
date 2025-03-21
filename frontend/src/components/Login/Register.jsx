@@ -81,12 +81,19 @@ function Register() {
     <div className="register-body">
       <div className="register-container">
         
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
         <h1>Register Form</h1>
         {error && <div className={styles.errorMessage}>{error}</div>}
         <form id="registerForm">
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
           <div className={styles.formColumn}>
+=======
+          <div className="register-form-column">
+>>>>>>> Stashed changes
 =======
           <div className="register-form-column">
 >>>>>>> Stashed changes
@@ -100,6 +107,7 @@ function Register() {
             />
 
             <label htmlFor="lastname">Last Name</label>
+<<<<<<< Updated upstream
             <input 
               type="text" 
               placeholder="Enter Last Name" 
@@ -107,9 +115,21 @@ function Register() {
               value={formData.lastname}
               onChange={handleChange}
             />
+=======
+            <input type="text" placeholder="Enter Last Name" name="lastname" />
 
             <label htmlFor="email">Email</label>
             <input type="email" placeholder="Enter Email" name="email" />
+
+            <label htmlFor="username">Username</label>
+            <input type="text" placeholder="Enter Username" name="username" />
+>>>>>>> Stashed changes
+
+            <label htmlFor="password">Password</label>
+            <input type="text" placeholder="Enter Password" name="username" />
+
+            <label htmlFor="password">Confirm Password</label>
+            <input type="text" placeholder="Confirm Password" name="password" />
 
             <label htmlFor="username">Username</label>
             <input 
@@ -186,6 +206,7 @@ function Register() {
             />
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
           <label htmlFor="about">About</label>
             <textarea 
               name="about" 
@@ -228,6 +249,8 @@ function Register() {
             </div>
 =======
 >>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             <label htmlFor="attachment">Attachments</label>
             <input type="file" name="resume" />
 
@@ -253,6 +276,9 @@ function Register() {
           <div className="register-form-buttons">
             <button type="button" onClick={handleReset} className="register-form-btn">Reset</button>
             <button type="button" onClick={handleRegister} className="register-form-btn">Register</button>
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
           </div>
           {/*
