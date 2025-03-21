@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import './TaskInformation.css';
 import EmojiPicker from 'emoji-picker-react';
 
+const MAX_FILE_SIZE = 1073741824; // 1GB in bytes
+
 const MemberIcon = ({ member }) => {
   const firstLetter = member.charAt(0).toUpperCase();
   const colorPalette = ["#ffc8dd", "#bde0fe", "#a2d2ff", "#94d2bd","#e0b1cb","#adb5bd","#98f5e1","#f79d65","#858ae3","#c2dfe3","#ffccd5","#e8e8e4","#fdffb6","#f1e8b8","#d8e2dc","#fff0f3","#ccff66"];
@@ -26,7 +28,6 @@ const TaskInformation = ({ task, onClose, isFromMyProjects, currentUser, onUpdat
   const PRIORITY_COLORS = { high: '#ff4444', medium: '#ffa500', low: '#4CAF50' };
   const STATUS_COLORS = { pending: '#f67a15', on_hold: '#939698', in_progress: '#0d85fd', completed: '#28a46a' };
 
-  // Reset state when task changes
   useEffect(() => {
     setDescription(task?.description || '');
     setAttachments(task?.attachments || []);
@@ -48,17 +49,44 @@ const TaskInformation = ({ task, onClose, isFromMyProjects, currentUser, onUpdat
     setCommentText(prev => prev + emojiObject.emoji);
     setShowEmojiPicker(false);
   };
+
   const handleDeleteAttachment = (attachmentId) => {
     if (window.confirm('Are you sure you want to delete this file?')) {
-      setAttachments(attachments.filter(a => a.id !== attachmentId));
+      setAttachments(prev => {
+        const updated = prev.filter(a => a.id !== attachmentId);
+        try {
+          onUpdateTask({
+            ...task,
+            attachments: updated
+          });
+        } catch (error) {
+          console.error('Delete error:', error);
+          alert('Error removing file. Please try again.');
+        }
+        return updated;
+      });
     }
   };
 
   const getFileIcon = (fileName) => {
     const ext = fileName.split('.').pop().toLowerCase();
-    if (ext === 'pdf') return '📄';
-    if (['doc', 'docx'].includes(ext)) return '📝';
-    return '📎';
+    const icons = {
+      pdf: '📄',
+      doc: '📝',
+      docx: '📝',
+      jpg: '🖼️',
+      jpeg: '🖼️',
+      png: '🖼️',
+      zip: '📦',
+      mp3: '🎵',
+      mp4: '🎥',
+      txt: '📃',
+      xls: '📊',
+      xlsx: '📊',
+      ppt: '📑',
+      pptx: '📑'
+    };
+    return icons[ext] || '📎';
   };
 
   const formatFileSize = (bytes) => {
@@ -68,7 +96,6 @@ const TaskInformation = ({ task, onClose, isFromMyProjects, currentUser, onUpdat
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   };
-
 
   const handleAddComment = () => {
     if (commentText.trim()) {
@@ -98,21 +125,66 @@ const TaskInformation = ({ task, onClose, isFromMyProjects, currentUser, onUpdat
     }
   };
 
-  const handleFileUpload = (e) => {
+  
+
+  const handleFileUpload = async (e) => { // Added async here
     if (!isFromMyProjects) {
-      const newFiles = Array.from(e.target.files).map(file => ({
-        id: Date.now(),
-        name: file.name,
-        url: URL.createObjectURL(file),
-        size: file.size,
-        type: file.type
-      }));
-      setAttachments([...attachments, ...newFiles]);
+      const files = Array.from(e.target.files);
+      const validFiles = [];
+      const invalidFiles = [];
+  
+      // Check file sizes first
+      files.forEach(file => {
+        if (file.size > MAX_FILE_SIZE) {
+          invalidFiles.push(file.name);
+        } else {
+          validFiles.push(file);
+        }
+      });
+  
+      // Show alerts for invalid files
+      if (invalidFiles.length > 0) {
+        alert(`These files exceed 1GB: ${invalidFiles.join(', ')}`);
+      }
+  
+      // Process valid files
+      if (validFiles.length > 0) {
+        try {
+          // Create all attachments first
+          const newAttachments = await Promise.all(
+            validFiles.map(file => new Promise((resolve) => {
+              const reader = new FileReader();
+              reader.onload = (e) => {
+                resolve({
+                  id: Date.now(),
+                  name: file.name,
+                  url: e.target.result,
+                  size: file.size,
+                  type: file.type,
+                  lastModified: file.lastModified
+                });
+              };
+              reader.readAsDataURL(file);
+            }))
+          );
+  
+          // Update state once with all new attachments
+          setAttachments(prev => {
+            const updatedAttachments = [...prev, ...newAttachments];
+            onUpdateTask({
+              ...task,
+              attachments: updatedAttachments
+            });
+            return updatedAttachments;
+          });
+        } catch (error) {
+          console.error('File processing error:', error);
+          alert('Error processing files. Please try again.');
+        }
+      }
     }
   };
-
   if (!task) return null;
-
 
   return (
     <div className="task-info-container">
@@ -236,8 +308,8 @@ const TaskInformation = ({ task, onClose, isFromMyProjects, currentUser, onUpdat
           />
         )}
       </div>
-     {/* Updated Attachments Section */}
-      <div className="task-info-attachments-section">
+    {/* Attachments Section */}
+    <div className="task-info-attachments-section">
         <div className="task-info-attachments-header">
           <h4 className="task-info-section-title">Attachments</h4>
           {!isFromMyProjects && (
@@ -257,7 +329,8 @@ const TaskInformation = ({ task, onClose, isFromMyProjects, currentUser, onUpdat
             <div key={file.id} className="attachment-item">
               <a 
                 href={file.url} 
-                target="_blank" 
+                download={file.name}
+                target="_blank"
                 rel="noopener noreferrer"
                 className="attachment-content"
               >
@@ -268,8 +341,7 @@ const TaskInformation = ({ task, onClose, isFromMyProjects, currentUser, onUpdat
                 </div>
               </a>
               {!isFromMyProjects && (
-                <button 
-                  className="delete-attachment-btn"
+                <button className="delete-attachment-btn"
                   onClick={() => handleDeleteAttachment(file.id)}
                 >
                   ×
@@ -280,53 +352,48 @@ const TaskInformation = ({ task, onClose, isFromMyProjects, currentUser, onUpdat
         </div>
       </div>
 
-      {/* Updated Comments Section */}
+     {/* Comments Section */}
       <div className="task-info-comments-section">
         <div className="task-info-comments-header">
           <h4 className="task-info-section-title">Comments</h4>
-          <div className="comment-section-divider"></div>
         </div>
 
-        {/* Comment Input Area */}
-        {!isFromMyProjects && (
-          <div className="comment-input-container">
-            <div className="comment-input-wrapper">
-              <button 
-                className="emoji-btn"
-                onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                type="button"
-              >
-                😀
-              </button>
-              <textarea
-                className="task-info-comment-textarea"
-                value={commentText}
-                onChange={(e) => setCommentText(e.target.value)}
-                placeholder="Add a new comment..."
-                rows="3"
-              />
-              <button 
-                className="add-comment-btn" 
-                onClick={handleAddComment}
-              >
-                Send
-              </button>
-            </div>
-            
-            {showEmojiPicker && (
-              <div className="emoji-picker-container">
-                <EmojiPicker 
-                  onEmojiClick={handleEmojiClick}
-                  searchDisabled
-                  skinTonesDisabled
-                  previewConfig={{ showPreview: false }}
-                />
-              </div>
-            )}
+        <div className="comment-input-area">
+          <textarea
+            className="task-info-comment-textarea"
+            value={commentText}
+            onChange={(e) => setCommentText(e.target.value)}
+            placeholder="Add a new comment..."
+            rows="3"
+          />
+          <div className="comment-buttons">
+            <button 
+              className="emoji-btn"
+              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+              type="button"
+            >
+              😀
+            </button>
+            <button 
+              className="add-comment-btn" 
+              onClick={handleAddComment}
+            >
+              Send
+            </button>
           </div>
-        )}
+          
+          {showEmojiPicker && (
+            <div className="emoji-picker-container">
+              <EmojiPicker 
+                onEmojiClick={handleEmojiClick}
+                searchDisabled
+                skinTonesDisabled
+                previewConfig={{ showPreview: false }}
+              />
+            </div>
+          )}
+        </div>
 
-        {/* Comments List */}
         <div className="comments-list">
           {comments.map(comment => (
             <div key={comment.id} className="comment-item">
@@ -336,47 +403,45 @@ const TaskInformation = ({ task, onClose, isFromMyProjects, currentUser, onUpdat
                   <span className="comment-username">{comment.user}:</span>
                 </div>
                 
-                {!isFromMyProjects && (
-                  <div className="comment-actions">
-                    {editingCommentId === comment.id ? (
-                      <>
-                        <button
-                          className="confirm-btn"
-                          onClick={() => handleEditComment(comment.id)}
-                        >
-                          Confirm
-                        </button>
-                        <button
-                          className="cancel-btn"
-                          onClick={() => {
-                            setEditingCommentId(null);
-                            setCommentText('');
-                          }}
-                        >
-                          Cancel
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <button
-                          className="edit-btn"
-                          onClick={() => {
-                            setEditingCommentId(comment.id);
-                            setCommentText(comment.text);
-                          }}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          className="delete-btn"
-                          onClick={() => handleDeleteComment(comment.id)}
-                        >
-                          Delete
-                        </button>
-                      </>
-                    )}
-                  </div>
-                )}
+                <div className="comment-actions">
+                  {editingCommentId === comment.id ? (
+                    <>
+                      <button
+                        className="confirm-btn"
+                        onClick={() => handleEditComment(comment.id)}
+                      >
+                        Confirm
+                      </button>
+                      <button
+                        className="cancel-btn"
+                        onClick={() => {
+                          setEditingCommentId(null);
+                          setCommentText('');
+                        }}
+                      >
+                        Cancel
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        className="edit-btn"
+                        onClick={() => {
+                          setEditingCommentId(comment.id);
+                          setCommentText(comment.text);
+                        }}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        className="delete-btn"
+                        onClick={() => handleDeleteComment(comment.id)}
+                      >
+                        Delete
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
 
               {editingCommentId === comment.id ? (

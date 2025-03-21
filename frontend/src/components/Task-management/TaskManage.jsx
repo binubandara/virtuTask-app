@@ -51,9 +51,8 @@ const TaskManage = () => {
     priority: 'medium'
   });
   const [editingTask, setEditingTask] = useState(null);
-  // Add this to your existing state declarations
   const [selectedTask, setSelectedTask] = useState(null);
-  const [selectedTaskId, setSelectedTaskId] = useState(null); // New state for dropdown
+  const [selectedTaskId, setSelectedTaskId] = useState(null);
 
   const loadProjects = () => {
     const saved = localStorage.getItem('projects');
@@ -62,7 +61,17 @@ const TaskManage = () => {
 
   // Save projects to localStorage
   const saveProjects = (updatedProjects) => {
-    localStorage.setItem('projects', JSON.stringify(updatedProjects));
+    try {
+      localStorage.setItem('projects', JSON.stringify(updatedProjects));
+    } catch (error) {
+      console.error('Storage error:', error);
+      if (error.name === 'QuotaExceededError') {
+        alert('Failed to save due to browser storage limits. Please remove some data.');
+      } else {
+        alert('Error saving data. Please try again.');
+      }
+      throw error;
+    }
   };
 
   useEffect(() => {
@@ -83,17 +92,21 @@ const TaskManage = () => {
   
       // Apply task filtering for My Projects view
       let filteredTasks = project.tasks || [];
-    if (isFromMyProjects) {
-      filteredTasks = filteredTasks.filter(task => 
-        task.assignees?.toLowerCase() // Plural + case-insensitive
-          .split(',')
-          .map(a => a.trim())
-          .includes('tharindy123') // Lowercase comparison
-      );
+      if (isFromMyProjects) {
+        filteredTasks = filteredTasks.filter(task => 
+          task.assignees?.toLowerCase()
+            .split(',')
+            .map(a => a.trim())
+            .includes('tharindy123')
+        );
+      }
+      setTasks(filteredTasks);
+    } else {
+      console.error('Project not found:', projectId);
+      // Handle the case when project is not found
+      navigate('/My-projects-manager');
     }
-    setTasks(filteredTasks);
-  }
-}, [projectId, navigate, isFromMyProjects])// Added isFromMyProjects to dependencies
+  }, [projectId, navigate, isFromMyProjects]);
 
   // Update the updateTasks function to handle attachments
   const updateTasks = (newTasks) => {
@@ -102,22 +115,22 @@ const TaskManage = () => {
       if (p.id === Number(projectId)) {
         return { 
           ...p, 
-          tasks: newTasks.map(task => ({
-            ...task,
-            attachments: task.attachments?.map(att => ({
-              id: att.id,
-              name: att.name,
-              file: att.file
-            })) || [],
-            comments: task.comments || []
-          }))
+          tasks: newTasks
         };
       }
       return p;
     });
-    saveProjects(updatedProjects);
-    setTasks(newTasks);
+    
+    try {
+      saveProjects(updatedProjects);
+      setTasks(newTasks);
+      return true;
+    } catch (error) {
+      console.error('Failed to save tasks:', error);
+      return false;
+    }
   };
+
   const addTask = (taskData) => {
     const newTask = { id: Date.now(), ...taskData };
     updateTasks([...tasks, newTask]);
@@ -141,17 +154,11 @@ const TaskManage = () => {
     setSelectedTaskId(null);
   };
   
-
-  
   const handleBack = () => navigate(-1);
-
-  
-  // ... keep existing useEffect and other functions ...
 
   const TaskNameWithEdit = ({ task }) => (
     <td className='tname'>
       <div className="task-name-container">
-        {/* Only show edit controls if NOT coming from My Projects */}
         {!isFromMyProjects && (
           <>
             <button 
@@ -196,6 +203,7 @@ const TaskManage = () => {
       </div>
     </td>
   );
+
   if (!currentProject) {
     return <div className="loading">Loading project...</div>;
   }
@@ -267,13 +275,13 @@ const TaskManage = () => {
               </thead>
               <tbody>
                 {tasks.map(task => (
-                  <tr className="task-item" key={task.id}onClick={() => setSelectedTask(task)}>
+                  <tr className="task-item" key={task.id} onClick={() => setSelectedTask(task)}>
                     <TaskNameWithEdit task={task} />
                     <td className='taskmanage-task_assignee'>
                       <div className="taskmanage-assignee-icons-container">
                         {task.assignees?.split(',').slice(0,4).map((assignee, index) => (
                           <MemberIcon 
-                            key={assignee.trim()} 
+                            key={`${task.id}-${assignee.trim()}-${index}`}
                             member={assignee.trim()}
                             style={{ zIndex: 4 - index }}
                           />
@@ -286,14 +294,14 @@ const TaskManage = () => {
                     <td className='task_due_date'>{task.dueDate}</td>
                     <td className='task_levels'>
                       <span className="priority-pill" 
-                        style={{ backgroundColor: PRIORITY_COLORS[task.priority] }}>
-                        {task.priority}
+                        style={{ backgroundColor: PRIORITY_COLORS[task.priority || 'medium'] }}>
+                        {task.priority || 'medium'}
                       </span>
                     </td>
                     <td className='task-levels'>
                       <span className="status-badge" 
-                        style={{ backgroundColor: STATUS_COLORS[task.status] }}>
-                        {task.status.replace(/_/g, ' ')}
+                        style={{ backgroundColor: STATUS_COLORS[task.status || 'pending'] }}>
+                        {(task.status || 'pending').replace(/_/g, ' ')}
                       </span>
                     </td>
                   </tr>
@@ -313,11 +321,10 @@ const TaskManage = () => {
             const newTasks = tasks.map(t => 
               t.id === updatedTask.id ? updatedTask : t
             );
-            updateTasks(newTasks);
+            return updateTasks(newTasks);
           }}
         />
       )}
-
 
       {showTaskForm && (
         <div className="modal-overlay">
@@ -330,7 +337,7 @@ const TaskManage = () => {
             editTask={editTask}
             projectStartDate={currentProject.startDate}
             projectDueDate={currentProject.dueDate}
-            projectMembers={currentProject.members || []} // Add this line
+            projectMembers={currentProject.members || []}
             initialData={editingTask}
             mode={editingTask ? 'edit' : 'create'}
           />
