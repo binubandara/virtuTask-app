@@ -1,12 +1,12 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-require('dotenv').config();
 const connectDB = require('./config/db');
+const mongoose = require('mongoose');
+const path = require('path');
 
 const app = express();
-
-// Connect to the Database
-connectDB();
+const PORT = process.env.PORT || 5001;
 
 // CORS configuration with specific origin
 app.use(cors({
@@ -18,22 +18,50 @@ app.use(cors({
 
 app.use(express.json());
 
-// Routes
-const authRoutes = require('./routes/authRoutes');
-const reminderRoutes = require('./routes/reminderRoutes');
-const userProfileRoutes = require('./routes/userProfileRoutes');
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-app.use('/api/auth', authRoutes);
-app.use('/api/reminders', reminderRoutes);
-app.use('/api/users', userProfileRoutes);
+const fs = require('fs');
+const uploadDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir);
+}
 
-// Basic route
-app.get('/', (req, res) => {
-    res.json({ message : 'Welcome to the authentication API' });
-});
+// Define a function to initialize the routes
+const initializeRoutes = () => {
+    const authRoutes = require('./routes/authRoutes');
+    const reminderRoutes = require('./routes/reminderRoutes');
+    const userProfileRoutes = require('./routes/userProfileRoutes');
 
-const PORT = process.env.PORT || 5001;
+    app.use('/api/auth', authRoutes);
+    app.use('/api/reminders', reminderRoutes);
+    app.use('/api/users', userProfileRoutes);
 
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-});
+    // Basic route
+    app.get('/', (req, res) => {
+        res.json({ message: 'Welcome to the authentication API' });
+    });
+};
+
+// Start the server
+const startServer = async () => {
+    try {
+        // Connect to MongoDB first
+        await connectDB();
+        mongoose.set('debug', true);
+        console.log('Database connected, initializing routes...');
+        
+        // Initialize routes after successfully connecting
+        initializeRoutes();
+
+        // Start the server
+        app.listen(PORT, () => {
+            console.log(`Server is running on port ${PORT}`);
+        });
+    } catch (error) {
+        console.error('Failed to start server:', error);
+        process.exit(1);
+    }
+};
+
+// Call startServer to begin the sequence
+startServer();

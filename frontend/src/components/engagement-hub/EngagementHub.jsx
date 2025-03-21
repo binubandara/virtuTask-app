@@ -39,9 +39,7 @@ const EngagementHub = () => {
 
   // Check authentication status
   const checkAuthStatus = () => {
-    const token = localStorage.getItem('userToken') || 
-                  localStorage.getItem('token') || 
-                  localStorage.getItem('authToken');
+    const token = localStorage.getItem('token');
     
     if (!token) {
       setError('You must be logged in to access the Engagement Hub');

@@ -46,7 +46,6 @@ const authenticateUser = async (req, res, next) => {
   }
 };
 
-
 // function to get productivity score
 const getProductivityScore = async (employeeId, authToken) => {
   try {
@@ -79,11 +78,15 @@ const calculateGameTime = (productivityScore) => {
   }
 };
 
-
 // API endpoint to check hub status
 router.get('/status', authenticateUser, async (req, res) => {
   try {
     const employeeId = req.employeeId;
+    
+    if (!employeeId) {
+      return res.status(400).json({ error: 'Employee ID is required' });
+    }
+    
     let userEngagement = await UserEngagement.findOne({ employeeId });
     
     // Get token from authorization header
@@ -98,12 +101,18 @@ router.get('/status', authenticateUser, async (req, res) => {
     
     // If no record exists, create one
     if (!userEngagement) {
-      userEngagement = new UserEngagement({ employeeId });
+      userEngagement = new UserEngagement({ 
+        employeeId,
+        isEnabled: true,
+        sessionDuration: 0,
+        lastSessionStart: null
+      });
       await userEngagement.save();
       return res.json({ 
         isEnabled: true, 
         remainingTime: totalAllowedTime,
-        productivityScore: productivityScore
+        productivityScore: productivityScore,
+        totalAllowedTime: totalAllowedTime
       });
     }
     
@@ -124,7 +133,8 @@ router.get('/status', authenticateUser, async (req, res) => {
       return res.json({ 
         isEnabled: true, 
         remainingTime: totalAllowedTime,
-        productivityScore: productivityScore
+        productivityScore: productivityScore,
+        totalAllowedTime: totalAllowedTime
       });
     }
     
@@ -149,24 +159,32 @@ router.get('/status', authenticateUser, async (req, res) => {
   }
 });
 
-
 // API endpoint to update hub status
 router.post('/status', authenticateUser, async (req, res) => {
   try {
     const { isEnabled } = req.body;
     const employeeId = req.employeeId;
     
+    if (!employeeId) {
+      return res.status(400).json({ error: 'Employee ID is required' });
+    }
+    
     let userEngagement = await UserEngagement.findOne({ employeeId });
     
     if (!userEngagement) {
-      userEngagement = new UserEngagement({ employeeId });
-    }
-    
-    userEngagement.isEnabled = isEnabled;
-    
-    // If enabling, set start time only if it's null or a new day
-    if (isEnabled && !userEngagement.lastSessionStart) {
-      userEngagement.lastSessionStart = new Date();
+      userEngagement = new UserEngagement({ 
+        employeeId,
+        isEnabled: isEnabled,
+        sessionDuration: 0,
+        lastSessionStart: isEnabled ? new Date() : null
+      });
+    } else {
+      userEngagement.isEnabled = isEnabled;
+      
+      // If enabling, set start time only if it's null or a new day
+      if (isEnabled && !userEngagement.lastSessionStart) {
+        userEngagement.lastSessionStart = new Date();
+      }
     }
     
     await userEngagement.save();
@@ -183,6 +201,10 @@ router.post('/play-time', authenticateUser, async (req, res) => {
   try {
     const { playedSeconds } = req.body;
     const employeeId = req.employeeId;
+    
+    if (!employeeId) {
+      return res.status(400).json({ error: 'Employee ID is required' });
+    }
     
     if (typeof playedSeconds !== 'number' || playedSeconds < 0) {
       return res.status(400).json({ error: 'Invalid played time value' });
@@ -202,7 +224,8 @@ router.post('/play-time', authenticateUser, async (req, res) => {
       userEngagement = new UserEngagement({ 
         employeeId,
         sessionDuration: playedSeconds,
-        lastSessionStart: new Date()
+        lastSessionStart: new Date(),
+        isEnabled: playedSeconds < totalAllowedTime
       });
     } else {
       // Update the session duration

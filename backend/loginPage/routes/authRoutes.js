@@ -54,4 +54,37 @@ router.post('/verify-token', async (req, res) => {
     }
   });
 
+
+  
+// Search users by name
+router.get('/search',protect, async (req, res) => {
+  try {
+      const { name } = req.query;
+
+      if (!name) {
+          return res.status(400).json({ message: 'Name parameter is required' });
+      }
+
+      const users = await User.find({
+          username: { $regex: name, $options: 'i' }
+      });
+
+      if (users.length === 0) {
+          return res.status(404).json({ message: 'No users found with that name' });
+      }
+     // Map the users and return only the needed information
+
+     const searchResults = users.map(user => ({
+          id: user._id,
+          username: user.username,
+          email: user.email,
+          employeeId: user.employeeId
+      }));
+      return res.json(searchResults);
+  } catch (error) {
+      console.error('Error searching users:', error);
+      return res.status(500).json({ message: 'Error searching users' });
+  }
+});
+
 module.exports = router;

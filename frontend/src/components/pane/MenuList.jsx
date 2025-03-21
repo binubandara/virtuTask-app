@@ -26,6 +26,9 @@ const MenuList = () => {
       case 'tool-1':
         navigate('/engagement-hub');
         break;
+      case 'tool-2':
+        navigate('/focus-mode');
+        break;  
       case 'tool-3':
         navigate('/health-habit-tracker');
         break;  

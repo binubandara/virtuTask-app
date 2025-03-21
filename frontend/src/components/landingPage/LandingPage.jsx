@@ -98,7 +98,7 @@ const LandingPage = () => {
             </div>
           </Carousel.Item>
           <Carousel.Item>
-            <div className="container py-5">
+            <div className="container-slide py-5">
               <div className="row align-items-center">
                 <div className="col-md-6 order-md-2">
                   <img src={img2} alt="" className="img-fluid" />

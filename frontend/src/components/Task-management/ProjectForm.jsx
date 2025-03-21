@@ -1,20 +1,101 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { useSocket } from "../../context/SocketContext";
 import './ProjectForm.css';
 
-
-
 function ProjectForm({ closeForm, addProject, editProject, initialData, mode }) {
-  const [formData, setFormData] = useState(initialData || {
-    projectname: '',
-    department: '',
-    client: '',
-    description: '',
-    startDate: '',
-    dueDate: '',
-    priority: 'medium'
+  // Add socket context
+  const { socket, connected } = useSocket();
+  const [formData, setFormData] = useState(() => {
+    if (initialData) {
+      return {
+        ...initialData,
+        members: initialData.members?.join(', ') || '',
+      };
+    }
+    return {
+      projectname: '',
+      department: '',
+      client: '',
+      description: '',
+      startDate: '',
+      dueDate: '',
+      priority: 'medium',
+      members: ''
+    };
   });
   
+  // State for searching members
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
   const [originalData] = useState(initialData || {...formData});
+
+  const API_URL = 'http://localhost:5004/api';
+
+  // Effect to listen for socket events related to project member changes or availability
+  useEffect(() => {
+    if (!socket || !connected) return;
+
+    // Listen for events like user status changes or new user registrations
+    // that might affect member selection
+    const handleUserStatusChange = (userData) => {
+      // Update search results if the user is in the current results
+      if (searchResults.some(user => user.user_id === userData.user_id)) {
+        setSearchResults(prevResults => 
+          prevResults.map(user => 
+            user.user_id === userData.user_id ? {...user, ...userData} : user
+          )
+        );
+      }
+    };
+
+    socket.on('user_status_change', handleUserStatusChange);
+
+    return () => {
+      socket.off('user_status_change', handleUserStatusChange);
+    };
+  }, [socket, connected, searchResults]);
+
+  // Function to search for users when adding members
+  const searchUsers = async (searchTerm) => {
+    if (!searchTerm.trim()) {
+      setSearchResults([]);
+      setIsSearching(false);
+      return;
+    }
+
+    try {
+      setIsSearching(true);
+      const token = localStorage.getItem('token');
+      
+      const response = await axios.get(`${API_URL}/search?name=${encodeURIComponent(searchTerm)}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setSearchResults(response.data);
+      setIsSearching(false);
+    } catch (error) {
+      console.error('Error searching users:', error);
+      setIsSearching(false);
+    }
+  };
+
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (formData.members && typeof formData.members === 'string') {
+        // Search for the last comma-separated term
+        const terms = formData.members.split(',');
+        const lastTerm = terms[terms.length - 1].trim();
+        
+        if (lastTerm) {
+          searchUsers(lastTerm);
+        }
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [formData.members]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -27,7 +108,8 @@ function ProjectForm({ closeForm, addProject, editProject, initialData, mode }) 
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
+  
+    // VALIDATION FIRST
     const requiredFields = ['projectname', 'department', 'startDate', 'dueDate'];
     const missingFields = requiredFields.filter(field => !formData[field]);
     
@@ -51,12 +133,19 @@ function ProjectForm({ closeForm, addProject, editProject, initialData, mode }) 
       return;
     }
 
+    // PROCESS DATA AFTER VALIDATION
+    const processedData = {
+      ...formData,
+      members: formData.members.split(',').map(m => m.trim()),
+      id: initialData?.id // Ensure ID preservation
+    };
+
     if (mode === 'edit') {
       if (window.confirm('Confirm project changes?')) {
-        editProject(formData);
+        editProject(processedData);
       }
     } else {
-      addProject(formData);
+      addProject(processedData);
     }
   };
 
@@ -69,7 +158,8 @@ function ProjectForm({ closeForm, addProject, editProject, initialData, mode }) 
         description: '',
         startDate: '',
         dueDate: '',
-        priority: 'medium'
+        priority: 'medium',
+        members: ''
       });
     }
   };
@@ -78,6 +168,19 @@ function ProjectForm({ closeForm, addProject, editProject, initialData, mode }) 
     if (window.confirm('Reset to original values?')) {
       setFormData(originalData);
     }
+  };
+
+  // Handle selecting a user from search results
+  const handleSelectUser = (userId, username) => {
+    const currentMembers = formData.members.split(',').map(m => m.trim()).filter(m => m !== '');
+    
+    // Only add if not already in the list
+    if (!currentMembers.includes(userId)) {
+      const updatedMembers = [...currentMembers, userId].join(', ');
+      setFormData(prev => ({ ...prev, members: updatedMembers }));
+    }
+    
+    setSearchResults([]);
   };
 
   return (
@@ -192,31 +295,49 @@ function ProjectForm({ closeForm, addProject, editProject, initialData, mode }) 
                 required
               />
                <label htmlFor="members">Members</label>
-              <div className="members-container">
-              <input 
-                type="search" 
-                name="members" 
-                className="members-input" 
-                placeholder="Search Member by ID"
-              />
-              <div className="svg-member-icon">
-                <svg 
-                  xmlns="http://www.w3.org/2000/svg" 
-                  fill="none" 
-                  viewBox="0 0 24 24" 
-                  strokeWidth="1" 
-                  stroke="currentColor" 
-                  className="size-6"
-                  width="24" height="24"
-                >
-                  <path 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round" 
-                    d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" 
-                  />
-                </svg>
+              <div className="projectform-members-container">
+                <input 
+                  type="search" 
+                  name="members" 
+                  className="projectform-members-input" 
+                  placeholder="Search Member by Username"
+                  value={formData.members}
+                  onChange={handleChange}
+                />
+                <div className="projectform-svg-member-icon">
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    fill="none" 
+                    viewBox="0 0 24 24" 
+                    strokeWidth="1" 
+                    stroke="currentColor" 
+                    className="size-6"
+                    width="24" height="24"
+                  >
+                    <path 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" 
+                    />
+                  </svg>
+                </div>
+                {searchResults.length > 0 && (
+                  <div className="members-search-results">
+                    {searchResults.map(user => (
+                      <div 
+                        key={user.user_id} 
+                        className="member-search-item"
+                        onClick={() => handleSelectUser(user.user_id, user.username)}
+                      >
+                        {user.username}
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {isSearching && (
+                  <div className="members-searching">Searching...</div>
+                )}
               </div>
-            </div>
             </div>
           </div>
 
