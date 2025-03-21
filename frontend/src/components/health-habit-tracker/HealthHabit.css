@@ -123,7 +123,7 @@
   /* Checklist Styles */
 /* Checklist Styles */
 .checklist-container {
-  margin: 8rem 7.5cm 1rem 1.5cm; /* Added bottom margin */
+  margin: 3em; /* Added bottom margin */
   max-width: 720px;
   background: rgba(245, 245, 245, 0.9);
   border-radius: 19px;

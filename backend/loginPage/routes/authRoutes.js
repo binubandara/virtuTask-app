@@ -54,7 +54,6 @@ router.post('/verify-token', async (req, res) => {
     }
   });
 
-
   
 // Search users by name
 router.get('/search',protect, async (req, res) => {

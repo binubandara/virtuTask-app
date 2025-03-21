@@ -33,6 +33,7 @@ import SetPomodoro from '../focus-mode/SetPomodoro';
 import CountdownAnimation from '../focus-mode/CountDownAnimation';
 import Button from '../focus-mode/Button';
 import TaskList from '../focus-mode/TaskList';
+import Rewards from '../rewardsPage/Rewards';
 
 const { Sider, Content } = Layout;
 
@@ -153,6 +154,7 @@ const PanePage = () => {
             <Route path="/settings" element={<Settings />} />
             <Route path="/settings/privacy" element={<PrivacySettings />} />
             <Route path="/pane/profile" element={<ProfilePage />} />
+            <Route path="/rewards" element={<Rewards />} /> 
 
             {/* Task Management Routes */}
             <Route path="/my-projects-manager" element={<MyProjectsManager projects={projects} setProjects={setProjects} />} />

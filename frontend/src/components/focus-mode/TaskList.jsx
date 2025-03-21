@@ -76,8 +76,8 @@ const TaskList = () => {
               onChange={(e) => setTaskSessions(e.target.value)}
             />
             <div className="modal-buttons">
-              <button className="cancel-btn" onClick={() => setShowModal(false)}>Cancel</button>
-              <button className="task-add-btn" onClick={handleAddTask}>Add Task</button>
+              <button className="cancel-btnfocus" onClick={() => setShowModal(false)}>Cancel</button>
+              <button className="task-add-btn-focus" onClick={handleAddTask}>Add Task</button>
             </div>
           </div>
         </div>

@@ -1,5 +1,5 @@
 import { Menu } from 'antd';
-import { AppstoreOutlined, ProjectOutlined, BarsOutlined, HomeOutlined, SettingOutlined, CheckSquareOutlined, GlobalOutlined, ToolOutlined, TeamOutlined, AimOutlined, HeartOutlined } from '@ant-design/icons';
+import { AppstoreOutlined, TrophyOutlined, ProjectOutlined, BarsOutlined, HomeOutlined, SettingOutlined, CheckSquareOutlined, GlobalOutlined, ToolOutlined, TeamOutlined, AimOutlined, HeartOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 
 const MenuList = () => {
@@ -32,6 +32,9 @@ const MenuList = () => {
       case 'tool-3':
         navigate('/health-habit-tracker');
         break;  
+      case 'tool-4':
+        navigate('/rewards');
+        break;    
       // Add cases for other menu items if needed
       default:
         break;
@@ -49,6 +52,7 @@ const MenuList = () => {
         <Menu.Item style={{ marginBottom: "10px" }} key="tool-1" icon={<TeamOutlined />}> Engagement Hub </Menu.Item>
         <Menu.Item style={{ marginBottom: "10px" }} key="tool-2" icon={<AimOutlined />}> Focus Mode </Menu.Item>
         <Menu.Item style={{ marginBottom: "10px" }} key="tool-3" icon={<HeartOutlined />}> Health Habit Tracker </Menu.Item>
+        <Menu.Item style={{ marginBottom: "10px" }} key="tool-4" icon={<TrophyOutlined />}> Rewards </Menu.Item>
       </Menu.SubMenu>
 
       <Menu.Item style={{ marginBottom: "10px" }} key="settings" icon={<SettingOutlined />}> Settings </Menu.Item>

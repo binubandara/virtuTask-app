@@ -39,21 +39,38 @@ const EngagementHub = () => {
 
   // Check authentication status
   const checkAuthStatus = () => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('userToken');
     
     if (!token) {
       setError('You must be logged in to access the Engagement Hub');
       setIsAuthenticated(false);
       // Redirect to login page
-      navigate('/login');
+      navigate('/login', { state: { from: '/engagement-hub' } });
       return false;
     }
-    setIsAuthenticated(true);
-    return true;
-};
+    
+    // Check token validity before assuming authentication
+    // This could be a simple check like trying to decode the JWT
+    try {
+      // Just check if it's a valid JWT format (this doesn't verify signature)
+      const parts = token.split('.');
+      if (parts.length !== 3) throw new Error('Invalid token format');
+      
+      setIsAuthenticated(true);
+      return true;
+    } catch (err) {
+      setError('Your session has expired. Please login again.');
+      setIsAuthenticated(false);
+      navigate('/login', { state: { from: '/engagement-hub' } });
+      return false;
+    }
+  };
 
   // Check if hub is enabled when component mounts
   useEffect(() => {
+    const token = localStorage.getItem('userToken');
+    console.log("Current token:", token); // Debug log
+    
     if (checkAuthStatus()) {
       checkHubStatus();
     }
