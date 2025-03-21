@@ -14,8 +14,8 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors());
-app.use(express.json());
+app.use(cors()); // Enable Cross-Origin Resource Sharing
+app.use(express.json()); // Parse incoming JSON requests
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI as string)
@@ -24,12 +24,8 @@ mongoose.connect(process.env.MONGODB_URI as string)
 
 // Routes
 
-
-
 // Apply authMiddleware to the reward routes
 app.use('/api', authMiddleware, rewardRoutes);
-
-app.use('/api', rewardRoutes);
 
 // Basic route (no authentication)
 app.get('/', (req: Request, res: Response) => {

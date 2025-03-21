@@ -1,12 +1,16 @@
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
-import Reward from '../models/Reward'; // Adjust path
+import Reward from '../models/Reward'; 
 
-// Calculate and award monthly gym membership rewards
+/**
+ * Calculate and award monthly gym membership rewards (PROTECTED endpoint)
+ * @param req - Express request object
+ * @param res - Express response object
+ */
 export const calculateMonthlyGymMembership = async (req: Request, res: Response): Promise<void> => {
   try {
     // 1. Authentication and Authorization
-    const employee_id = req.employee_id;  // Get employee_id from authMiddleware
+    const employee_id = req.employee_id;  
 
     if (!employee_id) {
       console.error('Unauthorized: Missing employee_id');
@@ -59,7 +63,7 @@ export const calculateMonthlyGymMembership = async (req: Request, res: Response)
         employee_id: employee_id,
         date: new Date(),
         rewardType: "Gym Membership",
-        rewardAmount: "5000", // Or anything that reflects to the user that they have the reward
+        rewardAmount: "5000", 
         description: `Gym membership awarded for average productivity of ${averageMonthlyScore.toFixed(2)} points in ${startOfMonth.toLocaleDateString('default', { month: 'long', year: 'numeric' })}`,
         name: "Monthly Gym Membership",
         points: averageMonthlyScore
@@ -69,7 +73,7 @@ export const calculateMonthlyGymMembership = async (req: Request, res: Response)
       const newReward = await Reward.create(rewardData);
 
       // 7. Send Response
-      res.status(201).json(newReward); // Send the newly created reward object
+      res.status(201).json(newReward); 
     } else {
       console.log(`Member did not meet the required monthly average score for gym membership: ${averageMonthlyScore.toFixed(2)} / ${requiredAverageMonthlyScoreForGymMembership}`);
       res.status(200).json({ message: `Did not meet the required monthly average score for gym membership: ${averageMonthlyScore.toFixed(2)} / ${requiredAverageMonthlyScoreForGymMembership}` }); // Status 200 is more appropriate here
@@ -81,42 +85,46 @@ export const calculateMonthlyGymMembership = async (req: Request, res: Response)
   }
 };
 
-// Get monthly gym membership reward for an employee (PROTECTED endpoint)
+/**
+ * Get monthly gym membership reward for an employee (PROTECTED endpoint)
+ * @param req - Express request object
+ * @param res - Express response object
+ */
 export const getMonthlyReward = async (req: Request, res: Response): Promise<void> => {
-    try {
-        // 1. Authentication and Authorization
-        const employee_id = req.employee_id;  // Get employee_id from authMiddleware
+  try {
+    // 1. Authentication and Authorization
+    const employee_id = req.employee_id;  
 
-        if (!employee_id) {
-            console.error('Unauthorized: Missing employee_id');
-            res.status(401).json({ message: 'Unauthorized: Missing employee ID' });
-            return;
-        }
-
-        // 2. Get the start and end dates of the current month
-        const now = new Date();
-        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-
-        // 3. Retrieve Reward from the Database (for the current month)
-        const reward = await Reward.findOne({
-            employee_id: employee_id,
-            rewardType: "Gym Membership",
-            date: { $gte: startOfMonth, $lte: endOfMonth }
-        });
-
-        if (!reward) {
-            console.warn('No gym membership reward found for this employee this month:', employee_id);
-            res.status(404).json({ message: 'No gym membership reward found for this employee this month' });
-            return;
-        }
-
-        // 4. Send Response
-        res.status(200).json(reward); // Send the Reward object
-
-    } catch (error: any) {
-        console.error('Error getting gym membership reward:', error);
-        res.status(500).json({ message: 'Failed to get gym membership reward', error: error.message });
-        return;
+    if (!employee_id) {
+      console.error('Unauthorized: Missing employee_id');
+      res.status(401).json({ message: 'Unauthorized: Missing employee ID' });
+      return;
     }
+
+    // 2. Get the start and end dates of the current month
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+    // 3. Retrieve Reward from the Database (for the current month)
+    const reward = await Reward.findOne({
+      employee_id: employee_id,
+      rewardType: "Gym Membership",
+      date: { $gte: startOfMonth, $lte: endOfMonth }
+    });
+
+    if (!reward) {
+      console.warn('No gym membership reward found for this employee this month:', employee_id);
+      res.status(404).json({ message: 'No gym membership reward found for this employee this month' });
+      return;
+    }
+
+    // 4. Send Response
+    res.status(200).json(reward); 
+
+  } catch (error: any) {
+    console.error('Error getting gym membership reward:', error);
+    res.status(500).json({ message: 'Failed to get gym membership reward', error: error.message });
+    return;
+  }
 };
