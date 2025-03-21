@@ -160,28 +160,8 @@
   transform: scale(0.98);
 }
 
-<<<<<<< Updated upstream:frontend/src/components/Login/Login.module.css
-<<<<<<< Updated upstream:frontend/src/components/Login/Login.module.css
-<<<<<<< Updated upstream:frontend/src/components/Login/Login.module.css
-<<<<<<< Updated upstream:frontend/src/components/Login/Login.module.css
-/* OR Divider 
+/* OR Divider */
 .orDivider {
-=======
-/* OR Divider */
-/*.orDivider {
->>>>>>> Stashed changes:frontend/src/components/Login/Login.css
-=======
-/* OR Divider */
-/*.orDivider {
->>>>>>> Stashed changes:frontend/src/components/Login/Login.css
-=======
-/* OR Divider */
-/*.orDivider {
->>>>>>> Stashed changes:frontend/src/components/Login/Login.css
-=======
-/* OR Divider */
-/*.orDivider {
->>>>>>> Stashed changes:frontend/src/components/Login/Login.css
   display: flex;
   align-items: center;
   justify-content: center;
@@ -201,30 +181,10 @@
   font-size: 14px;
   font-weight: bold;
   color: #555;
-} */
+}
 
-<<<<<<< Updated upstream:frontend/src/components/Login/Login.module.css
-<<<<<<< Updated upstream:frontend/src/components/Login/Login.module.css
-<<<<<<< Updated upstream:frontend/src/components/Login/Login.module.css
-<<<<<<< Updated upstream:frontend/src/components/Login/Login.module.css
-/* Google Sign-In Button 
-.googleBtn {
-=======
 /* Google Sign-In Button */
 /*.googleBtn {
->>>>>>> Stashed changes:frontend/src/components/Login/Login.css
-=======
-/* Google Sign-In Button */
-/*.googleBtn {
->>>>>>> Stashed changes:frontend/src/components/Login/Login.css
-=======
-/* Google Sign-In Button */
-/*.googleBtn {
->>>>>>> Stashed changes:frontend/src/components/Login/Login.css
-=======
-/* Google Sign-In Button */
-/*.googleBtn {
->>>>>>> Stashed changes:frontend/src/components/Login/Login.css
   width: 100%;
   background: white;
   color: black;
