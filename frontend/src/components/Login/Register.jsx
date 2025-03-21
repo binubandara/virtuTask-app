@@ -74,17 +74,12 @@ function Register() {
 
   /* CHANGED THE ORDER AND REMOVED SOME FIELDS */ 
   return (
-    <div className="register-body">
-      <div className="register-container">
-        
+    <div className={styles.registerBody}>
+      <div className={styles.registerContainer}>
         <h1>Register Form</h1>
         {error && <div className={styles.errorMessage}>{error}</div>}
         <form id="registerForm">
-<<<<<<< Updated upstream
           <div className={styles.formColumn}>
-=======
-          <div className="register-form-column">
->>>>>>> Stashed changes
             <label htmlFor="firstname">First Name</label>
             <input 
               type="text" 
@@ -95,10 +90,13 @@ function Register() {
             />
 
             <label htmlFor="lastname">Last Name</label>
-            <input type="text" placeholder="Enter Last Name" name="lastname" />
-
-            <label htmlFor="email">Email</label>
-            <input type="email" placeholder="Enter Email" name="email" />
+            <input 
+              type="text" 
+              placeholder="Enter Last Name" 
+              name="lastname" 
+              value={formData.lastname}
+              onChange={handleChange}
+            />
 
             <label htmlFor="username">Username</label>
             <input 
@@ -109,14 +107,14 @@ function Register() {
               onChange={handleChange}
             />
 
-            <label htmlFor="password">Password</label>
-            <input type="text" placeholder="Enter Password" name="username" />
-
-            <label htmlFor="password">Confirm Password</label>
-            <input type="text" placeholder="Confirm Password" name="password" />
-
-            <label htmlFor="contact">Contact</label>
-            <input type="tel" placeholder="Enter Phone number" name="contact" />
+            <label htmlFor="email">Email</label>
+            <input 
+              type="email" 
+              placeholder="Enter Email" 
+              name="email" 
+              value={formData.email}
+              onChange={handleChange}
+            />
 
             <label htmlFor="dob">Date of Birth</label>
             <input 
@@ -127,7 +125,6 @@ function Register() {
               onChange={handleChange}
             />
 
-<<<<<<< Updated upstream
             <label htmlFor="contact">Contact</label>
             <input 
               type="tel" 
@@ -136,14 +133,6 @@ function Register() {
               value={formData.contact}
               onChange={handleChange}
             />
-=======
-            <label htmlFor="gender">Gender</label>
-            <div className="register-gender-options">
-              <label><input type="radio" name="gender" value="Male" /> Male</label>
-              <label><input type="radio" name="gender" value="Female" /> Female</label>
-              <label><input type="radio" name="gender" value="Other" /> Other</label>
-            </div>
->>>>>>> Stashed changes
 
             <label htmlFor="address">Address</label>
             <textarea 
@@ -163,7 +152,6 @@ function Register() {
               onChange={handleChange}
             />
 
-<<<<<<< Updated upstream
           <label htmlFor="about">About</label>
             <textarea 
               name="about" 
@@ -204,15 +192,12 @@ function Register() {
                 /> Other
               </label>
             </div>
-=======
->>>>>>> Stashed changes
             <label htmlFor="attachment">Attachments</label>
             <input type="file" name="resume" />
 
             <label htmlFor="pic">Professional Picture</label>
             <input type="file" name="Image" />
 
-<<<<<<< Updated upstream
           <div className={styles.formButtons}>
             <button type="button" onClick={handleReset} className={styles.formBtn}>Reset</button>
             <button 
@@ -223,15 +208,6 @@ function Register() {
             >
               {loading ? "Processing..." : "Register"}
             </button>
-=======
-            <label htmlFor="about">About</label>
-            <textarea name="about" placeholder="Enter Description" className="register-textarea about-textarea"></textarea>
-          </div>
-
-          <div className="register-form-buttons">
-            <button type="button" onClick={handleReset} className="register-form-btn">Reset</button>
-            <button type="button" onClick={handleRegister} className="register-form-btn">Register</button>
->>>>>>> Stashed changes
           </div>
           {/*
           <div className={styles.googleRegisterSection}>
