@@ -83,6 +83,9 @@ function Register() {
         
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
@@ -94,7 +97,11 @@ function Register() {
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
           <div className={styles.formColumn}>
+=======
+          <div className="register-form-column">
+>>>>>>> Stashed changes
 =======
           <div className="register-form-column">
 >>>>>>> Stashed changes
@@ -128,7 +135,10 @@ function Register() {
             <label htmlFor="email">Email</label>
             <input type="email" placeholder="Enter Email" name="email" />
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 =======
+=======
+>>>>>>> Stashed changes
 
             <label htmlFor="username">Username</label>
             <input type="text" placeholder="Enter Username" name="username" />
@@ -138,6 +148,7 @@ function Register() {
 
             <label htmlFor="password">Confirm Password</label>
             <input type="text" placeholder="Confirm Password" name="password" />
+<<<<<<< Updated upstream
 >>>>>>> Stashed changes
 
             <label htmlFor="username">Username</label>
@@ -174,6 +185,8 @@ function Register() {
 
             <label htmlFor="password">Confirm Password</label>
             <input type="text" placeholder="Confirm Password" name="password" />
+=======
+>>>>>>> Stashed changes
 
             <label htmlFor="contact">Contact</label>
             <input type="tel" placeholder="Enter Phone number" name="contact" />
@@ -227,6 +240,7 @@ function Register() {
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
           <label htmlFor="about">About</label>
             <textarea 
               name="about" 
@@ -273,6 +287,8 @@ function Register() {
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             <label htmlFor="attachment">Attachments</label>
             <input type="file" name="resume" />
 
@@ -300,6 +316,9 @@ function Register() {
             <button type="button" onClick={handleRegister} className="register-form-btn">Register</button>
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
