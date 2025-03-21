@@ -45,24 +45,12 @@ function Login() {
   };
 
   return (
-<<<<<<< Updated upstream
     <div className={styles.container}>
       <div className={styles.leftSection}>
         <img src="/5790570.jpg" alt="Background" />
         <div className={styles.leftContent}>
           <h1>Welcome Back</h1>
           <p>Sign in to continue to your account</p>
-=======
-    <div className="container">
-      {/* Left Section */}
-      <div className="left-section">
-        {/* TEST: Add Image Directly */}
-        <img src="/5790570.jpg" alt="Login Background" style={{ width: "100%", height: "100vh", objectFit: "cover" }} />
-
-        <div className="left-content">
-          <h1>Streamline your remote work</h1>
-          <p>Start for free and experience smarter, more connected work......</p>
->>>>>>> Stashed changes
         </div>
       </div>
 
@@ -119,41 +107,14 @@ function Login() {
           >
             Register
           </button>
-<<<<<<< Updated upstream
           {/*
           <div className={styles.orDivider}>
             <hr /><span>OR</span><hr />
           </div>
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
           <button className={styles.googleBtn}>
             Sign in with Google
           </button> */}
-=======
-
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-          {/* <div className="or-divider">
-            <hr /> <span>OR</span> <hr />
-          </div>
-
-          <button className="google-btn">Sign in with Google</button> */}
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
         </div>
       </div>
     </div>
