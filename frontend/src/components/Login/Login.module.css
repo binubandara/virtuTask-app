@@ -160,7 +160,7 @@
   transform: scale(0.98);
 }
 
-/* OR Divider */
+/* OR Divider 
 .orDivider {
   display: flex;
   align-items: center;
@@ -181,9 +181,9 @@
   font-size: 14px;
   font-weight: bold;
   color: #555;
-}
+} */
 
-/* Google Sign-In Button */
+/* Google Sign-In Button 
 .googleBtn {
   width: 100%;
   background: white;
@@ -203,4 +203,4 @@
 .googleBtn:active {
   background: #ddd;
   transform: scale(0.98);
-}
+}*/

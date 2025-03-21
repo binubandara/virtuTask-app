@@ -13,17 +13,17 @@
 .registerContainer {
   background-color: #fff;
   border-radius: 25px;
-  padding: 25px 30px;
+  padding: 35px 30px;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
   width: 90%;
-  max-width: 600px;
-  margin: 20px 0;
+  max-width: 650px;
+  margin: 30px 0;
 }
 
 .registerContainer h1 {
   font-size: x-large;
   text-align: center;
-  color: #4206a3;
+  color: #805db7;
   margin-bottom: 20px;
 }
 
@@ -43,7 +43,8 @@
 .formColumn input, 
 .formColumn select, 
 .formColumn textarea {
-  width: 100%;
+  width: 90%;
+  max-width: 450px;
   padding: 12px;
   border-radius: 15px;
   border: 1px solid #ccc;
