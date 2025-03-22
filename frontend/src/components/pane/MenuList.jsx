@@ -1,5 +1,5 @@
 import { Menu } from 'antd';
-import { AppstoreOutlined, TrophyOutlined, ProjectOutlined, BarsOutlined, HomeOutlined, SettingOutlined, CheckSquareOutlined, GlobalOutlined, ToolOutlined, TeamOutlined, AimOutlined, HeartOutlined } from '@ant-design/icons';
+import { AppstoreOutlined, FolderOpenOutlined, SolutionOutlined, TrophyOutlined, ProjectOutlined, BarsOutlined, HomeOutlined, SettingOutlined, CheckSquareOutlined, GlobalOutlined, ToolOutlined, TeamOutlined, AimOutlined, HeartOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 
 const MenuList = () => {
@@ -11,8 +11,11 @@ const MenuList = () => {
       case 'dashboard':
         navigate('/dashboard');
         break;
-      case 'projects':
+      case 'p-1':
         navigate('/my-projects-manager');
+        break;
+      case 'p-2':
+        navigate('/my-projects');
         break;
       case 'myTask':
         navigate('/my-tasks');
@@ -44,7 +47,12 @@ const MenuList = () => {
   return (
     <Menu mode="inline" className='sideBar' onClick={({ key }) => handleMenuClick(key)}>
       <Menu.Item style={{ marginTop: "12px", marginBottom: "10px" }} key="dashboard" icon={<BarsOutlined />}> Dashboard </Menu.Item>
-      <Menu.Item style={{ marginBottom: "10px" }} key="projects" icon={<ProjectOutlined />}> Projects </Menu.Item>
+      
+      <Menu.SubMenu style={{ marginBottom: "10px" }} key="projects" icon={<AppstoreOutlined />} title="Projects">
+        <Menu.Item style={{ marginBottom: "10px" }} key="p-1" icon={<SolutionOutlined />}> Project Management </Menu.Item>
+        <Menu.Item style={{ marginBottom: "10px" }} key="p-2" icon={<FolderOpenOutlined />}> My Projects </Menu.Item>
+      </Menu.SubMenu>
+
       <Menu.Item style={{ marginBottom: "10px" }} key="myTask" icon={<CheckSquareOutlined />}> My Task </Menu.Item>
       <Menu.Item style={{ marginBottom: "10px" }} key="global" icon={<GlobalOutlined />}> Global Time Sync </Menu.Item>
 

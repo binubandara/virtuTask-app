@@ -12,7 +12,7 @@ connectDB();
 
 const app = express();
 
-// Set port - changed from 5000 to 5002
+// Set port to 5002
 const PORT = process.env.ENGAGEMENT_HUB_PORT || 5002;
 
 // Frontend origin

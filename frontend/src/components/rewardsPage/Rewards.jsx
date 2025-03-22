@@ -14,7 +14,7 @@ const Rewards = () => {
   useEffect(() => {
     const fetchRewards = async () => {
       try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('userToken');
         if (!token) {
           navigate('/rewards');
           return;
@@ -56,7 +56,7 @@ const Rewards = () => {
 
   const handleClaimGameTime = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('userToken');
       const response = await fetch('http://localhost:5006/api/createGame', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }

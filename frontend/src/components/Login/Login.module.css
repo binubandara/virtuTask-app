@@ -204,3 +204,80 @@
   background: #ddd;
   transform: scale(0.98);
 }
+/* Login.module.css */
+/* Teardrop Shape */
+.leftContent {
+  position: absolute;
+  width: 30em;
+  height: 30em;
+  background: rgba(0, 0, 0, 0.625);
+  color: white;
+  padding: 30px;
+  text-align: center;
+  
+  /* Custom teardrop shape */
+  border-top-left-radius: 0;
+  border-top-right-radius: 50%;
+  border-bottom-left-radius: 50%;
+  border-bottom-right-radius: 50%;
+  
+
+  /* Positioning */
+  top: 100px;
+  left: 90px;
+}
+.leftContent h1,
+.leftContent p {
+  
+  position: relative;
+  top: 15px;
+  left: 65px;
+  width: 220px;
+}
+.leftContent p {
+  font-size: 1.4rem;
+  font-weight: 500;
+  margin-left:1em;
+}
+.leftContent h1{
+  font-size: 3.4rem;
+  font-weight: 500;
+  margin-top: 1.5em;
+  margin-left: 0.5em;
+}
+
+/* Remember Me Checkbox */
+.loginOptions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px; /* Adjust gap as needed */
+  width: 100%;
+  margin-bottom: 5px;
+}
+
+.rememberMe {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+ 
+}
+
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+  }
+  
+  .leftSection, .rightSection {
+    flex: 1;
+    width: 100%;
+  }
+  
+  .leftContent {
+    position: relative;
+    margin-top: 40px;
+  }
+}

@@ -21,7 +21,7 @@ export const calculateGameRewards = async (req: Request, res: Response): Promise
       res.status(500).json({ message: 'Database connection is not established' });
       return;
     }
-    const productivityCollection = mongoose.connection.db.collection('productivity_tracker'); // Replace 'productivity_tracker' with your actual collection name
+    const productivityCollection = mongoose.connection.db.collection('daily_scores'); // Replace 'productivity_tracker' with your actual collection name
 
     // Assuming you want data for the current employee
     const productivityData = await productivityCollection.find({ employee_id: employee_id }).toArray();

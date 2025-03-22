@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect  } from 'react';
 import './HealthHabit.css';
 import HabitInfo from './HabitInfo';
 import postureImage_0 from '../../assets/posture0.jpg';
@@ -693,7 +693,15 @@ const HealthHabit = () => {
   const handleNext = () => {
     setCurrentIndex(prev => (prev >= tiles.length - tilesPerView ? 0 : prev + 1));
   };
-  const [tasks, setTasks] = useState([]);
+  const [tasks, setTasks] = useState(() => {
+    const savedTasks = localStorage.getItem('healthHabitTasks');
+    return savedTasks ? JSON.parse(savedTasks) : [];
+  });
+
+  useEffect(() => {
+    localStorage.setItem('healthHabitTasks', JSON.stringify(tasks));
+  }, [tasks]);
+  
   const [inputText, setInputText] = useState('');
 
   const handleAddTask = (e) => {

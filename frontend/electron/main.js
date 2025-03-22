@@ -16,8 +16,7 @@ global.backendProcesses = {
   pythonTracker: null,
   authServer: null,
   engagementHub: null,
-  profileBackend: null, 
-
+  focusMode: null
 };
 
 /**
@@ -260,8 +259,8 @@ async function startAuthServer() {
       const env = { 
         ...process.env, 
         PORT: port,
-        MONGODB_URI: process.env.MONGODB_URI || 'mongodb://localhost:27017/yourdb',
-        JWT_SECRET: process.env.JWT_SECRET || 'your-secret-key'
+        MONGODB_URI: 'mongodb://localhost:27017/VirtuTask',
+        JWT_SECRET: '123VirtuTask'
       };
       
       authProcess = spawn('node', [scriptPath], { 
@@ -277,8 +276,8 @@ async function startAuthServer() {
         env: { 
           ...process.env, 
           PORT: port,
-          MONGODB_URI: process.env.MONGODB_URI || 'mongodb://localhost:27017/yourdb',
-          JWT_SECRET: process.env.JWT_SECRET || 'your-secret-key'
+          MONGODB_URI: 'mongodb://localhost:27017/VirtuTask',
+          JWT_SECRET: '123VirtuTask'
         },
         cwd: path.join(process.resourcesPath, 'backend', 'auth-server')
       });
@@ -362,8 +361,8 @@ async function startEngagementHubServer() {
         ...process.env, 
         ENGAGEMENT_HUB_PORT: port,
         NODE_ENV: process.env.NODE_ENV || 'development',
-        MONGODB_URI: process.env.MONGODB_URI || 'mongodb://localhost:27017/yourdb',
-        JWT_SECRET: process.env.JWT_SECRET || 'your-secret-key'
+        MONGODB_URI: 'mongodb://localhost:27017/VirtuTask',
+        JWT_SECRET: '123VirtuTask'
       };
       
       hubProcess = spawn('node', [scriptPath], { 
@@ -380,8 +379,8 @@ async function startEngagementHubServer() {
           ...process.env, 
           ENGAGEMENT_HUB_PORT: port,
           NODE_ENV: 'production',
-          MONGODB_URI: process.env.MONGODB_URI || 'mongodb://localhost:27017/yourdb',
-          JWT_SECRET: process.env.JWT_SECRET || 'your-secret-key'
+          MONGODB_URI: 'mongodb://localhost:27017/VirtuTask',
+          JWT_SECRET: '123VirtuTask'
         },
         cwd: path.join(process.resourcesPath, 'backend', 'engagement-hub')
       });
@@ -416,101 +415,93 @@ async function startEngagementHubServer() {
   }
 }
 
-/**
- * Start the Profile Backend
- * @returns {Promise<ChildProcess>} The spawned Node.js profile backend process
- */
-async function startProfileBackend() {
-  const port = 5003;
+//Start focus mode server
+async function startFocusModeServer() {
+  const port = 5005;
   console.log(`Checking if port ${port} is in use...`);
-
+  
   try {
     // Try to kill any process using our port
     await killProcessOnPort(port);
-
+    
     // Wait for port to be free
     const portFree = await waitForPortToBeFree(port, 5000);
     if (!portFree) {
       console.warn(`Port ${port} could not be freed, but continuing anyway...`);
     }
-
-    console.log('Starting Profile Backend...');
-    let profileProcess;
-
+    
+    console.log('Starting Focus Mode Server...');
+    let focusProcess;
+    
     if (!app.isPackaged) {
       // Development mode - find server script
       const possiblePaths = [
-        path.join(__dirname, '../../backend/profile/server.js'),
-        path.join(__dirname, '../backend/profile/server.js'),
-        path.join(process.cwd(), 'backend/profile/server.js'),
+        path.join(__dirname, '../../backend/focus-mode/server.js'),
+        path.join(__dirname, '../backend/focus-mode/server.js'),
+        path.join(process.cwd(), 'backend/focus-mode/server.js')
       ];
-
+      
       let scriptPath = null;
       for (const testPath of possiblePaths) {
-        console.log(`Checking for Profile Backend at: ${testPath}`);
+        console.log(`Checking for Focus Mode server at: ${testPath}`);
         if (fs.existsSync(testPath)) {
           scriptPath = testPath;
           break;
         }
       }
-
+      
       if (!scriptPath) {
-        throw new Error('Profile Backend script not found in any of the expected locations');
+        throw new Error('Focus Mode server script not found in any of the expected locations');
       }
-
-      console.log(`Spawning Profile Backend from: ${scriptPath}`);
-
-      // Set environment variables
-      const env = {
-        ...process.env,
-        PROFILE_PORT: port,
-        MONGODB_URI: process.env.MONGODB_URI || 'mongodb://localhost:27017/yourdb',
-      };
-
-      profileProcess = spawn('node', [scriptPath], {
-        env,
-        cwd: path.dirname(scriptPath),
+      
+      console.log(`Spawning Focus Mode server from: ${scriptPath}`);
+      
+      focusProcess = spawn('node', [scriptPath], { 
+        env: { 
+          ...process.env, 
+          PORT: port
+        },
+        cwd: path.dirname(scriptPath)
       });
     } else {
       // Packaged app mode
-      const scriptPath = path.join(process.resourcesPath, 'backend', 'profile', 'server.js');
-      console.log(`Spawning Profile Backend from: ${scriptPath}`);
-
-      profileProcess = spawn('node', [scriptPath], {
-        env: {
-          ...process.env,
-          PROFILE_PORT: port,
-          MONGODB_URI: process.env.MONGODB_URI || 'mongodb://localhost:27017/yourdb',
+      const scriptPath = path.join(process.resourcesPath, 'backend', 'focus-mode', 'server.js');
+      console.log(`Spawning Focus Mode server from: ${scriptPath}`);
+      
+      focusProcess = spawn('node', [scriptPath], { 
+        env: { 
+          ...process.env, 
+          PORT: port
         },
-        cwd: path.join(process.resourcesPath, 'backend', 'profile'),
+        cwd: path.join(process.resourcesPath, 'backend', 'focus-mode')
       });
     }
 
     // Handle process stdout/stderr
-    profileProcess.stdout.on('data', (data) => {
-      console.log(`Profile Backend stdout: ${data}`);
+    focusProcess.stdout.on('data', (data) => {
+      console.log(`Focus Mode stdout: ${data}`);
     });
 
-    profileProcess.stderr.on('data', (data) => {
-      console.error(`Profile Backend stderr: ${data}`);
+    focusProcess.stderr.on('data', (data) => {
+      console.error(`Focus Mode stderr: ${data}`);
     });
 
     // Handle process exit
-    profileProcess.on('exit', (code, signal) => {
-      console.log(`Profile Backend exited with code ${code} and signal ${signal}`);
-      if (global.backendProcesses.profileBackend === profileProcess) {
-        global.backendProcesses.profileBackend = null;
+    focusProcess.on('exit', (code, signal) => {
+      console.log(`Focus Mode server exited with code ${code} and signal ${signal}`);
+      if (global.backendProcesses.focusMode === focusProcess) {
+        global.backendProcesses.focusMode = null;
       }
     });
 
     // Handle process error
-    profileProcess.on('error', (err) => {
-      console.error(`Failed to start Profile Backend: ${err.message}`);
+    focusProcess.on('error', (err) => {
+      console.error(`Failed to start Focus Mode server: ${err.message}`);
     });
 
-    return profileProcess;
+    return focusProcess;
   } catch (error) {
-    console.error(`Failed to start Profile Backend: ${error.message}`);
+    console.error(`Failed to start Focus Mode server: ${error.message}`);
     throw error;
   }
 }
@@ -589,8 +580,16 @@ async function createWindow() {
         backendsStarted.hub = true;
       }).catch(err => {
         console.error(`Engagement Hub failed to start: ${err.message}`);
+      }),
+
+      startFocusModeServer().then(process => {
+        global.backendProcesses.focusMode = process;
+        backendsStarted.focus = true;
+      }).catch(err => {
+        console.error(`Focus Mode server failed to start: ${err.message}`);
       })
     ];
+    
     
     // Wait for all processes to start (or fail)
     await Promise.allSettled(startPromises);
@@ -753,26 +752,26 @@ ipcMain.on('restart-engagement-hub', async () => {
   }
 });
 
-// Restart Profile Backend handler
-ipcMain.on('restart-profile-backend', async () => {
-  console.log('Restart Profile Backend request received');
+// Add IPC handler for restarting focus mode
+ipcMain.on('restart-focus-mode', async () => {
+  console.log('Restart Focus Mode request received');
   
-  if (global.backendProcesses.profileBackend) {
-    kill(global.backendProcesses.profileBackend.pid, 'SIGTERM', async (err) => {
-      if (err) console.error(`Error killing Profile Backend: ${err.message}`);
+  if (global.backendProcesses.focusMode) {
+    kill(global.backendProcesses.focusMode.pid, 'SIGTERM', async (err) => {
+      if (err) console.error(`Error killing Focus Mode Server: ${err.message}`);
       
-      global.backendProcesses.profileBackend = null;
+      global.backendProcesses.focusMode = null;
       
       try {
-        global.backendProcesses.profileBackend = await startProfileBackend();
+        global.backendProcesses.focusMode = await startFocusModeServer();
         
         if (global.mainWindow && !global.mainWindow.isDestroyed()) {
-          global.mainWindow.webContents.send('profile-backend-restarted');
+          global.mainWindow.webContents.send('focus-mode-restarted');
         }
       } catch (error) {
-        console.error(`Failed to restart Profile Backend: ${error.message}`);
+        console.error(`Failed to restart Focus Mode Server: ${error.message}`);
         if (global.mainWindow && !global.mainWindow.isDestroyed()) {
-          global.mainWindow.webContents.send('profile-backend-error', error.message);
+          global.mainWindow.webContents.send('focus-mode-error', error.message);
         }
       }
     });

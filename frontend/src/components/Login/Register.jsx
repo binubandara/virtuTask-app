@@ -72,14 +72,14 @@ function Register() {
     }
   };
 
-  /* CHANGED THE ORDER AND REMOVED SOME FIELDS */ 
   return (
     <div className={styles.registerBody}>
       <div className={styles.registerContainer}>
         <h1>Register Form</h1>
         {error && <div className={styles.errorMessage}>{error}</div>}
-        <form id="registerForm">
-          <div className={styles.formColumn}>
+        
+        <form id="registerForm">{/*<div className={styles.formColumn}>*/}
+          <div className={styles.singleColumn}>
             <label htmlFor="firstname">First Name</label>
             <input 
               type="text" 
@@ -97,106 +97,141 @@ function Register() {
               value={formData.lastname}
               onChange={handleChange}
             />
-
-            <label htmlFor="username">Username</label>
-            <input 
-              type="text" 
-              placeholder="Enter Username" 
-              name="username" 
-              value={formData.username}
-              onChange={handleChange}
-            />
-
-            <label htmlFor="email">Email</label>
-            <input 
-              type="email" 
-              placeholder="Enter Email" 
-              name="email" 
-              value={formData.email}
-              onChange={handleChange}
-            />
-
-            <label htmlFor="dob">Date of Birth</label>
-            <input 
-              type="text" 
-              placeholder="DD-MM-YYYY" 
-              name="dob" 
-              value={formData.dob}
-              onChange={handleChange}
-            />
-
-            <label htmlFor="contact">Contact</label>
-            <input 
-              type="tel" 
-              placeholder="Enter Phone number" 
-              name="contact" 
-              value={formData.contact}
-              onChange={handleChange}
-            />
-
-            <label htmlFor="address">Address</label>
-            <textarea 
-              name="address" 
-              placeholder="Enter Address" 
-              className={styles.textarea}
-              value={formData.address}
-              onChange={handleChange}
-            ></textarea>
-
-            <label htmlFor="pcode">Postal Code</label>
-            <input 
-              type="text" 
-              placeholder="Enter Postal Code" 
-              name="pcode" 
-              value={formData.pcode}
-              onChange={handleChange}
-            />
-
-          <label htmlFor="about">About</label>
-            <textarea 
-              name="about" 
-              placeholder="Enter Description" 
-              className={`${styles.textarea} ${styles.aboutTextarea}`}
-              value={formData.about}
-              onChange={handleChange}
-            ></textarea>
           </div>
 
-            <label htmlFor="gender">Gender</label>
-            <div className={styles.genderOptions}>
-              <label>
+            {/* Two-column section for email/username */}
+            <div className={styles.rowContainer}>
+              <div className={styles.leftColumn}>
+                <label htmlFor="email">Email</label>
                 <input 
-                  type="radio" 
-                  name="gender" 
-                  value="Male" 
-                  checked={formData.gender === "Male"}
+                  type="email" 
+                  placeholder="Enter Email" 
+                  name="email" 
+                  value={formData.email}
                   onChange={handleChange}
-                /> Male
-              </label>
-              <label>
+                />
+              </div>
+              <div className={styles.rightColumn}>
+                <label htmlFor="username">Username</label>
                 <input 
-                  type="radio" 
-                  name="gender" 
-                  value="Female" 
-                  checked={formData.gender === "Female"}
+                  type="text" 
+                  placeholder="Enter Username" 
+                  name="username" 
+                  value={formData.username}
                   onChange={handleChange}
-                /> Female
-              </label>
-              <label>
-                <input 
-                  type="radio" 
-                  name="gender" 
-                  value="Other" 
-                  checked={formData.gender === "Other"}
-                  onChange={handleChange}
-                /> Other
-              </label>
+                />
+              </div>
             </div>
-            <label htmlFor="attachment">Attachments</label>
-            <input type="file" name="resume" />
 
-            <label htmlFor="pic">Professional Picture</label>
-            <input type="file" name="Image" />
+            {/* Two-column section for dob/contact */}
+            <div className={styles.rowContainer}>
+              <div className={styles.leftColumn}>
+                <label htmlFor="dob">Date of Birth</label>
+                <input 
+                  type="date" 
+                  name="dob" 
+                  value={formData.dob}
+                  onChange={handleChange}
+                  className={styles.dateInput}
+                />
+              </div>
+              <div className={styles.rightColumn}>
+                <label htmlFor="contact">Contact</label>
+                <input 
+                  type="tel" 
+                  placeholder="Enter Phone number" 
+                  name="contact" 
+                  value={formData.contact}
+                  onChange={handleChange}
+                />
+              </div>
+            </div>
+
+            {/* Two-column section for address/postal code */}
+            <div className={styles.rowContainer}>
+              <div className={styles.leftColumn}>
+                <label htmlFor="address">Address</label>
+                <textarea 
+                  name="address" 
+                  placeholder="Enter Address" 
+                  className={styles.textarea}
+                  value={formData.address}
+                  onChange={handleChange}
+                ></textarea>
+              </div>
+              <div className={styles.rightColumn}>
+                <label htmlFor="pcode">Postal Code</label>
+                <input 
+                  type="text" 
+                  placeholder="Enter Postal Code" 
+                  name="pcode" 
+                  value={formData.pcode}
+                  onChange={handleChange}
+                />
+              </div>
+            </div>
+
+            {/* Full-width About section */}
+            <div className={styles.singleColumn}>
+              <label htmlFor="about">About</label>
+              <textarea 
+                name="about" 
+                placeholder="Enter Description" 
+                className={`${styles.textarea} ${styles.aboutTextarea}`}
+                value={formData.about}
+                onChange={handleChange}
+              ></textarea>
+            </div>
+            
+            {/* Two-column section for gender/file uploads */}
+            <div className={styles.rowContainer}> {/* Added missing rowContainer */}
+              <div className={styles.leftColumn}>
+                <label htmlFor="gender">Gender</label>
+             
+                  <div className={styles.genderOptions}>
+                    <label>
+                      <span>Male</span>
+                      <input 
+                        type="radio" 
+                        name="gender" 
+                        value="Male" 
+                        checked={formData.gender === "Male"}
+                        onChange={handleChange}
+                      />
+                    </label>
+                    <label>
+                      <span>Female</span>
+                      <input 
+                        type="radio" 
+                        name="gender" 
+                        value="Female" 
+                        checked={formData.gender === "Female"}
+                        onChange={handleChange}
+                      />
+                    </label>
+                    <label>
+                      <span>Other</span>
+                      <input 
+                        type="radio" 
+                        name="gender" 
+                        value="Other" 
+                        checked={formData.gender === "Other"}
+                        onChange={handleChange}
+                      />
+                    </label>
+                  </div>
+              
+            </div>
+
+            <div className={styles.rightColumn}>
+              <label htmlFor="attachment">Attachments</label>
+              <input type="file" name="resume" className={styles.fileInput} />
+              
+              <label htmlFor="pic">Professional Picture</label>
+              <input type="file" name="Image" className={styles.fileInput} />
+            </div>
+          </div>
+
 
           <div className={styles.formButtons}>
             <button type="button" onClick={handleReset} className={styles.formBtn}>Reset</button>
@@ -209,7 +244,7 @@ function Register() {
               {loading ? "Processing..." : "Register"}
             </button>
           </div>
-          {/*
+        {/*
           <div className={styles.googleRegisterSection}>
             <button type="button" className={styles.formBtn}>Sign Up with Google</button>
           </div>*/}
