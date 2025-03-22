@@ -21,7 +21,7 @@ interface ITask extends Document {
   priority: string;
   status: string;
   assignees: {
-    user: mongoose.Types.ObjectId;  // Reference to User model
+    user: string;  // Reference to User model
     status: string;               // Status of the assignee for this task
   }[];
   description: string;
@@ -30,7 +30,7 @@ interface ITask extends Document {
   createdAt: Date;
   updatedAt: Date;
   attachments: IAttachment[];
-  createdBy: mongoose.Types.ObjectId;
+  createdBy: String;
 }
 
 const CommentSchema: Schema = new Schema({
@@ -46,7 +46,7 @@ const TaskSchema: Schema = new Schema({
   priority: { type: String, default: 'Medium' },
   status: { type: String, default: 'Pending' },
   assignees: [{
-    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    user: { type: String, required: true },
     status: { type: String, required: true, default: 'Pending' }
   }],
   description: { type: String, default: '' },
@@ -62,7 +62,7 @@ const TaskSchema: Schema = new Schema({
     fileType: { type: String },
   }],
   createdBy: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: String,
     ref: 'User',
     required: true
   }

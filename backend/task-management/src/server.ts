@@ -1,53 +1,64 @@
-import express from "express";
-import { createServer } from "http";
-import { Server } from "socket.io";
-import cors from "cors";
-import { connectDB } from "./config/database";
-import taskRoutes from "./routes/taskRoutes";
-import projectRoutes from "./routes/projectRoutes";
-import { authMiddleware } from './middleware/auth';
-import { socketHandler } from "./socket/socketHandler";
+import express from 'express';
+import { createServer } from 'http';
+import { Server } from 'socket.io';
+import cors from 'cors';
+import { connectDB } from './config/database';
+import taskRoutes from './routes/taskRoutes';
+import projectRoutes from './routes/projectRoutes';
+import subTaskRoutes from './routes/subTaskRoutes';
+import { authMiddleware } from './middleware/authMiddleware';
+import { socketHandler } from './socket/socketHandler';
 import { errorHandler } from './middleware/errorHandler';
 import dotenv from 'dotenv';
 
-// Load environment variables
 dotenv.config();
 
 const app = express();
 const httpServer = createServer(app);
+
+// Configure Socket.IO
 const io = new Server(httpServer, {
   cors: {
-    origin: process.env.CLIENT_URL || "http://localhost:5000",
-    methods: ["GET", "POST", "PATCH", "DELETE"],
+    origin: process.env.CLIENT_URL?.split(',') || 'http://localhost:3000',
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+    credentials: true
   },
+  connectionStateRecovery: {
+    maxDisconnectionDuration: 120000 // 2 minutes
+  }
 });
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: process.env.CLIENT_URL?.split(',') || 'http://localhost:3000',
+  credentials: true
+}));
 app.use(express.json());
 
-// Store io instance on app
-app.set("io", io);
-
-// Connect to MongoDB
+// Database connection
 connectDB();
-// Apply authMiddleware to ALL routes *before* registering projectRoutes
+
+// Authentication middleware for HTTP routes
 app.use(authMiddleware);
+
+// Store io instance for HTTP routes
+app.set('io', io);
+
 // Routes
-app.use("/api", taskRoutes);
-app.use("/api", projectRoutes);
-// app.use("/api", require("./routes/authRoutes"));
+app.use('/api', taskRoutes);
+app.use('/api', projectRoutes);
+app.use('/api', subTaskRoutes);
 
 // Error handling
 app.use(errorHandler);
 
-// Setup Socket handlers
+// Initialize Socket.IO
 socketHandler(io);
 
-const PORT = process.env.PORT || 5000;
+// Start server
+const PORT = process.env.PORT || 5004;
 httpServer.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 
-// Export io instance
 export { io };

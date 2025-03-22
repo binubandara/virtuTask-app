@@ -1,27 +1,19 @@
 import { Request, Response } from 'express';
-interface MulterRequest extends Request {
-  file?: Express.Multer.File;
-}
-import {Task} from '../models/Task';
+import { Task } from '../models/Task';
 import { Project } from '../models/Project';
 import { v4 as uuidv4 } from 'uuid';
 import mongoose from 'mongoose';
-import multer from 'multer';
-import path from 'path';
-import fs from 'fs';
-import { io } from '../server'; 
-
-
+import { io } from '../server';
 
 // Create new task under a project
 export const createTask = async (req: Request, res: Response): Promise<void> => {
   try {
     console.log('Creating new task:', req.body);
 
-    // Access the user's ID from auth middleware
-    const userId = req.user?.id;
-    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
-      res.status(401).json({ message: 'Unauthorized: User not authenticated' });
+    // Access the employee's ID from auth middleware
+    const employee_id = req.employee_id;
+    if (!employee_id) {
+      res.status(401).json({ message: 'Unauthorized: Employee not authenticated' });
       return;
     }
 
@@ -34,7 +26,7 @@ export const createTask = async (req: Request, res: Response): Promise<void> => 
 
     // Validate required fields from body
     const { name, dueDate, priority, status, assignees, description } = req.body;
-    if (!name || !dueDate) {  // Removed project_id from body validation
+    if (!name || !dueDate) {
       res.status(400).json({ message: 'Name and due date are required' });
       return;
     }
@@ -50,9 +42,9 @@ export const createTask = async (req: Request, res: Response): Promise<void> => 
       if (
         typeof assignee !== 'object' ||
         !assignee.user ||
-        !mongoose.Types.ObjectId.isValid(assignee.user)
+        typeof assignee.user !== 'string'
       ) {
-        res.status(400).json({ message: 'Each assignee must have a valid user ObjectId' });
+        res.status(400).json({ message: 'Each assignee must have a valid user ID' });
         return;
       }
       if (typeof assignee.status !== 'string') {
@@ -78,7 +70,7 @@ export const createTask = async (req: Request, res: Response): Promise<void> => 
       assignees,
       description: description || '',
       project_id, // Now coming from URL params
-      createdBy: new mongoose.Types.ObjectId(userId),
+      createdBy: employee_id,
     });
 
     // Notify assignees via WebSocket
@@ -94,25 +86,23 @@ export const createTask = async (req: Request, res: Response): Promise<void> => 
 };
 
 
-
-
-// Get tasks for a user (where user is creator or assignee)
+// Get tasks for an employee (where employee is creator or assignee)
 export const getTasks = async (req: Request, res: Response): Promise<void> => {
   try {
-    // 1. Get user ID from middleware
-    const userId = req.user?.id;
-    console.log('Fetching tasks for user:', userId);
+    // 1. Get employee ID from middleware
+    const employee_id = req.employee_id;
+    console.log('Fetching tasks for employee:', employee_id);
 
-    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
-      res.status(401).json({ message: 'Invalid user credentials' });
+    if (!employee_id) {
+      res.status(401).json({ message: 'Invalid employee credentials' });
       return;
     }
 
-    // 2. Find tasks where the user is an assignee or the creator
+    // 2. Find tasks where the employee is an assignee or the creator
     const tasks = await Task.find({
       $or: [
-        { 'assignees.user': userId },
-        { createdBy: userId }
+        { 'assignees.user': employee_id },
+        { createdBy: employee_id }
       ]
     });
 
@@ -123,18 +113,15 @@ export const getTasks = async (req: Request, res: Response): Promise<void> => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
-
-
-
 // Get task by ID
 export const getTaskById = async (req: Request, res: Response): Promise<void> => {
   try {
-    // 1. Get user ID from middleware
-    const userId = req.user?.id;
-    console.log('Fetching task for user:', userId);
+    // 1. Get employee ID from middleware
+    const employee_id = req.employee_id;
+    console.log('Fetching task for employee:', employee_id);
 
-    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
-      res.status(401).json({ message: 'Invalid user credentials' });
+    if (!employee_id) {
+      res.status(401).json({ message: 'Invalid employee credentials' });
       return;
     }
 
@@ -148,12 +135,12 @@ export const getTaskById = async (req: Request, res: Response): Promise<void> =>
       return;
     }
 
-    // 4. Check if the user is an assignee of the task or the creator
-    const isAssignee = task.assignees.some((assignee: any) => assignee.user.toString() === userId);
-    const isCreator = task.createdBy.toString() === userId;
+    // 4. Check if the employee is an assignee of the task or the creator
+    const isAssignee = task.assignees.some((assignee: any) => assignee.user === employee_id);
+    const isCreator = task.createdBy === employee_id;
 
     if (!isAssignee && !isCreator) {
-      console.log('User is not authorized to access this task:', req.params.task_id);
+      console.log('Employee is not authorized to access this task:', req.params.task_id);
       res.status(403).json({ message: 'Forbidden: You do not have permission to access this task' });
       return;
     }
@@ -167,15 +154,16 @@ export const getTaskById = async (req: Request, res: Response): Promise<void> =>
   }
 };
 
+
 // Update a task (only the creator can update)
 export const updateTask = async (req: Request, res: Response): Promise<void> => {
   try {
     console.log('Updating task:', req.params.task_id);
 
-    // Access the user's ID from auth middleware
-    const userId = req.user?.id;
-    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
-      res.status(401).json({ message: 'Unauthorized: User not authenticated' });
+    // Access the employee's ID from auth middleware
+    const employee_id = req.employee_id;
+    if (!employee_id) {
+      res.status(401).json({ message: 'Unauthorized: Employee not authenticated' });
       return;
     }
 
@@ -204,9 +192,9 @@ export const updateTask = async (req: Request, res: Response): Promise<void> => 
       if (
         typeof assignee !== 'object' ||
         !assignee.user ||
-        !mongoose.Types.ObjectId.isValid(assignee.user)
+        typeof assignee.user !== 'string'
       ) {
-        res.status(400).json({ message: 'Each assignee must have a valid user ObjectId' });
+        res.status(400).json({ message: 'Each assignee must have a valid user identifier' });
         return;
       }
       if (typeof assignee.status !== 'string') {
@@ -215,13 +203,13 @@ export const updateTask = async (req: Request, res: Response): Promise<void> => 
       }
     }
 
-    // Verify task exists and user is the creator
+    // Verify task exists and employee is the creator
     const task = await Task.findOne({ task_id, project_id });
     if (!task) {
       res.status(404).json({ message: 'Task not found' });
       return;
     }
-    if (task.createdBy.toString() !== userId) {
+    if (task.createdBy !== employee_id) {
       res.status(403).json({ message: 'Forbidden: Only the creator can update this task' });
       return;
     }
@@ -231,15 +219,33 @@ export const updateTask = async (req: Request, res: Response): Promise<void> => 
     task.dueDate = new Date(dueDate);
     task.priority = priority || 'Medium';
     task.status = status || 'Pending';
-    task.assignees = assignees;
     task.description = description || '';
+
+    // Update assignees
+    const updatedAssignees = assignees.map(assignee => ({
+      user: assignee.user,
+      status: assignee.status
+    }));
+
+    task.assignees = task.assignees.filter(existingAssignee =>
+      updatedAssignees.some(updatedAssignee => updatedAssignee.user === existingAssignee.user)
+    );
+
+    updatedAssignees.forEach(updatedAssignee => {
+      const existingAssignee = task.assignees.find(a => a.user === updatedAssignee.user);
+      if (existingAssignee) {
+        existingAssignee.status = updatedAssignee.status;
+      } else {
+        task.assignees.push(updatedAssignee);
+      }
+    });
 
     // Save updated task
     const updatedTask = await task.save();
 
     // Notify assignees via WebSocket
     assignees.forEach((assignee: any) => {
-      io.to(assignee.user).emit('task_updated', updatedTask);
+      io.to(assignee.user.toString()).emit('task_updated', updatedTask);
     });
 
     res.status(200).json(updatedTask);
@@ -248,7 +254,6 @@ export const updateTask = async (req: Request, res: Response): Promise<void> => 
     res.status(500).json({ message: 'Error updating task', error: error.message });
   }
 };
-
 // Get tasks for a project
 export const getTasksByProject = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -256,11 +261,11 @@ export const getTasksByProject = async (req: Request, res: Response): Promise<vo
     const projectId = req.params.project_id;
     console.log('Fetching tasks for project:', projectId);
 
-    // 2. Get user ID from middleware (optional, if you need to verify project access)
-    const userId = req.user?.id;  // Assuming your auth middleware populates req.user
-    console.log('User ID:', userId);
-    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
-      res.status(401).json({ message: 'Invalid user credentials' });
+    // 2. Get employee ID from middleware (optional, if you need to verify project access)
+    const employee_id = req.employee_id;  // Assuming your auth middleware populates req.employee_id
+    console.log('Employee ID:', employee_id);
+    if (!employee_id) {
+      res.status(401).json({ message: 'Invalid employee credentials' });
       return;
     }
 
@@ -293,12 +298,12 @@ export const deleteTask = async (req: Request, res: Response): Promise<void> => 
   try {
     console.log('Deleting task:', req.params.task_id);
 
-    // Get the logged-in user's ID from the request (set by the `authMiddleware`)
-    const userId = req.user?.id;
+    // Get the logged-in employee's ID from the request (set by the `authMiddleware`)
+    const employee_id = req.employee_id;
 
-    // Validate that the user is authenticated
-    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
-      res.status(401).json({ message: 'Unauthorized: User not authenticated' });
+    // Validate that the employee is authenticated
+    if (!employee_id) {
+      res.status(401).json({ message: 'Unauthorized: Employee not authenticated' });
       return;
     }
 
@@ -312,10 +317,10 @@ export const deleteTask = async (req: Request, res: Response): Promise<void> => 
       return;
     }
 
-    // Check if the user is the creator of the task
-    const isCreator = task.createdBy.toString() === userId;
+    // Check if the employee is the creator of the task
+    const isCreator = task.createdBy === employee_id;
     if (!isCreator) {
-      console.log('User is not authorized to delete this task:', req.params.task_id);
+      console.log('Employee is not authorized to delete this task:', req.params.task_id);
       res.status(403).json({ message: 'Forbidden: Only the creator can delete this task' });
       return;
     }
@@ -331,7 +336,7 @@ export const deleteTask = async (req: Request, res: Response): Promise<void> => 
 
     // Notify assignees via WebSocket
     task.assignees.forEach((assignee: any) => {
-      io.to(assignee.user).emit('task_deleted', deletedTask);
+      io.to(assignee.user.toString()).emit('task_deleted', deletedTask);
     });
 
     console.log('Task deleted successfully:', deletedTask);
@@ -342,19 +347,21 @@ export const deleteTask = async (req: Request, res: Response): Promise<void> => 
   }
 };
 
-
-
-
 // Helper function to determine overall task status
 const determineOverallTaskStatus = (assigneeStatuses: string[]): string => {
   if (assigneeStatuses.every(status => status === 'Completed')) {
-      return 'Completed';
+    return 'Completed';
   }
   if (assigneeStatuses.some(status => status === 'In Progress')) {
-      return 'In Progress';
+    return 'In Progress';
   }
   return 'Pending';
-};export const updateAssigneeStatus = async (req: Request, res: Response): Promise<void> => {
+};
+
+
+
+
+export const updateAssigneeStatus = async (req: Request, res: Response): Promise<void> => {
   try {
     const { project_id, task_id } = req.params;
     const { status } = req.body;
@@ -366,8 +373,8 @@ const determineOverallTaskStatus = (assigneeStatuses: string[]): string => {
     }
 
     // Authentication check
-    const userId = req.user?.id;
-    if (!userId) {
+    const employee_id = req.employee_id;
+    if (!employee_id) {
       res.status(401).json({ message: 'Unauthorized' });
       return;
     }
@@ -384,7 +391,7 @@ const determineOverallTaskStatus = (assigneeStatuses: string[]): string => {
     }
 
     // Find assignee in task
-    const assignee = task.assignees.find(a => a.user.toString() === userId);
+    const assignee = task.assignees.find(a => a.user === employee_id);
     if (!assignee) {
       res.status(403).json({ message: 'You are not assigned to this task' });
       return;
@@ -412,30 +419,38 @@ const determineOverallTaskStatus = (assigneeStatuses: string[]): string => {
   }
 };
 
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
 
-// --- Multer Configuration ---
+
+interface MulterRequest extends Request {
+  file?: Express.Multer.File;
+}
+
+// Multer configuration
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-      cb(null, 'uploads/');
+    cb(null, 'uploads/');
   },
   filename: (req, file, cb) => {
-      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-      cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
   }
 });
 
 const upload = multer({
   storage: storage,
   fileFilter: function (req, file, cb) {
-      const filetypes = /jpeg|jpg|png|gif|pdf|doc|docx/;
-      const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
-      const mimetype = filetypes.test(file.mimetype);
+    const filetypes = /jpeg|jpg|png|gif|pdf|doc|docx/;
+    const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = filetypes.test(file.mimetype);
 
-      if (mimetype && extname) {
-          return cb(null, true);
-      } else {
-          cb(new Error('Only images (jpeg, jpg, png, gif), PDFs, and Word documents are allowed!'));
-      }
+    if (mimetype && extname) {
+      return cb(null, true);
+    } else {
+      cb(new Error('Only images (jpeg, jpg, png, gif), PDFs, and Word documents are allowed!'));
+    }
   }
 });
 
@@ -450,8 +465,8 @@ export const uploadFile = [
       }
 
       // 2. Authentication check
-      const userId = req.user?.id;
-      if (!userId) {
+      const employee_id = req.employee_id;
+      if (!employee_id) {
         res.status(401).json({ message: 'Unauthorized' });
         return;
       }
@@ -464,9 +479,9 @@ export const uploadFile = [
       }
 
       // 4. Authorization check (fixed comparison)
-      if (task.createdBy.toString() !== userId) {
-        console.log('Permission denied for user:', userId);
-        console.log('Task creator:', task.createdBy.toString());
+      if (task.createdBy !== employee_id) {
+        console.log('Permission denied for employee:', employee_id);
+        console.log('Task creator:', task.createdBy);
         res.status(403).json({ message: 'Forbidden: Only the task creator can upload attachments' });
         return;
       }
@@ -486,7 +501,7 @@ export const uploadFile = [
 
       // 7. Notify assignees via WebSocket
       task.assignees.forEach((assignee: any) => {
-        io.to(assignee.user).emit('task_attachment_uploaded', {
+        io.to(assignee.user.toString()).emit('task_attachment_uploaded', {
           taskId: task.task_id,
           attachment,
         });
@@ -504,13 +519,15 @@ export const uploadFile = [
   },
 ];
 
+
+
 export const getAttachment = async (req: Request, res: Response): Promise<void> => {
   try {
     const { task_id, attachment_id } = req.params;
-    const userId = req.user?.id; // Get from proper authentication middleware
+    const employee_id = req.employee_id; // Get from proper authentication middleware
 
     // Validate authentication
-    if (!userId) {
+    if (!employee_id) {
       res.status(401).json({ message: 'Unauthorized' });
       return;
     }
@@ -523,12 +540,10 @@ export const getAttachment = async (req: Request, res: Response): Promise<void> 
     }
 
     // Check permissions (using proper ID comparison)
-    const isCreator = task.createdBy.toString() === userId;
-    const isAssignee = task.assignees.some(assignee => 
-      assignee.user.toString() === userId
-    );
+    const isCreator = task.createdBy === employee_id;
+    const isAssignee = task.assignees.some(assignee => assignee.user === employee_id);
 
-    console.log(`Permission check - User: ${userId}, Creator: ${task.createdBy}, Assignees: ${task.assignees.map(a => a.user)}`);
+    console.log(`Permission check - Employee: ${employee_id}, Creator: ${task.createdBy}, Assignees: ${task.assignees.map(a => a.user)}`);
 
     if (!isCreator && !isAssignee) {
       res.status(403).json({ message: 'Forbidden: No access permissions' });
@@ -536,9 +551,7 @@ export const getAttachment = async (req: Request, res: Response): Promise<void> 
     }
 
     // Find attachment
-    const attachment = task.attachments.find(a => 
-      a._id.toString() === attachment_id
-    );
+    const attachment = task.attachments.find(a => a._id.toString() === attachment_id);
 
     if (!attachment) {
       res.status(404).json({ message: 'Attachment not found' });
@@ -551,8 +564,6 @@ export const getAttachment = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
-    
-    
     res.sendFile(attachment.filePath, { root: process.cwd() }, (err) => {
       if (err) console.error('File send error:', err);
     });
@@ -565,7 +576,6 @@ export const getAttachment = async (req: Request, res: Response): Promise<void> 
     });
   }
 };
-
 export const deleteAttachment = async (req: Request, res: Response): Promise<void> => {
   try {
     const { task_id, attachment_id } = req.params;
@@ -577,9 +587,9 @@ export const deleteAttachment = async (req: Request, res: Response): Promise<voi
       return;
     }
 
-    // Check if the user is the task creator
-    const userId = req.user?.id;
-    if (task.createdBy.toString() !== userId) {
+    // Check if the employee is the task creator
+    const employee_id = req.employee_id;
+    if (task.createdBy !== employee_id) {
       res.status(403).json({ message: 'Forbidden: Only the task creator can delete attachments' });
       return;
     }
@@ -608,14 +618,13 @@ export const deleteAttachment = async (req: Request, res: Response): Promise<voi
 
     // Emit socket event for real-time updates
     task.assignees.forEach((assignee: any) => {
-      io.to(assignee.user).emit('task_attachment_deleted', { taskId: task_id, attachmentId: attachment_id });
+      io.to(assignee.user.toString()).emit('task_attachment_deleted', { taskId: task_id, attachmentId: attachment_id });
     });
   } catch (error: any) {
     console.error('Error deleting attachment:', error);
     res.status(500).json({ message: 'Error deleting attachment', error: error.message });
   }
-};
-export const updateAttachment = async (req: Request, res: Response): Promise<void> => {
+};export const updateAttachment = async (req: Request, res: Response): Promise<void> => {
   upload.single('file')(req, res, async (err) => {
     try {
       if (err) {
@@ -633,9 +642,9 @@ export const updateAttachment = async (req: Request, res: Response): Promise<voi
         return;
       }
 
-      // Check if the user is the task creator
-      const userId = req.user?.id;
-      if (task.createdBy.toString() !== userId) {
+      // Check if the employee is the task creator
+      const employee_id = req.employee_id;
+      if (task.createdBy !== employee_id) {
         res.status(403).json({ message: 'Forbidden: Only the task creator can update attachments' });
         return;
       }
@@ -670,7 +679,7 @@ export const updateAttachment = async (req: Request, res: Response): Promise<voi
 
       // Emit socket event for real-time updates
       task.assignees.forEach((assignee: any) => {
-        io.to(assignee.user).emit('task_attachment_updated', { taskId: task_id, attachment: attachment });
+        io.to(assignee.user.toString()).emit('task_attachment_updated', { taskId: task_id, attachment: attachment });
       });
     } catch (error: any) {
       console.error('Error updating attachment:', error);
@@ -678,5 +687,3 @@ export const updateAttachment = async (req: Request, res: Response): Promise<voi
     }
   });
 };
-
-

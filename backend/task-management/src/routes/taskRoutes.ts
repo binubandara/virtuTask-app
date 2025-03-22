@@ -1,50 +1,21 @@
-import express from 'express';
-import {
-  createTask,
-  getTasks,
-  getTaskById,
-  updateTask,
-  deleteTask,
-  getTasksByProject,
-  updateAssigneeStatus,
-  uploadFile,
-  getAttachment,
-  deleteAttachment,
-  updateAttachment
-} from '../controllers/taskController';
-import { authMiddleware } from '../middleware/auth'; 
+import { Router } from 'express';
+import { getTaskById, createTask, updateTask, deleteTask, getTasksByProject, getTasks, updateAssigneeStatus, uploadFile, getAttachment, deleteAttachment, updateAttachment } from '../controllers/taskController';
 
-const router = express.Router();
+const router = Router();
 
+// Define the route for getting a task by ID
+router.get('/projects/:project_id/tasks/:task_id', getTaskById);
 
-
-// Task CRUD operations
-router.post('/projects/:project_id/tasks', authMiddleware, createTask);
-router.get('/projects/my-tasks', authMiddleware,getTasks);
-router.get('/projects/tasks/:task_id', authMiddleware,getTaskById);
-router.patch('/projects/:project_id/tasks/:task_id', authMiddleware,updateTask);
-router.delete('/projects/:project_id/tasks/:task_id', authMiddleware, deleteTask);
-
-// // Project-specific tasks
-router.get('/projects/:project_id/tasks', authMiddleware,getTasksByProject);
-
-// // Assignee Status Update
-router.patch('/:projects/:project_id/tasks/:task_id/assignee-status', authMiddleware, updateAssigneeStatus);
-
-// // File Upload and Attachment Routes
-router.post('/projects/:project_id/tasks/:task_id/attachments', authMiddleware,uploadFile);
-router.get('/projects/:project_id/tasks/:task_id/attachments/:attachment_id', authMiddleware,getAttachment);
-router.delete('/projects/:project_id/tasks/:task_id/attachments/:attachment_id',authMiddleware, deleteAttachment);
-router.patch('/projects/:project_id/tasks/:task_id/attachments/:attachment_id', authMiddleware,updateAttachment);
-
+// Other task routes
+router.post('/projects/:project_id/tasks', createTask);
+router.patch('/projects/:project_id/tasks/:task_id', updateTask);
+router.delete('/projects/:project_id/tasks/:task_id', deleteTask);
+router.get('/projects/:project_id/tasks', getTasksByProject);
+router.get('/my-tasks', getTasks);
+router.patch('/projects/:project_id/tasks/:task_id/assignee-status', updateAssigneeStatus);
+router.post('/projects/:project_id/tasks/:task_id/upload', uploadFile);
+router.get('/projects/:project_id/tasks/:task_id/attachments/:attachment_id', getAttachment);
+router.delete('/projects/:project_id/tasks/:task_id/attachments/:attachment_id', deleteAttachment);
+router.patch('/projects/:project_id/tasks/:task_id/attachments/:attachment_id', updateAttachment);
 
 export default router;
-
-
-
-
-
-
-
-
-
