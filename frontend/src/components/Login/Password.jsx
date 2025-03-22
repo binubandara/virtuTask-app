@@ -54,13 +54,15 @@ function Password() {
     setLoading(true);
     
     try {
-      // Prepare data for API
+      // Prepare data for API - Set a default role since it's no longer collected in the form
       const userData = {
         username: registerData.username,
         email: registerData.email,
         password: passwords.password,
-        role: registerData.role.toLowerCase() // Convert to match backend enum
+        role: "user" // Default to 'user' role since it's required by the backend
       };
+      
+      console.log("Sending registration data:", userData);
       
       // Make API call to register user
       const response = await axios.post("/api/auth/register", userData);
@@ -80,7 +82,7 @@ function Password() {
           gender: registerData.gender,
           address: registerData.address,
           pcode: registerData.pcode,
-          about: registerData.about
+          about: registerData.about || "" // Make sure about is at least an empty string
         }, {
           headers: {
             'Authorization': `Bearer ${response.data.token}`
@@ -98,6 +100,7 @@ function Password() {
       // Redirect to dashboard
       navigate("/dashboard");
     } catch (error) {
+      console.error("Registration error:", error);
       setError(error.response?.data?.message || "Registration failed. Please try again.");
     } finally {
       setLoading(false);

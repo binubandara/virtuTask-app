@@ -2,22 +2,21 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './Register.module.css';
-import axios from '../axiosConfig'; // Import the configured axios
 
+/* CHANGED THE ORDER AND REMOVED SOME FIELDS */ 
 function Register() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     firstname: '',
     lastname: '',
-    username: '',
     email: '',
+    username: '',
     contact: '',
-    dob: '',
-    gender: '',
     address: '',
     pcode: '',
-    role: 'employee',
-    about: ''
+    about: '',
+    gender: '',
+    dob: ''  
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -30,20 +29,20 @@ function Register() {
     });
   };
 
+  /* CHANGED THE ORDER AND REMOVED SOME FIELDS */ 
   const handleReset = () => {
     if (window.confirm("Are you sure you want to reset the form?")) {
       setFormData({
         firstname: '',
         lastname: '',
-        username: '',
         email: '',
+        username: '',
         contact: '',
-        dob: '',
-        gender: '',
         address: '',
         pcode: '',
-        role: 'employee',
-        about: ''
+        about: '',
+        gender: '',
+        dob: ''  
       });
       setError('');
     }
@@ -73,6 +72,7 @@ function Register() {
     }
   };
 
+  /* CHANGED THE ORDER AND REMOVED SOME FIELDS */ 
   return (
     <div className={styles.registerBody}>
       <div className={styles.registerContainer}>
@@ -116,6 +116,15 @@ function Register() {
               onChange={handleChange}
             />
 
+            <label htmlFor="dob">Date of Birth</label>
+            <input 
+              type="text" 
+              placeholder="DD-MM-YYYY" 
+              name="dob" 
+              value={formData.dob}
+              onChange={handleChange}
+            />
+
             <label htmlFor="contact">Contact</label>
             <input 
               type="tel" 
@@ -125,14 +134,33 @@ function Register() {
               onChange={handleChange}
             />
 
-            <label htmlFor="dob">Date of Birth</label>
+            <label htmlFor="address">Address</label>
+            <textarea 
+              name="address" 
+              placeholder="Enter Address" 
+              className={styles.textarea}
+              value={formData.address}
+              onChange={handleChange}
+            ></textarea>
+
+            <label htmlFor="pcode">Postal Code</label>
             <input 
               type="text" 
-              placeholder="DD-MM-YYYY" 
-              name="dob" 
-              value={formData.dob}
+              placeholder="Enter Postal Code" 
+              name="pcode" 
+              value={formData.pcode}
               onChange={handleChange}
             />
+
+          <label htmlFor="about">About</label>
+            <textarea 
+              name="about" 
+              placeholder="Enter Description" 
+              className={`${styles.textarea} ${styles.aboutTextarea}`}
+              value={formData.about}
+              onChange={handleChange}
+            ></textarea>
+          </div>
 
             <label htmlFor="gender">Gender</label>
             <div className={styles.genderOptions}>
@@ -164,51 +192,11 @@ function Register() {
                 /> Other
               </label>
             </div>
-
-            <label htmlFor="address">Address</label>
-            <textarea 
-              name="address" 
-              placeholder="Enter Address" 
-              className={styles.textarea}
-              value={formData.address}
-              onChange={handleChange}
-            ></textarea>
-
-            <label htmlFor="pcode">Postal Code</label>
-            <input 
-              type="text" 
-              placeholder="Enter Postal Code" 
-              name="pcode" 
-              value={formData.pcode}
-              onChange={handleChange}
-            />
-
-            <label htmlFor="role">Role</label>
-            <select 
-              name="role"
-              value={formData.role}
-              onChange={handleChange}
-            >
-              <option value="employee">Employee</option>
-              <option value="manager">Manager</option>
-              <option value="cbo">CBO</option>
-            </select>
-
             <label htmlFor="attachment">Attachments</label>
             <input type="file" name="resume" />
 
             <label htmlFor="pic">Professional Picture</label>
             <input type="file" name="Image" />
-
-            <label htmlFor="about">About</label>
-            <textarea 
-              name="about" 
-              placeholder="Enter Description" 
-              className={`${styles.textarea} ${styles.aboutTextarea}`}
-              value={formData.about}
-              onChange={handleChange}
-            ></textarea>
-          </div>
 
           <div className={styles.formButtons}>
             <button type="button" onClick={handleReset} className={styles.formBtn}>Reset</button>
@@ -221,10 +209,10 @@ function Register() {
               {loading ? "Processing..." : "Register"}
             </button>
           </div>
-
+          {/*
           <div className={styles.googleRegisterSection}>
             <button type="button" className={styles.formBtn}>Sign Up with Google</button>
-          </div>
+          </div>*/}
         </form>
       </div>
     </div>

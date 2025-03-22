@@ -47,10 +47,10 @@ function Login() {
   return (
     <div className={styles.container}>
       <div className={styles.leftSection}>
-        <img src="/login-left.jpg" alt="Background" />
+        <img src="/5790570.jpg" alt="Background" />
         <div className={styles.leftContent}>
-          <h1>Welcome Back</h1>
-          <p>Sign in to continue to your account</p>
+          <h1>Streamline your remote work</h1>
+          <p>Start for free and experience smarter, more connected work....</p>
         </div>
       </div>
 
@@ -106,14 +106,6 @@ function Login() {
             onClick={() => navigate("/register")}
           >
             Register
-          </button>
-
-          <div className={styles.orDivider}>
-            <hr /><span>OR</span><hr />
-          </div>
-
-          <button className={styles.googleBtn}>
-            Sign in with Google
           </button>
         </div>
       </div>
