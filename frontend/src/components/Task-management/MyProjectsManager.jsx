@@ -18,18 +18,40 @@ const pencilSVG = (
 );
 
 
-function MyProjectsManager() {  // Removed props destructuring
+function MyProjectsManager() {
   const navigate = useNavigate();
   const [showForm, setShowForm] = useState(false);
   const [editingProject, setEditingProject] = useState(null);
   const [selectedProjectId, setSelectedProjectId] = useState(null);
+  const [sortBy, setSortBy] = useState('default'); // Add this line
   const colorPalette = ["#ffc8dd", "#bde0fe", "#a2d2ff", "#94d2bd","#e0b1cb","#adb5bd","#98f5e1","#f79d65","#858ae3","#c2dfe3","#ffccd5","#e8e8e4","#fdffb6","#f1e8b8","#d8e2dc","#fff0f3","#ccff66"];
 
-  // State initialization with localStorage
+  // Fix projects initialization
   const [projects, setProjects] = useState(() => {
-    const saved = localStorage.getItem('projects');
-    return saved ? JSON.parse(saved) : [];
+    try {
+      const saved = localStorage.getItem('projects');
+      return saved ? JSON.parse(saved) : [];
+    } catch (error) {
+      console.error('Error loading projects:', error);
+      return [];
+    }
   });
+
+  const sortProjects = (projects) => {
+    switch(sortBy) {
+      case 'a-z':
+        return [...projects].sort((a, b) => 
+          a.projectname.localeCompare(b.projectname));
+      case 'month':
+        return [...projects].sort((a, b) => 
+          new Date(a.dueDate) - new Date(b.dueDate));
+      case 'year':
+        return [...projects].sort((a, b) => 
+          new Date(a.dueDate).getFullYear() - new Date(b.dueDate).getFullYear());
+      default:
+        return projects;
+    }
+  };
 
   // Save to localStorage whenever projects change
   useEffect(() => {
@@ -156,19 +178,15 @@ function MyProjectsManager() {  // Removed props destructuring
 
         <div className="toolbar">
           <div className="dropdowns">
-            <select className="dropdown">
-              <option>Sort</option>
-              <option>A - Z</option>
-              <option>Month</option>
-              <option>Year</option>
-            </select>
-
-            <select className="dropdown" name="Status">
-              <option>Status</option>
-              <option>All</option>
-              <option>Completed</option>
-              <option>On Hold</option>
-              <option>Started</option>
+            <select 
+              className="dropdown"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+            >
+              <option value="default">Sort</option>
+              <option value="a-z">A - Z</option>
+              <option value="month">Month</option>
+              <option value="year">Year</option>
             </select>
           </div>
 
@@ -181,7 +199,8 @@ function MyProjectsManager() {  // Removed props destructuring
         </div>
 
         <div className="project-tiles">
-          {projects.map((project) => {
+          
+        {sortProjects(projects).map((project) =>  {
             const dueDisplay = getDueDateDisplay(project.dueDate);
             return (
               <div 
