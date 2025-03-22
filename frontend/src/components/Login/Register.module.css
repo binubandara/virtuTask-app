@@ -1,0 +1,103 @@
+/* Register.module.css */
+
+.registerBody {
+  background: rgb(214, 212, 212);
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 0;
+}
+
+.registerContainer {
+  background-color: #fff;
+  border-radius: 25px;
+  padding: 35px 30px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+  width: 90%;
+  max-width: 650px;
+  margin: 30px 0;
+}
+
+.registerContainer h1 {
+  font-size: x-large;
+  text-align: center;
+  color: #805db7;
+  margin-bottom: 20px;
+}
+
+.formColumn {
+  display: flex;
+  flex-direction: column;
+}
+
+.registerContainer label {
+  font-size: 15px;
+  font-weight: bold;
+  color: #555;
+  margin-top: 15px;
+  margin-bottom: 5px;
+}
+
+.formColumn input, 
+.formColumn select, 
+.formColumn textarea {
+  width: 90%;
+  max-width: 450px;
+  padding: 12px;
+  border-radius: 15px;
+  border: 1px solid #ccc;
+  margin-bottom: 5px;
+}
+
+.textarea {
+  height: 100px;
+  resize: vertical;
+}
+
+.aboutTextarea {
+  height: 120px;
+}
+
+/* Gender options styles */
+.genderOptions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin: 10px 0;
+}
+
+.genderOptions label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 5px;
+}
+
+.formButtons {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  margin-top: 25px;
+}
+
+.formBtn {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  background: #358bcd;
+  color: white;
+  border: none;
+  cursor: pointer;
+  border-radius: 15px;
+  transition: background 0.3s ease;
+}
+
+.formBtn:hover {
+  background: #1d98c1;
+}
+
+.googleRegisterSection {
+  margin-top: 15px;
+}
