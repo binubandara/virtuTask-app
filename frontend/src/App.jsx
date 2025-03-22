@@ -29,6 +29,7 @@ function App() {
                 <Route path="/Project-form" element={<ProjectForm />} />
                 <Route path="/task-manager/:projectId" element={<TaskManage projects={projects} setProjects={setProjects} />} /> {/* Fixed route */}
                 <Route path="/TaskForm" element={<TaskForm />} />
+                <Route path="/task-info" element={<TaskInformation />} />
                 <Route path="/task-manager/:projectId/:taskId?" element={<TaskManage projects={projects} setProjects={setProjects} />} />
                 <Route path="/health-habit" element={<HealthHabit />} />
                 <Route path="/habit-info" element={<HabitInfo />} />

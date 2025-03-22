@@ -78,12 +78,12 @@ function MyProjectsManager() {  // Removed props destructuring
   })();
 
   const createProject = (formData) => ({
-    ...formData, // Spread formData first
-    id: Date.now(), // Ensure id is set after, overriding any formData id
+    id: Date.now(),
+    ...formData,
     color: getRandomColor(),
-    priority: formData.priority
+    priority: formData.priority,
+    members: formData.members || [] // Add members array
   });
-
   
   const truncateText = (text, maxLength = 50) => 
     text.length > maxLength ? `${text.substring(0, maxLength)}...` : text;
@@ -245,7 +245,10 @@ function MyProjectsManager() {  // Removed props destructuring
                     <h4>{truncateText(project.department, 20)}</h4>
                   </div>
                 </div>
-                <p>{truncateText(project.description)}</p>
+                <div className="project-description">
+                  <p>{truncateText(project.description)}</p>
+                </div>
+                
                 
                 {dueDisplay.text && (
                   <button 

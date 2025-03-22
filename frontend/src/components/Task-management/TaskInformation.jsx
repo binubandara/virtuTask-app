@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react';
 import './TaskInformation.css';
 import EmojiPicker from 'emoji-picker-react';
 
-const MAX_FILE_SIZE = 1073741824; // 1GB in bytes
-
 const MemberIcon = ({ member }) => {
   const firstLetter = member.charAt(0).toUpperCase();
   const colorPalette = ["#ffc8dd", "#bde0fe", "#a2d2ff", "#94d2bd","#e0b1cb","#adb5bd","#98f5e1","#f79d65","#858ae3","#c2dfe3","#ffccd5","#e8e8e4","#fdffb6","#f1e8b8","#d8e2dc","#fff0f3","#ccff66"];
@@ -21,7 +19,6 @@ const TaskInformation = ({ task, onClose, isFromMyProjects, currentUser, onUpdat
   const [commentText, setCommentText] = useState('');
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [description, setDescription] = useState('');
-  const [attachments, setAttachments] = useState([]);
   const [comments, setComments] = useState([]);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
@@ -30,7 +27,6 @@ const TaskInformation = ({ task, onClose, isFromMyProjects, currentUser, onUpdat
 
   useEffect(() => {
     setDescription(task?.description || '');
-    setAttachments(task?.attachments || []);
     setComments(task?.comments || []);
   }, [task]);
 
@@ -39,62 +35,14 @@ const TaskInformation = ({ task, onClose, isFromMyProjects, currentUser, onUpdat
       onUpdateTask({
         ...task,
         description,
-        attachments,
         comments
       });
     }
-  }, [description, attachments, comments]);
+  }, [description, comments]);
 
   const handleEmojiClick = (emojiObject) => {
     setCommentText(prev => prev + emojiObject.emoji);
     setShowEmojiPicker(false);
-  };
-
-  const handleDeleteAttachment = (attachmentId) => {
-    if (window.confirm('Are you sure you want to delete this file?')) {
-      setAttachments(prev => {
-        const updated = prev.filter(a => a.id !== attachmentId);
-        try {
-          onUpdateTask({
-            ...task,
-            attachments: updated
-          });
-        } catch (error) {
-          console.error('Delete error:', error);
-          alert('Error removing file. Please try again.');
-        }
-        return updated;
-      });
-    }
-  };
-
-  const getFileIcon = (fileName) => {
-    const ext = fileName.split('.').pop().toLowerCase();
-    const icons = {
-      pdf: '📄',
-      doc: '📝',
-      docx: '📝',
-      jpg: '🖼️',
-      jpeg: '🖼️',
-      png: '🖼️',
-      zip: '📦',
-      mp3: '🎵',
-      mp4: '🎥',
-      txt: '📃',
-      xls: '📊',
-      xlsx: '📊',
-      ppt: '📑',
-      pptx: '📑'
-    };
-    return icons[ext] || '📎';
-  };
-
-  const formatFileSize = (bytes) => {
-    if (bytes === 0) return '0 B';
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   };
 
   const handleAddComment = () => {
@@ -125,65 +73,6 @@ const TaskInformation = ({ task, onClose, isFromMyProjects, currentUser, onUpdat
     }
   };
 
-  
-
-  const handleFileUpload = async (e) => { // Added async here
-    if (!isFromMyProjects) {
-      const files = Array.from(e.target.files);
-      const validFiles = [];
-      const invalidFiles = [];
-  
-      // Check file sizes first
-      files.forEach(file => {
-        if (file.size > MAX_FILE_SIZE) {
-          invalidFiles.push(file.name);
-        } else {
-          validFiles.push(file);
-        }
-      });
-  
-      // Show alerts for invalid files
-      if (invalidFiles.length > 0) {
-        alert(`These files exceed 1GB: ${invalidFiles.join(', ')}`);
-      }
-  
-      // Process valid files
-      if (validFiles.length > 0) {
-        try {
-          // Create all attachments first
-          const newAttachments = await Promise.all(
-            validFiles.map(file => new Promise((resolve) => {
-              const reader = new FileReader();
-              reader.onload = (e) => {
-                resolve({
-                  id: Date.now(),
-                  name: file.name,
-                  url: e.target.result,
-                  size: file.size,
-                  type: file.type,
-                  lastModified: file.lastModified
-                });
-              };
-              reader.readAsDataURL(file);
-            }))
-          );
-  
-          // Update state once with all new attachments
-          setAttachments(prev => {
-            const updatedAttachments = [...prev, ...newAttachments];
-            onUpdateTask({
-              ...task,
-              attachments: updatedAttachments
-            });
-            return updatedAttachments;
-          });
-        } catch (error) {
-          console.error('File processing error:', error);
-          alert('Error processing files. Please try again.');
-        }
-      }
-    }
-  };
   if (!task) return null;
 
   return (
@@ -294,7 +183,6 @@ const TaskInformation = ({ task, onClose, isFromMyProjects, currentUser, onUpdat
       </div>
       </div>
 
-      {/* Updated Description Section */}
       <div className="task-info-description-section">
         <h4 className="task-info-section-title">Description</h4>
         {isFromMyProjects ? (
@@ -302,58 +190,14 @@ const TaskInformation = ({ task, onClose, isFromMyProjects, currentUser, onUpdat
         ) : (
           <textarea
             className="task-info-description-textarea"
-            value={description} // Use local state
-            onChange={(e) => setDescription(e.target.value)} // Add onChange handler
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
             placeholder="No description available"
           />
         )}
       </div>
-    {/* Attachments Section */}
-    <div className="task-info-attachments-section">
-        <div className="task-info-attachments-header">
-          <h4 className="task-info-section-title">Attachments</h4>
-          {!isFromMyProjects && (
-            <label className="attachment-upload-btn">
-              <span>+</span>
-              <input 
-                type="file" 
-                onChange={handleFileUpload}
-                multiple 
-                style={{ display: 'none' }}
-              />
-            </label>
-          )}
-        </div>
-        <div className="attachments-list">
-          {attachments.map((file) => (
-            <div key={file.id} className="attachment-item">
-              <a 
-                href={file.url} 
-                download={file.name}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="attachment-content"
-              >
-                <span className="file-icon">{getFileIcon(file.name)}</span>
-                <div className="file-details">
-                  <span className="file-name">{file.name}</span>
-                  <span className="file-size">{formatFileSize(file.size)}</span>
-                </div>
-              </a>
-              {!isFromMyProjects && (
-                <button className="delete-attachment-btn"
-                  onClick={() => handleDeleteAttachment(file.id)}
-                >
-                  ×
-                </button>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
 
-     {/* Comments Section */}
-      <div className="task-info-comments-section">
+     <div className="task-info-comments-section">
         <div className="task-info-comments-header">
           <h4 className="task-info-section-title">Comments</h4>
         </div>
