@@ -107,7 +107,7 @@ function Password() {
   return (
     <div className={styles.container}>
       <div className={styles.leftSection}>
-        <img src="/login-left.jpg" alt="Background" />
+        <img src="/5790570.jpg" alt="Background" />
         <div className={styles.leftContent}>
           <h1>Secure Your Account</h1>
           <p>Set a password to protect your account</p>
