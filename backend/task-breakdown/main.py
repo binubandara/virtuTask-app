@@ -13,6 +13,9 @@ from google.ai.generativelanguage import GenerateContentResponse
 import json
 import re
 import uuid
+from auth import auth_middleware
+from typing import List, Dict, Optional
+from pydantic import BaseModel
 
 load_dotenv()
 
@@ -53,9 +56,13 @@ class SubTask(BaseModel):
     time_estimate: str
 
 class TaskAnalysis(BaseModel):
+    user_id: str # Add user_id
+    project_id: str  # Add project_id
+    
     task_id: str
     task: str
     subtasks: List[SubTask]
+    
 
 class TaskRequest(BaseModel):
     task_id: str
@@ -77,9 +84,17 @@ class ChatResponse(BaseModel):
     conversation_id: str
     gemini_response: str
 
-class Conversation(BaseModel):
+class Message(BaseModel):
+    user: str
+    message: str
+
+class SingleConversation(BaseModel):
     conversation_id: str
-    messages: List[Dict[str, str]] # List of messages in that conversation
+    messages: List[Message]
+
+class Conversation(BaseModel):
+    user_id: str
+    conversations: List[SingleConversation]
 
 
 # Helper Functions
@@ -97,7 +112,7 @@ def check_rate_limit(client_ip: str):
 
 async def analyze_with_ai(task_name: str, description: str, priority: str, due_date: str) -> str:  # Modified function signature
     try:
-        model = genai.GenerativeModel('gemini-pro')
+        model = genai.GenerativeModel('gemini-2.0-flash')
 
         prompt = f"""You are a project management expert. Analyze the following task, considering its priority, due date, and description, and break it down into detailed steps with time estimates. Be specific and practical.
 
@@ -138,14 +153,12 @@ async def calculate_priority_score(task: str, deadline: Optional[datetime], prio
 
     return min(base_score, 100)
 
-async def chat_with_gemini(user_message: str, conversation_history_list: List[Dict[str, str]]):
+async def chat_with_gemini(user_message: str):
     try:
-        model = genai.GenerativeModel('gemini-pro')
-        context = "\n".join([f"{msg['user']}: {msg['message']}" for msg in conversation_history_list])
+        model = genai.GenerativeModel('gemini-2.0-flash')
+        #context = "\n".join([f"{msg['user']}: {msg['message']}" for msg in conversation_history_list])
 
-        prompt = f"""You are a helpful chatbot.
-            Respond to the user's message based on the conversation history.  Do not include information that is not in the user's question.
-            Conversation History:\n{context}\n
+        prompt = f"""You are a helpful chatbot. Respond to the user's message.  Do not include information that is not in the user's question.
             User Message: {user_message}"""
 
         response: GenerateContentResponse = model.generate_content(prompt)
@@ -176,14 +189,18 @@ async def store_message(conversation_id: str, user: str, message: str):
         upsert=True,  # Creates the conversation if it doesn't exist
     )
 # API Endpoints
-@app.post("/api/analyze-task")
-async def analyze_task(task_request: TaskRequest, request: Request):
+@app.post("/projects/{project_id}/tasks/{task_id}/analyze-task")
+async def analyze_task(request: Request, project_id: str, task_id: str, user_id: str = Depends(auth_middleware)):
     client_ip = request.client.host
     check_rate_limit(client_ip)
 
     try:
-        task_id = task_request.task_id.strip()
+        project_id = project_id.strip()
+        project_id_str = str(project_id)
+        task_id = task_id.strip()
         task_id_str = str(task_id)
+        print(f"Processing task {task_id_str} for project {project_id_str} (user: {user_id})")
+
 
         print(f"Received task_id: {task_id_str}")
 
@@ -213,26 +230,36 @@ async def analyze_task(task_request: TaskRequest, request: Request):
         print(f"Raw AI Analysis: {ai_analysis_text}")
 
         try:
-            # 1. Remove code fences
-            ai_analysis_text = ai_analysis_text.replace("```json", "").replace("```", "")
+            # Define the sanitize_json_string function HERE (insert the whole function definition)
+            def sanitize_json_string(json_string: str) -> str:
+                # Replace control characters and escape special JSON characters
+                json_string = re.sub(r"[\x00-\x1F]", "", json_string)  # Remove control characters
 
-            # 2. Sanitize: Replace single quotes with double quotes (carefully)
-            ai_analysis_text = re.sub(r"(\S)'(\S)", r'\1"\2', ai_analysis_text)
+                # Escape backslashes, double quotes, and single quotes
+                json_string = json_string.replace("\\", "\\\\")  # Escape backslashes
+                json_string = json_string.replace("\"", "\\\"")  # Escape double quotes
+                json_string = json_string.replace("'", "\\'")  # Escape single quotes, needed for the "s"
 
-
+                return json_string
             # 3. Attempt to parse, catching common errors
+
+            # Remove Markdown code block
+            ai_analysis_text = ai_analysis_text.replace("```json", "").replace("```", "")
+            ai_analysis_text = ai_analysis_text.strip()  # Remove leading/trailing whitespace
+
             try:
                 ai_analysis_json = json.loads(ai_analysis_text)
             except json.JSONDecodeError as e:
-                print(f"JSONDecodeError after sanitization: {e}")
+                print(f"JSONDecodeError after removing markdown and sanitization: {e}")
                 # Attempt more aggressive cleaning if needed
                 # Remove any characters that aren't valid in JSON
                 ai_analysis_text = re.sub(r'[^\x20-\x7F]+', '', ai_analysis_text)  # Remove non-ASCII characters
                 try:
                     ai_analysis_json = json.loads(ai_analysis_text) # try again
-                except:
+                except json.JSONDecodeError as e:
                     raise HTTPException(status_code=500, detail=f"Failed to parse Gemini response as JSON even after aggressive cleaning: {e}. Raw response: {ai_analysis_text}")
-
+                except Exception as e:
+                    raise HTTPException(status_code=500, detail=f"Unexpected error while cleaning and parsing JSON: {e}")
 
 
             print(f"Parsed AI Analysis JSON: {ai_analysis_json}")
@@ -250,7 +277,9 @@ async def analyze_task(task_request: TaskRequest, request: Request):
             task_analysis = TaskAnalysis(
                 task_id = task_id_str,  # ADD THIS LINE
                 task = ai_analysis_json.get("task", "No Task"),
-                subtasks = steps
+                subtasks = steps,
+                project_id = project_id_str, # ADD THIS LINE
+                user_id = user_id # ADD THIS LINE
             )
             task_analyses_collection = db["task_analyses"]
             await task_analyses_collection.insert_one(task_analysis.dict())
@@ -275,24 +304,54 @@ async def get_task_analysis(task_id: str):
     return TaskAnalysis(**task_analysis)
 
 @app.post("/api/chat", response_model=ChatResponse)
-async def chat(chat_request: ChatRequest):
+async def chat(
+    chat_request: ChatRequest,
+    user_id: str = Depends(auth_middleware)  # Get the user ID
+):
     user_message = chat_request.user_message.strip()
     conversation_id = chat_request.conversation_id or str(uuid.uuid4())  # Generate a new ID if none
-    conversation_history_list = await get_conversation_history(conversation_id)
 
-    gemini_response = await chat_with_gemini(user_message, conversation_history_list)
+    gemini_response = await chat_with_gemini(user_message)
 
-    await store_message(conversation_id, "user", user_message)
-    await store_message(conversation_id, "gemini", gemini_response)
+    # Structure for the message
+    new_message = {"user": "user", "message": user_message}
+    new_gemini_message = {"user": "gemini", "message": gemini_response}
+    
+    # Structure for the conversation
+    new_single_conversation = SingleConversation(
+        conversation_id=conversation_id,
+        messages=[
+            Message(user="user", message=user_message),
+            Message(user="gemini", message=gemini_response),
+        ],
+    )
+
+    # Find if a document exists for this user
+    conversation = await db["conversations"].find_one({"user_id": user_id})
+
+    # If the user has no previous conversations, create a new document
+    if not conversation:
+        new_conversation = Conversation(
+            user_id=user_id,
+            conversations=[new_single_conversation],
+        )
+        await db["conversations"].insert_one(new_conversation.dict())
+
+    # If the user already has conversations, add this one to the existing document
+    else:
+        await db["conversations"].update_one(
+            {"user_id": user_id},
+            {"$push": {"conversations": new_single_conversation.dict()}},
+        )
 
     return ChatResponse(conversation_id=conversation_id, gemini_response=gemini_response)
 
 #New GET route for conversations
-@app.get("/api/conversations/{conversation_id}", response_model=Conversation)
-async def get_conversation(conversation_id: str):
-    conversation = await db["conversations"].find_one({"conversation_id": conversation_id})
+@app.get("/api/conversations/{user_id}", response_model=Conversation)
+async def get_conversations(user_id: str):
+    conversation = await db["conversations"].find_one({"user_id": user_id})
     if conversation is None:
-        raise HTTPException(status_code=404, detail="Conversation not found")
+        raise HTTPException(status_code=404, detail="Conversations not found")
     return Conversation(**conversation)
 
 
