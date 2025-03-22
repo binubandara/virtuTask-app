@@ -1,5 +1,5 @@
 {
-  "name": "productivity-tracker",
+  "name": "virtutask",
   "private": true,
   "version": "1.0.0",
   "type": "commonjs",
@@ -54,8 +54,8 @@
     "wait-on": "^7.2.0"
   },
   "build": {
-    "appId": "com.productivity.tracker",
-    "productName": "Productivity Tracker",
+    "appId": "com.virtutask",
+    "productName": "VirtuTask",
     "files": [
       "dist/**/*",
       "electron/**/*"
@@ -68,6 +68,33 @@
       {
         "from": "../backend/productivity-tracker/.env",
         "to": "backend/.env"
+      },
+      {
+        "from": "../backend/loginPage",
+        "to": "backend/loginPage",
+        "filter": ["**/*", "!node_modules/**/*"]
+      },
+      {
+        "from": "../backend/loginPage/.env",
+        "to": "../backend/loginPage/.env"
+      },
+      {
+        "from": "../backend/engagement-hub",
+        "to": "backend/engagement-hub",
+        "filter": ["**/*", "!node_modules/**/*"]
+      },
+      {
+        "from": "../backend/engagement-hub/.env",
+        "to": "backend/engagement-hub/.env"
+      },
+      {
+        "from": "../backend/focus-mode",
+        "to": "backend/focus-mode",
+        "filter": ["**/*", "!node_modules/**/*"]
+      },
+      {
+        "from": "../backend/focus-mode/.env",
+        "to": "backend/focus-mode/.env"
       }
     ],
     "win": {

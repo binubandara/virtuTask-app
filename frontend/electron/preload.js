@@ -1,3 +1,5 @@
+const { contextBridge, ipcRenderer } = require('electron');
+
 contextBridge.exposeInMainWorld('electron', {
   // Python productivity tracker
   restartPython: () => ipcRenderer.send('restart-python'),
@@ -14,10 +16,10 @@ contextBridge.exposeInMainWorld('electron', {
   onEngagementHubRestarted: (callback) => ipcRenderer.on('engagement-hub-restarted', callback),
   onEngagementHubError: (callback) => ipcRenderer.on('engagement-hub-error', callback),
   
-  // Profile backend
-  restartProfileBackend: () => ipcRenderer.send('restart-profile-backend'),
-  onProfileBackendRestarted: (callback) => ipcRenderer.on('profile-backend-restarted', callback),
-  onProfileBackendError: (callback) => ipcRenderer.on('profile-backend-error', callback),
+ // Focus mode
+ restartFocusMode: () => ipcRenderer.send('restart-focus-mode'),
+ onFocusModeRestarted: (callback) => ipcRenderer.on('focus-mode-restarted', callback),
+ onFocusModeError: (callback) => ipcRenderer.on('focus-mode-error', callback),
   
   // General application status
   onBackendStatus: (callback) => ipcRenderer.on('backend-status', (_, status) => callback(status)),

@@ -49,8 +49,8 @@ function Login() {
       <div className={styles.leftSection}>
         <img src="/5790570.jpg" alt="Background" />
         <div className={styles.leftContent}>
-          <h1>Streamline your remote work</h1>
-          <p>Start for free and experience smarter, more connected work....</p>
+          <h1>Welcome Back !</h1>
+          <p>Sign in to continue to your account</p>
         </div>
       </div>
 
@@ -86,8 +86,9 @@ function Login() {
             </div>
 
             <div className={styles.loginOptions}>
-              <label>
-                <input type="checkbox" /> Remember me
+              <label className={styles.rememberMe}>
+                <input type="checkbox" />
+                Remember me
               </label>
               <a href="#" className={styles.forgotPassword}>Forgot Password?</a>
             </div>
@@ -107,6 +108,15 @@ function Login() {
           >
             Register
           </button>
+
+        {/*
+          <div className={styles.orDivider}>
+            <hr /><span>OR</span><hr />
+          </div>
+
+          <button className={styles.googleBtn}>
+            Sign in with Google
+          </button>*/}
         </div>
       </div>
     </div>
