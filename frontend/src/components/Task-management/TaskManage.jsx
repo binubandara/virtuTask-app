@@ -51,8 +51,9 @@ const TaskManage = () => {
     priority: 'medium'
   });
   const [editingTask, setEditingTask] = useState(null);
+  // Add this to your existing state declarations
   const [selectedTask, setSelectedTask] = useState(null);
-  const [selectedTaskId, setSelectedTaskId] = useState(null);
+  const [selectedTaskId, setSelectedTaskId] = useState(null); // New state for dropdown
 
   const loadProjects = () => {
     const saved = localStorage.getItem('projects');
@@ -61,17 +62,7 @@ const TaskManage = () => {
 
   // Save projects to localStorage
   const saveProjects = (updatedProjects) => {
-    try {
-      localStorage.setItem('projects', JSON.stringify(updatedProjects));
-    } catch (error) {
-      console.error('Storage error:', error);
-      if (error.name === 'QuotaExceededError') {
-        alert('Failed to save due to browser storage limits. Please remove some data.');
-      } else {
-        alert('Error saving data. Please try again.');
-      }
-      throw error;
-    }
+    localStorage.setItem('projects', JSON.stringify(updatedProjects));
   };
 
   useEffect(() => {
@@ -81,6 +72,7 @@ const TaskManage = () => {
     if (project) {
       setCurrentProject({
         id: project.id,
+        ...project,
         projectName: project.projectname,
         startDate: project.startDate,
         dueDate: project.dueDate,
@@ -92,21 +84,17 @@ const TaskManage = () => {
   
       // Apply task filtering for My Projects view
       let filteredTasks = project.tasks || [];
-      if (isFromMyProjects) {
-        filteredTasks = filteredTasks.filter(task => 
-          task.assignees?.toLowerCase()
-            .split(',')
-            .map(a => a.trim())
-            .includes('tharindy123')
-        );
-      }
-      setTasks(filteredTasks);
-    } else {
-      console.error('Project not found:', projectId);
-      // Handle the case when project is not found
-      navigate('/My-projects-manager');
+    if (isFromMyProjects) {
+      filteredTasks = filteredTasks.filter(task => 
+        task.assignees?.toLowerCase() // Plural + case-insensitive
+          .split(',')
+          .map(a => a.trim())
+          .includes('tharindy123') // Lowercase comparison
+      );
     }
-  }, [projectId, navigate, isFromMyProjects]);
+    setTasks(filteredTasks);
+  }
+}, [projectId, navigate, isFromMyProjects])// Added isFromMyProjects to dependencies
 
   // Update the updateTasks function to handle attachments
   const updateTasks = (newTasks) => {
@@ -115,22 +103,22 @@ const TaskManage = () => {
       if (p.id === Number(projectId)) {
         return { 
           ...p, 
-          tasks: newTasks
+          tasks: newTasks.map(task => ({
+            ...task,
+            attachments: task.attachments?.map(att => ({
+              id: att.id,
+              name: att.name,
+              file: att.file
+            })) || [],
+            comments: task.comments || []
+          }))
         };
       }
       return p;
     });
-    
-    try {
-      saveProjects(updatedProjects);
-      setTasks(newTasks);
-      return true;
-    } catch (error) {
-      console.error('Failed to save tasks:', error);
-      return false;
-    }
+    saveProjects(updatedProjects);
+    setTasks(newTasks);
   };
-
   const addTask = (taskData) => {
     const newTask = { id: Date.now(), ...taskData };
     updateTasks([...tasks, newTask]);
@@ -154,11 +142,17 @@ const TaskManage = () => {
     setSelectedTaskId(null);
   };
   
+
+  
   const handleBack = () => navigate(-1);
+
+  
+  // ... keep existing useEffect and other functions ...
 
   const TaskNameWithEdit = ({ task }) => (
     <td className='tname'>
       <div className="task-name-container">
+        {/* Only show edit controls if NOT coming from My Projects */}
         {!isFromMyProjects && (
           <>
             <button 
@@ -203,7 +197,6 @@ const TaskManage = () => {
       </div>
     </td>
   );
-
   if (!currentProject) {
     return <div className="loading">Loading project...</div>;
   }
@@ -211,22 +204,24 @@ const TaskManage = () => {
   return (
     <div className="task-manage-container">
       
+     
+   
       <div className="members-container"
           onMouseEnter={() => setIsMembersHovered(true)}
           onMouseLeave={() => setIsMembersHovered(false)}>
         <button className="members-dropdown">
-        <span>Members ▼</span>
+          Members ({currentProject?.members?.length || 0}) ▼
         </button>
         
-        {isMembersHovered && currentProject?.members?.length > 0 && (
+        {isMembersHovered && (
           <div className="members-list">
-          {currentProject.members.map((member) => (
-            <div key={member} className="member-item">
-              <MemberIcon member={member} />
-              <span>{member}</span>
-            </div>
-          ))}
-        </div>
+            {currentProject?.members?.map((member) => (
+              <div key={member} className="member-item">
+                <MemberIcon member={member} />
+                <span>{member}</span>
+              </div>
+            ))}
+          </div>
         )}
       </div>
 
@@ -275,13 +270,13 @@ const TaskManage = () => {
               </thead>
               <tbody>
                 {tasks.map(task => (
-                  <tr className="task-item" key={task.id} onClick={() => setSelectedTask(task)}>
+                  <tr className="task-item" key={task.id}onClick={() => setSelectedTask(task)}>
                     <TaskNameWithEdit task={task} />
                     <td className='taskmanage-task_assignee'>
                       <div className="taskmanage-assignee-icons-container">
                         {task.assignees?.split(',').slice(0,4).map((assignee, index) => (
                           <MemberIcon 
-                            key={`${task.id}-${assignee.trim()}-${index}`}
+                            key={assignee.trim()} 
                             member={assignee.trim()}
                             style={{ zIndex: 4 - index }}
                           />
@@ -294,14 +289,14 @@ const TaskManage = () => {
                     <td className='task_due_date'>{task.dueDate}</td>
                     <td className='task_levels'>
                       <span className="priority-pill" 
-                        style={{ backgroundColor: PRIORITY_COLORS[task.priority || 'medium'] }}>
-                        {task.priority || 'medium'}
+                        style={{ backgroundColor: PRIORITY_COLORS[task.priority] }}>
+                        {task.priority}
                       </span>
                     </td>
                     <td className='task-levels'>
                       <span className="status-badge" 
-                        style={{ backgroundColor: STATUS_COLORS[task.status || 'pending'] }}>
-                        {(task.status || 'pending').replace(/_/g, ' ')}
+                        style={{ backgroundColor: STATUS_COLORS[task.status] }}>
+                        {task.status.replace(/_/g, ' ')}
                       </span>
                     </td>
                   </tr>
@@ -321,10 +316,11 @@ const TaskManage = () => {
             const newTasks = tasks.map(t => 
               t.id === updatedTask.id ? updatedTask : t
             );
-            return updateTasks(newTasks);
+            updateTasks(newTasks);
           }}
         />
       )}
+
 
       {showTaskForm && (
         <div className="modal-overlay">
@@ -337,7 +333,7 @@ const TaskManage = () => {
             editTask={editTask}
             projectStartDate={currentProject.startDate}
             projectDueDate={currentProject.dueDate}
-            projectMembers={currentProject.members || []}
+            projectMembers={currentProject.members || []} // Add this line
             initialData={editingTask}
             mode={editingTask ? 'edit' : 'create'}
           />

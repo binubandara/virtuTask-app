@@ -12,6 +12,27 @@ const clockSVG = (
 const MyProjects = () => {
   const navigate = useNavigate();
   const [projects, setProjects] = useState([]);
+    const [sortBy, setSortBy] = useState('default'); // Add this line
+  
+    
+  
+
+  const sortProjects = (projects) => {
+    switch(sortBy) {
+      case 'a-z':
+        return [...projects].sort((a, b) => 
+          a.projectname.localeCompare(b.projectname));
+      case 'month':
+        return [...projects].sort((a, b) => 
+          new Date(a.dueDate) - new Date(b.dueDate));
+      case 'year':
+        return [...projects].sort((a, b) => 
+          new Date(a.dueDate).getFullYear() - new Date(b.dueDate).getFullYear());
+      default:
+        return projects;
+    }
+  };
+
 
   // Load from same localStorage key
   useEffect(() => {
@@ -101,28 +122,25 @@ const MyProjects = () => {
       <h1 className="title">My Projects</h1>
       <div className="line"></div>
 
-      {/* Simplified toolbar for My Projects */}
       <div className="toolbar">
         <div className="dropdowns">
-          <select className="dropdown">
-            <option>Sort</option>
-            <option>A - Z</option>
-            <option>Month</option>
-            <option>Year</option>
-          </select>
-          <select className="dropdown" name="Status">
-            <option>Status</option>
-            <option>All</option>
-            <option>Completed</option>
-            <option>On Hold</option>
-            <option>Started</option>
+          <select 
+            className="dropdown"
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+          >
+            <option value="default">Sort</option>
+            <option value="a-z">A - Z</option>
+            <option value="month">Month</option>
+            <option value="year">Year</option>
           </select>
         </div>
       </div>
 
+
       {/* Use EXACTLY the same project-tiles structure */}
       <div className="project-tiles">
-        {userProjects.map((project) => {
+      {sortProjects(projects).map((project) => {
           const dueDisplay = getDueDateDisplay(project.dueDate);
           return (
             <div 

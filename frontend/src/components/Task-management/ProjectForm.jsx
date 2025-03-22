@@ -1,101 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { useSocket } from "../../context/SocketContext";
+import React, { useState } from 'react';
 import './ProjectForm.css';
 
 function ProjectForm({ closeForm, addProject, editProject, initialData, mode }) {
-  // Add socket context
-  const { socket, connected } = useSocket();
-  const [formData, setFormData] = useState(() => {
-    if (initialData) {
-      return {
-        ...initialData,
-        members: initialData.members?.join(', ') || '',
-      };
-    }
-    return {
-      projectname: '',
-      department: '',
-      client: '',
-      description: '',
-      startDate: '',
-      dueDate: '',
-      priority: 'medium',
-      members: ''
-    };
+  const [formData, setFormData] = useState(initialData ? {
+    ...initialData,
+    members: initialData.members?.join(', ') || '' // Convert array to string
+  } : {
+    projectname: '',
+    department: '',
+    client: '',
+    description: '',
+    startDate: '',
+    dueDate: '',
+    priority: 'medium',
+    members: ''
   });
-  
-  // State for searching members
-  const [searchResults, setSearchResults] = useState([]);
-  const [isSearching, setIsSearching] = useState(false);
+
   const [originalData] = useState(initialData || {...formData});
-
-  const API_URL = 'http://localhost:5004/api';
-
-  // Effect to listen for socket events related to project member changes or availability
-  useEffect(() => {
-    if (!socket || !connected) return;
-
-    // Listen for events like user status changes or new user registrations
-    // that might affect member selection
-    const handleUserStatusChange = (userData) => {
-      // Update search results if the user is in the current results
-      if (searchResults.some(user => user.user_id === userData.user_id)) {
-        setSearchResults(prevResults => 
-          prevResults.map(user => 
-            user.user_id === userData.user_id ? {...user, ...userData} : user
-          )
-        );
-      }
-    };
-
-    socket.on('user_status_change', handleUserStatusChange);
-
-    return () => {
-      socket.off('user_status_change', handleUserStatusChange);
-    };
-  }, [socket, connected, searchResults]);
-
-  // Function to search for users when adding members
-  const searchUsers = async (searchTerm) => {
-    if (!searchTerm.trim()) {
-      setSearchResults([]);
-      setIsSearching(false);
-      return;
-    }
-
-    try {
-      setIsSearching(true);
-      const token = localStorage.getItem('token');
-      
-      const response = await axios.get(`${API_URL}/search?name=${encodeURIComponent(searchTerm)}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      setSearchResults(response.data);
-      setIsSearching(false);
-    } catch (error) {
-      console.error('Error searching users:', error);
-      setIsSearching(false);
-    }
-  };
-
-  // Debounce search input
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (formData.members && typeof formData.members === 'string') {
-        // Search for the last comma-separated term
-        const terms = formData.members.split(',');
-        const lastTerm = terms[terms.length - 1].trim();
-        
-        if (lastTerm) {
-          searchUsers(lastTerm);
-        }
-      }
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [formData.members]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -108,20 +29,28 @@ function ProjectForm({ closeForm, addProject, editProject, initialData, mode }) 
 
   const handleSubmit = (e) => {
     e.preventDefault();
-  
-    // VALIDATION FIRST
+
+    // Process members into array
+    const processedData = {
+      ...formData,
+      members: formData.members 
+        ? formData.members.split(',').map(m => m.trim()).filter(m => m)
+        : []
+    };
+
     const requiredFields = ['projectname', 'department', 'startDate', 'dueDate'];
-    const missingFields = requiredFields.filter(field => !formData[field]);
+    const missingFields = requiredFields.filter(field => !processedData[field]);
     
     if (missingFields.length > 0) {
       alert(`Missing required fields: ${missingFields.join(', ')}`);
       return;
     }
 
+    // Existing validation checks
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const startDate = new Date(formData.startDate);
-    const dueDate = new Date(formData.dueDate);
+    const startDate = new Date(processedData.startDate);
+    const dueDate = new Date(processedData.dueDate);
 
     if (dueDate < startDate) {
       alert('Due date must be after start date');
@@ -133,13 +62,6 @@ function ProjectForm({ closeForm, addProject, editProject, initialData, mode }) 
       return;
     }
 
-    // PROCESS DATA AFTER VALIDATION
-    const processedData = {
-      ...formData,
-      members: formData.members.split(',').map(m => m.trim()),
-      id: initialData?.id // Ensure ID preservation
-    };
-
     if (mode === 'edit') {
       if (window.confirm('Confirm project changes?')) {
         editProject(processedData);
@@ -148,6 +70,8 @@ function ProjectForm({ closeForm, addProject, editProject, initialData, mode }) 
       addProject(processedData);
     }
   };
+
+  // Rest of the component remains the same...
 
   const handleCreateReset = () => {
     if (window.confirm('Are you sure you want to reset the form?')) {
@@ -158,8 +82,7 @@ function ProjectForm({ closeForm, addProject, editProject, initialData, mode }) 
         description: '',
         startDate: '',
         dueDate: '',
-        priority: 'medium',
-        members: ''
+        priority: 'medium'
       });
     }
   };
@@ -170,25 +93,12 @@ function ProjectForm({ closeForm, addProject, editProject, initialData, mode }) 
     }
   };
 
-  // Handle selecting a user from search results
-  const handleSelectUser = (userId, username) => {
-    const currentMembers = formData.members.split(',').map(m => m.trim()).filter(m => m !== '');
-    
-    // Only add if not already in the list
-    if (!currentMembers.includes(userId)) {
-      const updatedMembers = [...currentMembers, userId].join(', ');
-      setFormData(prev => ({ ...prev, members: updatedMembers }));
-    }
-    
-    setSearchResults([]);
-  };
-
   return (
-    <div className="form-modal">
-      <div className="projects-container" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
+    <div className="projectform-form-modal">
+      <div className="projectform-projects-container" onClick={(e) => e.stopPropagation()}>
+        <div className="projectform-modal-header">
           <h1>{mode === 'edit' ? 'Edit Project' : 'Create New Project'}</h1>
-          <div className="minus-icon" onClick={closeForm}>
+          <div className="projectform-minus-icon" onClick={closeForm}>
             <svg 
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
@@ -208,8 +118,8 @@ function ProjectForm({ closeForm, addProject, editProject, initialData, mode }) 
           </div>
         </div>
         <form onSubmit={handleSubmit}>
-          <div className="form-row">
-            <div className="left-form-column">
+          <div className="projectform-form-row">
+            <div className="projectform-left-form-column">
               <label htmlFor="projectname">Project Name</label>
               <input 
                 type="text" 
@@ -245,13 +155,13 @@ function ProjectForm({ closeForm, addProject, editProject, initialData, mode }) 
                 placeholder="Enter Description" 
                 value={formData.description}
                 onChange={handleChange}
-                className="textarea"
+                className="projectform-textarea"
               />
             </div>
 
-            <div className="right-form-column">
+            <div className="projectform-right-form-column">
               <label>Priority Level</label>
-              <div className="priority-buttons">
+              <div className="projectform-priority-buttons">
                 <button 
                   type="button" 
                   className={`high ${formData.priority === 'high' ? 'active' : ''}`}
@@ -279,7 +189,7 @@ function ProjectForm({ closeForm, addProject, editProject, initialData, mode }) 
               <input 
                 type="date" 
                 name="startDate" 
-                className="date-picker"
+                className="projectform-date-picker"
                 value={formData.startDate}
                 onChange={handleChange}
                 required
@@ -289,64 +199,49 @@ function ProjectForm({ closeForm, addProject, editProject, initialData, mode }) 
               <input 
                 type="date" 
                 name="dueDate" 
-                className="date-picker"
+                className="projectform-date-picker"
                 value={formData.dueDate}
                 onChange={handleChange}
                 required
               />
                <label htmlFor="members">Members</label>
               <div className="projectform-members-container">
-                <input 
-                  type="search" 
-                  name="members" 
-                  className="projectform-members-input" 
-                  placeholder="Search Member by Username"
-                  value={formData.members}
-                  onChange={handleChange}
-                />
-                <div className="projectform-svg-member-icon">
-                  <svg 
-                    xmlns="http://www.w3.org/2000/svg" 
-                    fill="none" 
-                    viewBox="0 0 24 24" 
-                    strokeWidth="1" 
-                    stroke="currentColor" 
-                    className="size-6"
-                    width="24" height="24"
-                  >
-                    <path 
-                      strokeLinecap="round" 
-                      strokeLinejoin="round" 
-                      d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" 
-                    />
-                  </svg>
-                </div>
-                {searchResults.length > 0 && (
-                  <div className="members-search-results">
-                    {searchResults.map(user => (
-                      <div 
-                        key={user.user_id} 
-                        className="member-search-item"
-                        onClick={() => handleSelectUser(user.user_id, user.username)}
-                      >
-                        {user.username}
-                      </div>
-                    ))}
-                  </div>
-                )}
-                {isSearching && (
-                  <div className="members-searching">Searching...</div>
-                )}
+              <input 
+                type="text" 
+                name="members" 
+                className="projectform-members-input" 
+                placeholder="Enter member IDs (comma separated)"
+                value={formData.members}
+                onChange={handleChange}
+              />
+              
+              <div className="projectform-svg-member-icon">
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  strokeWidth="1" 
+                  stroke="currentColor" 
+                  className="size-6"
+                  width="24" height="24"
+                >
+                  <path 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" 
+                  />
+                </svg>
               </div>
+            </div>
             </div>
           </div>
 
-          <div className="form-buttons">
+          <div className="projectform-form-buttons">
             {mode === 'edit' ? (
               <button 
                 type="button" 
                 onClick={handleEditReset} 
-                className="form-btn reset"
+                className="projectform-form-btn reset"
               >
                 Original Input
               </button>
@@ -354,12 +249,12 @@ function ProjectForm({ closeForm, addProject, editProject, initialData, mode }) 
               <button 
                 type="button" 
                 onClick={handleCreateReset} 
-                className="form-btn reset"
+                className="projectform-form-btn reset"
               >
                 Reset
               </button>
             )}
-            <button type="submit" className="form-btn create">
+            <button type="submit" className="projectform-form-btn create">
               {mode === 'edit' ? 'Confirm Edit' : 'Create Project'}
             </button>
           </div>
