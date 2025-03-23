@@ -1,0 +1,26 @@
+steps:
+  # Build the Docker image
+  - name: 'docker'
+    args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/my-repo/productivity-tracker:$SHORT_SHA', '-f', 'Dockerfile', '.']
+  # Push the Docker image to Artifact Registry
+  - name: 'docker'
+    args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/my-repo/productivity-tracker:$SHORT_SHA']
+  # Deploy to Cloud Run
+  - name: 'gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'productivity-tracker'
+      - '--image'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/my-repo/productivity-tracker:$SHORT_SHA'
+      - '--region'
+      - 'us-central1'
+      - '--platform'
+      - 'managed'
+      - '--set-env-vars=MONGO_URI=${_MONGO_URI},PORT=5000,AUTH_SERVICE_URL=${_AUTH_SERVICE_URL},GEMINI_API_KEY=${_GEMINI_API_KEY}'
+      - '--memory=1Gi'
+      - '--cpu=1'
+substitutions:
+  _MONGO_URI: 'mongodb+srv://binu20230681:virtutask123@virtutask.nmivs.mongodb.net/?retryWrites=true&w=majority&appName=VirtuTask' 
+  _AUTH_SERVICE_URL: 'https://auth-service-[YOUR-SERVICE-ID].a.run.app/api/auth'
+  _GEMINI_API_KEY: 'AIzaSyA9Ph5ko82POTvD5I8wZ832nyvHL4G8MyM'
