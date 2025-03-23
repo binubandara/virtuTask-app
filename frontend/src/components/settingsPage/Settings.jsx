@@ -574,7 +574,6 @@ const Settings = () => {
               Change Password
             </button>
             <button className="logout-button" onClick={handleLogout}>
-
               <FaPowerOff /> Log Out
             </button>
           </div>

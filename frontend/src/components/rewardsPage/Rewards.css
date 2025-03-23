@@ -1,5 +1,6 @@
 .rewards-container {
     padding: 20px;
+    padding-left: -10px;
     max-width: 1200px;
     margin: 0 auto;
   }

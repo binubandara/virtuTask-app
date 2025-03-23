@@ -51,10 +51,10 @@ const TaskManage = () => {
     priority: 'medium'
   });
   const [editingTask, setEditingTask] = useState(null);
-  // Add this to your existing state declarations
   const [selectedTask, setSelectedTask] = useState(null);
-  const [selectedTaskId, setSelectedTaskId] = useState(null); // New state for dropdown
+  const [selectedTaskId, setSelectedTaskId] = useState(null);
 
+  // Load projects from localStorage
   const loadProjects = () => {
     const saved = localStorage.getItem('projects');
     return saved ? JSON.parse(saved) : [];
@@ -84,19 +84,19 @@ const TaskManage = () => {
   
       // Apply task filtering for My Projects view
       let filteredTasks = project.tasks || [];
-    if (isFromMyProjects) {
-      filteredTasks = filteredTasks.filter(task => 
-        task.assignees?.toLowerCase() // Plural + case-insensitive
-          .split(',')
-          .map(a => a.trim())
-          .includes('tharindy123') // Lowercase comparison
-      );
+      if (isFromMyProjects) {
+        filteredTasks = filteredTasks.filter(task => 
+          task.assignees?.toLowerCase() // Plural + case-insensitive
+            .split(',')
+            .map(a => a.trim())
+            .includes('tharindy123') // Lowercase comparison
+        );
+      }
+      setTasks(filteredTasks);
     }
-    setTasks(filteredTasks);
-  }
-}, [projectId, navigate, isFromMyProjects])// Added isFromMyProjects to dependencies
+  }, [projectId, navigate, isFromMyProjects]);
 
-  // Update the updateTasks function to handle attachments
+  // Updated function to ensure tasks are properly saved to localStorage
   const updateTasks = (newTasks) => {
     const projects = loadProjects();
     const updatedProjects = projects.map(p => {
@@ -105,50 +105,72 @@ const TaskManage = () => {
           ...p, 
           tasks: newTasks.map(task => ({
             ...task,
-            attachments: task.attachments?.map(att => ({
-              id: att.id,
-              name: att.name,
-              file: att.file
-            })) || [],
+            attachments: task.attachments || [],
             comments: task.comments || []
           }))
         };
       }
       return p;
     });
+    
     saveProjects(updatedProjects);
     setTasks(newTasks);
   };
+
+  // Function to add a new task
   const addTask = (taskData) => {
-    const newTask = { id: Date.now(), ...taskData };
-    updateTasks([...tasks, newTask]);
+    // Create new task with proper structure
+    const newTask = { 
+      id: Date.now(), 
+      ...taskData,
+      attachments: taskData.attachments || [],
+      comments: taskData.comments || []
+    };
+    
+    const updatedTasks = [...tasks, newTask];
+    updateTasks(updatedTasks);
+    
+    // Also update the current project's tasks to keep everything in sync
+    setCurrentProject(prev => ({
+      ...prev,
+      tasks: [...(prev.tasks || []), newTask]
+    }));
+    
     setShowTaskForm(false);
   };
 
+  // Function to edit an existing task
   const editTask = (updatedTask) => {
     const newTasks = tasks.map(task => 
       task.id === updatedTask.id ? updatedTask : task
     );
     updateTasks(newTasks);
+    
+    // Also update the selected task if it's currently being viewed
+    if (selectedTask && selectedTask.id === updatedTask.id) {
+      setSelectedTask(updatedTask);
+    }
+    
     setShowTaskForm(false);
     setEditingTask(null);
   };
 
+  // Function to delete a task
   const deleteTask = (taskId) => {
     if (window.confirm('Are you sure you want to delete this task?')) {
       const newTasks = tasks.filter(task => task.id !== taskId);
       updateTasks(newTasks);
+      
+      // Close task information panel if the deleted task was being viewed
+      if (selectedTask && selectedTask.id === taskId) {
+        setSelectedTask(null);
+      }
     }
     setSelectedTaskId(null);
   };
   
-
-  
   const handleBack = () => navigate(-1);
-
   
-  // ... keep existing useEffect and other functions ...
-
   const TaskNameWithEdit = ({ task }) => (
     <td className='tname'>
       <div className="task-name-container">
@@ -197,15 +219,13 @@ const TaskManage = () => {
       </div>
     </td>
   );
+  
   if (!currentProject) {
     return <div className="loading">Loading project...</div>;
   }
 
   return (
     <div className="task-manage-container">
-      
-     
-   
       <div className="members-container"
           onMouseEnter={() => setIsMembersHovered(true)}
           onMouseLeave={() => setIsMembersHovered(false)}>
@@ -270,7 +290,7 @@ const TaskManage = () => {
               </thead>
               <tbody>
                 {tasks.map(task => (
-                  <tr className="task-item" key={task.id}onClick={() => setSelectedTask(task)}>
+                  <tr className="task-item" key={task.id} onClick={() => setSelectedTask(task)}>
                     <TaskNameWithEdit task={task} />
                     <td className='taskmanage-task_assignee'>
                       <div className="taskmanage-assignee-icons-container">
@@ -317,10 +337,10 @@ const TaskManage = () => {
               t.id === updatedTask.id ? updatedTask : t
             );
             updateTasks(newTasks);
+            setSelectedTask(updatedTask);
           }}
         />
       )}
-
 
       {showTaskForm && (
         <div className="modal-overlay">
@@ -333,7 +353,7 @@ const TaskManage = () => {
             editTask={editTask}
             projectStartDate={currentProject.startDate}
             projectDueDate={currentProject.dueDate}
-            projectMembers={currentProject.members || []} // Add this line
+            projectMembers={currentProject.members || []}
             initialData={editingTask}
             mode={editingTask ? 'edit' : 'create'}
           />

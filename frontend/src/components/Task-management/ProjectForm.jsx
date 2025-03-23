@@ -1,22 +1,54 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './ProjectForm.css';
 
 function ProjectForm({ closeForm, addProject, editProject, initialData, mode }) {
-  const [formData, setFormData] = useState(initialData ? {
-    ...initialData,
-    members: initialData.members?.join(', ') || '' // Convert array to string
-  } : {
-    projectname: '',
-    department: '',
-    client: '',
-    description: '',
-    startDate: '',
-    dueDate: '',
-    priority: 'medium',
-    members: ''
-  });
+  // Local storage key for saving form data
+  const STORAGE_KEY = 'project_form_draft';
+  
+  // Initialize form data from initialData, local storage, or default values
+  const initializeFormData = () => {
+    // If we're editing an existing project, use that data
+    if (initialData) {
+      return {
+        ...initialData,
+        members: initialData.members?.join(', ') || '' // Convert array to string
+      };
+    }
+    
+    // For new projects, try to load draft from local storage
+    if (mode === 'create') {
+      const savedForm = localStorage.getItem(STORAGE_KEY);
+      if (savedForm) {
+        try {
+          return JSON.parse(savedForm);
+        } catch (e) {
+          console.error("Failed to parse saved form data:", e);
+        }
+      }
+    }
+    
+    // Default empty form
+    return {
+      projectname: '',
+      department: '',
+      client: '',
+      description: '',
+      startDate: '',
+      dueDate: '',
+      priority: 'medium',
+      members: ''
+    };
+  };
 
+  const [formData, setFormData] = useState(initializeFormData);
   const [originalData] = useState(initialData || {...formData});
+
+  // Save to local storage whenever form data changes (only in create mode)
+  useEffect(() => {
+    if (mode === 'create') {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(formData));
+    }
+  }, [formData, mode]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -65,25 +97,33 @@ function ProjectForm({ closeForm, addProject, editProject, initialData, mode }) 
     if (mode === 'edit') {
       if (window.confirm('Confirm project changes?')) {
         editProject(processedData);
+        // No need to clear storage in edit mode
       }
     } else {
       addProject(processedData);
+      // Clear the saved draft after successful creation
+      localStorage.removeItem(STORAGE_KEY);
     }
+    
+    closeForm(); // Close the form after successful submission
   };
 
-  // Rest of the component remains the same...
-
   const handleCreateReset = () => {
-    if (window.confirm('Are you sure you want to reset the form?')) {
-      setFormData({
+    if (window.confirm('Are you sure you want to reset the form? This will clear all entered data.')) {
+      const emptyForm = {
         projectname: '',
         department: '',
         client: '',
         description: '',
         startDate: '',
         dueDate: '',
-        priority: 'medium'
-      });
+        priority: 'medium',
+        members: ''
+      };
+      
+      setFormData(emptyForm);
+      // Update the local storage with the empty form
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(emptyForm));
     }
   };
 
@@ -93,12 +133,43 @@ function ProjectForm({ closeForm, addProject, editProject, initialData, mode }) 
     }
   };
 
+  // Add function to clear draft if the form is closed
+  const handleCloseForm = () => {
+    // We don't automatically clear drafts when closing to allow users to come back
+    closeForm();
+  };
+
+  // Add function to discard draft
+  const handleDiscardDraft = () => {
+    if (window.confirm('Discard the saved draft? This cannot be undone.')) {
+      localStorage.removeItem(STORAGE_KEY);
+      setFormData({
+        projectname: '',
+        department: '',
+        client: '',
+        description: '',
+        startDate: '',
+        dueDate: '',
+        priority: 'medium',
+        members: ''
+      });
+    }
+  };
+
+  // Check if we have a saved draft (only in create mode)
+  const hasSavedDraft = mode === 'create' && localStorage.getItem(STORAGE_KEY) !== null;
+
   return (
     <div className="projectform-form-modal">
       <div className="projectform-projects-container" onClick={(e) => e.stopPropagation()}>
         <div className="projectform-modal-header">
           <h1>{mode === 'edit' ? 'Edit Project' : 'Create New Project'}</h1>
-          <div className="projectform-minus-icon" onClick={closeForm}>
+          {hasSavedDraft && mode === 'create' && (
+            <div className="projectform-draft-indicator">
+              Draft Loaded
+            </div>
+          )}
+          <div className="projectform-minus-icon" onClick={handleCloseForm}>
             <svg 
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
@@ -246,13 +317,24 @@ function ProjectForm({ closeForm, addProject, editProject, initialData, mode }) 
                 Original Input
               </button>
             ) : (
-              <button 
-                type="button" 
-                onClick={handleCreateReset} 
-                className="projectform-form-btn reset"
-              >
-                Reset
-              </button>
+              <>
+                <button 
+                  type="button" 
+                  onClick={handleCreateReset} 
+                  className="projectform-form-btn reset"
+                >
+                  Reset
+                </button>
+                {hasSavedDraft && (
+                  <button 
+                    type="button" 
+                    onClick={handleDiscardDraft} 
+                    className="projectform-form-btn discard"
+                  >
+                    Discard Draft
+                  </button>
+                )}
+              </>
             )}
             <button type="submit" className="projectform-form-btn create">
               {mode === 'edit' ? 'Confirm Edit' : 'Create Project'}
