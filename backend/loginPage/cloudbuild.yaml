@@ -1,7 +1,7 @@
 steps:
-  # Debug: List directory contents
+  # Debug: List directory contents and verify Dockerfile
   - name: 'ubuntu'
-    args: ['ls', '-R', 'backend/loginPage']
+    args: ['sh', '-c', 'pwd && ls -la backend/loginPage && cat backend/loginPage/Dockerfile']
 
   # Build the Docker image
   - name: 'gcr.io/cloud-builders/docker'

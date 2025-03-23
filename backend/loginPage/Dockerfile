@@ -10,11 +10,11 @@ COPY package.json package-lock.json ./
 # Install dependencies
 RUN npm install
 
-# Copy the entire project
+# Copy entire project
 COPY . .
 
-# Expose the port the app runs on
+# Expose port
 EXPOSE 5001
 
-# Command to run the application
-CMD ["node", "servers.js"]
+# Command to start the server
+CMD ["node", "server.js"]
