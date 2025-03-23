@@ -5,6 +5,8 @@ import { createServer } from 'http';
 import { Server } from 'socket.io';
 import { connectDB } from './config/database';
 import taskRoutes from './routes/taskRoutes';
+import projectRoutes from './routes/projectRoutes';
+// import authRoutes from './routes/authRoutes';
 import { socketHandler } from './socket/socketHandler';
 
 
@@ -38,6 +40,8 @@ app.use((req: any, res, next) => {
 
 // Routes
 app.use('/api', taskRoutes);
+app.use('/api', projectRoutes);
+// app.use('/api', authRoutes);
 
 // Initialize Socket.IO handlers
 socketHandler(io);
