@@ -7,6 +7,7 @@ on:
     branches: [ "main", "develop" ]
 
 jobs:
+  # Node.js Services Testing
   test-node-services:
     runs-on: ubuntu-latest
     strategy:
@@ -48,28 +49,19 @@ jobs:
     
     - name: Install dependencies
       working-directory: ${{ matrix.service.path }}
-      run: |
-        if [ ! -f package-lock.json ]; then
-          npm install
-        fi
-        npm ci
+      run: npm ci
     
     - name: Lint
       working-directory: ${{ matrix.service.path }}
-      run: |
-        npm run lint || echo "Linting skipped"
+      run: npm run lint || echo "Linting skipped"
     
     - name: Run tests
       working-directory: ${{ matrix.service.path }}
-      run: |
-        if [ -f test ]; then
-          npm test
-        else
-          echo "No tests configured"
-        fi
+      run: npm test || echo "No tests configured"
       env:
         PORT: ${{ matrix.service.port }}
 
+  # Python Services Testing
   test-python-services:
     runs-on: ubuntu-latest
     strategy:
@@ -107,7 +99,7 @@ jobs:
     - name: Test with pytest
       working-directory: ${{ matrix.service.path }}
       run: |
-        if [ -f tests ]; then
+        if [ -d tests ]; then
           pytest
         else
           echo "No tests configured"
@@ -115,6 +107,7 @@ jobs:
       env:
         PORT: ${{ matrix.service.port }}
 
+  # Build and Push Node.js Services
   build-push-node-services:
     needs: test-node-services
     runs-on: ubuntu-latest
@@ -167,6 +160,7 @@ jobs:
         build-args: |
           PORT=${{ matrix.service.port }}
 
+  # Build and Push Python Services
   build-push-python-services:
     needs: test-python-services
     runs-on: ubuntu-latest
@@ -204,6 +198,7 @@ jobs:
         build-args: |
           PORT=${{ matrix.service.port }}
 
+  # Optional: Deployment Job
   deploy:
     needs: 
       - build-push-node-services
@@ -217,6 +212,7 @@ jobs:
         echo "Deploying services"
         # Add your deployment commands here
 
+  # Create GitHub Release
   release:
     needs: deploy
     runs-on: ubuntu-latest
