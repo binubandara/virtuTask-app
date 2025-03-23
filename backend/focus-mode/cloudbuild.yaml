@@ -1,0 +1,24 @@
+steps:
+  # Build the Docker image
+  - name: 'docker'
+    args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/my-repo/task-session-management:$SHORT_SHA', '-f', 'Dockerfile', '.']
+  # Push the Docker image to Artifact Registry
+  - name: 'docker'
+    args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/my-repo/task-session-management:$SHORT_SHA']
+  # Deploy to Cloud Run
+  - name: 'gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'task-session-management'
+      - '--image'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/my-repo/task-session-management:$SHORT_SHA'
+      - '--region'
+      - 'us-central1'
+      - '--platform'
+      - 'managed'
+      - '--set-env-vars=MONGO_URI=${_MONGO_URI},PORT=5005'
+      - '--memory=1Gi'
+      - '--cpu=1'
+substitutions:
+  _MONGO_URI: 'mongodb+srv://binu20230681:virtutask123@virtutask.nmivs.mongodb.net/electron_focus?retryWrites=true&w=majority&appName=VirtuTask' 

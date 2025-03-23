@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "target": "es6",  // Or a later version
+    "module": "commonjs", // Or "esnext" or similar
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "declaration": true,
+    "sourceMap": true,
+    "outDir": "./dist",
+    "strict": true,     // Enable strict type checking
+    "baseUrl": ".",
+    "paths": {
+      "*": [
+        "node_modules/*"
+      ]
+    },
+    "typeRoots": [    // Important for global type declarations
+      "./node_modules/@types",
+      "./src/@types"  // Or wherever you keep your custom types
+    ]
+  },
+  "include": [
+    "src/**/*"       // Include your source files
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

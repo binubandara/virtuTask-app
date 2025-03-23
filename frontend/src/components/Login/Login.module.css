@@ -1,0 +1,283 @@
+/* Login.module.css */
+
+.container {
+  display: flex;
+  height: 100vh;
+}
+
+/* Left Section (Image & Text) */
+.leftSection {
+  flex: 1.2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.leftSection img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: -1;
+}
+
+/* Text Overlay */
+.leftContent {
+  position: absolute;
+  text-align: center;
+  color: white;
+  width: 80%;
+  z-index: 1;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 20px;
+  border-radius: 10px;
+}
+
+.leftContent h1 {
+  font-size: 2rem;
+  margin-bottom: 10px;
+}
+
+.leftContent p {
+  font-size: 1rem;
+}
+
+/* Right Section (Full-Width Login Form) */
+.rightSection {
+  flex: 0.8;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40%;
+  padding: 50px;
+}
+
+.loginBox {
+  width: 100%;
+  max-width: 500px;
+  text-align: left;
+  padding: 0;
+  box-shadow: none;
+  background: none;
+}
+
+/* Login Heading & Subtext */
+.loginBox h2 {
+  font-size: 26px;
+  margin-bottom: 10px;
+}
+
+.loginSubtext {
+  font-size: 16px;
+  color: gray;
+  margin-bottom: 20px;
+}
+
+/* Line-Style Inputs */
+.inputContainer {
+  width: 100%;
+  margin-bottom: 15px;
+  border-bottom: 2px solid #ccc;
+  display: flex;
+}
+
+.inputLine {
+  width: 100%;
+  border: none;
+  outline: none;
+  padding: 12px;
+  font-size: 16px;
+  background: transparent;
+}
+
+/* Remember Me & Forgot Password */
+.loginOptions {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  color: gray;
+  margin-bottom: 20px;
+}
+
+.forgotPassword {
+  text-decoration: none;
+  color: blue;
+}
+
+.forgotPassword:hover {
+  text-decoration: underline;
+}
+
+/* Login Button (Black Default - Selected) */
+.loginBtn {
+  width: 100%;
+  background: black;
+  color: white;
+  padding: 14px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  margin-bottom: 15px;
+  transition: background 0.3s ease, transform 0.1s;
+}
+
+.loginBtn:hover {
+  background: #222;
+}
+
+.loginBtn:active {
+  background: #333;
+  transform: scale(0.98);
+}
+
+/* Register Button (White Default - Unselected) */
+.registerBtn {
+  width: 100%;
+  background: white;
+  color: black;
+  padding: 14px;
+  border: 1px solid black;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  margin-bottom: 15px;
+  transition: background 0.3s ease, transform 0.1s;
+}
+
+.registerBtn:hover {
+  background: black;
+  color: white;
+}
+
+.registerBtn:active {
+  background: #333;
+  color: white;
+  transform: scale(0.98);
+}
+
+/* OR Divider */
+.orDivider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: gray;
+  margin-bottom: 20px;
+}
+
+.orDivider hr {
+  width: 40%;
+  border: none;
+  height: 1px;
+  background: #ccc;
+}
+
+.orDivider span {
+  margin: 0 10px;
+  font-size: 14px;
+  font-weight: bold;
+  color: #555;
+}
+
+/* Google Sign-In Button */
+.googleBtn {
+  width: 100%;
+  background: white;
+  color: black;
+  padding: 14px;
+  border: 1px solid gray;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background 0.3s ease, transform 0.1s;
+}
+
+.googleBtn:hover {
+  background: #f4f4f4;
+}
+
+.googleBtn:active {
+  background: #ddd;
+  transform: scale(0.98);
+}
+/* Login.module.css */
+/* Teardrop Shape */
+.leftContent {
+  position: absolute;
+  width: 30em;
+  height: 30em;
+  background: rgba(0, 0, 0, 0.625);
+  color: white;
+  padding: 30px;
+  text-align: center;
+  
+  /* Custom teardrop shape */
+  border-top-left-radius: 0;
+  border-top-right-radius: 50%;
+  border-bottom-left-radius: 50%;
+  border-bottom-right-radius: 50%;
+  
+
+  /* Positioning */
+  top: 100px;
+  left: 90px;
+}
+.leftContent h1,
+.leftContent p {
+  
+  position: relative;
+  top: 15px;
+  left: 65px;
+  width: 220px;
+}
+.leftContent p {
+  font-size: 1.4rem;
+  font-weight: 500;
+  margin-left:1em;
+}
+.leftContent h1{
+  font-size: 3.4rem;
+  font-weight: 500;
+  margin-top: 1.5em;
+  margin-left: 0.5em;
+}
+
+/* Remember Me Checkbox */
+.loginOptions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px; /* Adjust gap as needed */
+  width: 100%;
+  margin-bottom: 5px;
+}
+
+.rememberMe {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+ 
+}
+
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+  }
+  
+  .leftSection, .rightSection {
+    flex: 1;
+    width: 100%;
+  }
+  
+  .leftContent {
+    position: relative;
+    margin-top: 40px;
+  }
+}
