@@ -16,7 +16,7 @@ jobs:
         service: [
           {
             "name": "authentication-service", 
-            "path": "backend/authentication-service", 
+            "path": "backend/loginPage", 
             "port": 5001
           },
           {
@@ -26,12 +26,12 @@ jobs:
           },
           {
             "name": "focus-mode-service", 
-            "path": "backend/focus-mode-service", 
+            "path": "backend/focus-mode", 
             "port": 5005
           },
           {
             "name": "rewards-system", 
-            "path": "backend/rewards-system", 
+            "path": "backend/reward-system", 
             "port": 5006
           }
         ]
@@ -121,7 +121,7 @@ jobs:
         service: [
           {
             "name": "authentication-service", 
-            "path": "backend/authentication-service", 
+            "path": "backend/loginPage", 
             "port": 5001
           },
           {
@@ -131,12 +131,12 @@ jobs:
           },
           {
             "name": "focus-mode-service", 
-            "path": "backend/focus-mode-service", 
+            "path": "backend/focus-mode", 
             "port": 5005
           },
           {
             "name": "rewards-system", 
-            "path": "backend/rewards-system", 
+            "path": "backend/reward-system", 
             "port": 5006
           }
         ]
