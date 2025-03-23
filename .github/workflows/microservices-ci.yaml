@@ -6,27 +6,34 @@ on:
   pull_request:
     branches: [ "main", "develop" ]
 
-# Define the services
-env:
-  NODE_SERVICES: |
-    [
-      {"name": "authentication-service", "path": "backend/authentication-service", "port": 5001},
-      {"name": "engagement-hub", "path": "backend/engagement-hub", "port": 5002},
-      {"name": "focus-mode-service", "path": "backend/focus-mode-service", "port": 5005},
-      {"name": "rewards-system", "path": "backend/rewards-system", "port": 5006}
-    ]
-  PYTHON_SERVICES: |
-    [
-      {"name": "productivity-tracker", "path": "backend/productivity-tracker", "port": 5000}
-    ]
-
 jobs:
   # Node.js Services Testing
   test-node-services:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: ${{ fromJSON(env.NODE_SERVICES) }}
+        service: [
+          {
+            "name": "authentication-service", 
+            "path": "backend/authentication-service", 
+            "port": 5001
+          },
+          {
+            "name": "engagement-hub", 
+            "path": "backend/engagement-hub", 
+            "port": 5002
+          },
+          {
+            "name": "focus-mode-service", 
+            "path": "backend/focus-mode-service", 
+            "port": 5005
+          },
+          {
+            "name": "rewards-system", 
+            "path": "backend/rewards-system", 
+            "port": 5006
+          }
+        ]
         node-version: [20.17.0]
 
     defaults:
@@ -53,19 +60,19 @@ jobs:
       run: npm test
       env:
         PORT: ${{ matrix.service.port }}
-    
-    - name: Code coverage
-      uses: codecov/codecov-action@v4
-      with:
-        files: ${{ matrix.service.path }}/coverage/coverage-final.json
-        flags: ${{ matrix.service.name }}
 
   # Python Services Testing
   test-python-services:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: ${{ fromJSON(env.PYTHON_SERVICES) }}
+        service: [
+          {
+            "name": "productivity-tracker", 
+            "path": "backend/productivity-tracker", 
+            "port": 5000
+          }
+        ]
         python-version: ['3.13.0-alpha.3']
 
     defaults:
@@ -104,7 +111,28 @@ jobs:
     if: github.ref == 'refs/heads/main'
     strategy:
       matrix:
-        service: ${{ fromJSON(env.NODE_SERVICES) }}
+        service: [
+          {
+            "name": "authentication-service", 
+            "path": "backend/authentication-service", 
+            "port": 5001
+          },
+          {
+            "name": "engagement-hub", 
+            "path": "backend/engagement-hub", 
+            "port": 5002
+          },
+          {
+            "name": "focus-mode-service", 
+            "path": "backend/focus-mode-service", 
+            "port": 5005
+          },
+          {
+            "name": "rewards-system", 
+            "path": "backend/rewards-system", 
+            "port": 5006
+          }
+        ]
     
     steps:
     - uses: actions/checkout@v4
@@ -139,7 +167,13 @@ jobs:
     if: github.ref == 'refs/heads/main'
     strategy:
       matrix:
-        service: ${{ fromJSON(env.PYTHON_SERVICES) }}
+        service: [
+          {
+            "name": "productivity-tracker", 
+            "path": "backend/productivity-tracker", 
+            "port": 5000
+          }
+        ]
     
     steps:
     - uses: actions/checkout@v4
@@ -176,9 +210,29 @@ jobs:
     if: github.ref == 'refs/heads/main'
     
     steps:
-    - name: Deploy to Kubernetes
+    - name: Deploy to Server
       run: |
-        echo "Deploying services to Kubernetes"
-        # Add your Kubernetes deployment commands here
+        echo "Deploying services"
+        # Add your deployment commands here
+        # Could be SSH, Docker Compose, Kubernetes, etc.
         # Example:
-        # kubectl set image deployment/authentication-service authentication-service=binubandara/authentication-service:${{ github.sha }}
+        # ssh user@server "docker-compose pull && docker-compose up -d"
+
+  # Create GitHub Release
+  release:
+    needs: deploy
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Create Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: v${{ github.sha }}
+        release_name: Release ${{ github.sha }}
+        draft: false
+        prerelease: false
