@@ -1,8 +1,4 @@
 steps:
-  # Debug: List directory contents and verify Dockerfile
-  - name: 'ubuntu'
-    args: ['sh', '-c', 'pwd && ls -la backend/loginPage && cat backend/loginPage/Dockerfile']
-
   # Build the Docker image
   - name: 'gcr.io/cloud-builders/docker'
     args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/my-repo/login-service:$SHORT_SHA', '-f', 'backend/loginPage/Dockerfile', 'backend/loginPage']
@@ -23,7 +19,7 @@ steps:
       - 'us-central1'
       - '--platform'
       - 'managed'
-      - '--set-env-vars=MONGO_URI=${_MONGO_URI},PORT=5001'
+      - '--set-env-vars=MONGO_URI=${_MONGO_URI}'
       - '--memory=1Gi'
       - '--cpu=1'
       - '--allow-unauthenticated'
