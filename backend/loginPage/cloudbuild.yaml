@@ -1,7 +1,11 @@
 steps:
+  # Debug: List directory contents
+  - name: 'ubuntu'
+    args: ['ls', '-R', 'backend/loginPage']
+
   # Build the Docker image
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/my-repo/login-service:$SHORT_SHA', '-f', 'Dockerfile', 'backend/loginPage']
+    args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/my-repo/login-service:$SHORT_SHA', '-f', 'backend/loginPage/Dockerfile', 'backend/loginPage']
   
   # Push the Docker image to Artifact Registry
   - name: 'gcr.io/cloud-builders/docker'

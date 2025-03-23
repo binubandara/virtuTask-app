@@ -5,16 +5,16 @@ FROM node:20-alpine
 WORKDIR /app
 
 # Copy package.json and package-lock.json
-COPY package*.json ./
+COPY package.json package-lock.json ./
 
 # Install dependencies
 RUN npm install
 
-# Copy entire project
+# Copy the entire project
 COPY . .
 
-# Expose port
+# Expose the port the app runs on
 EXPOSE 5001
 
-# Command to start the server
-CMD ["node", "server.js"]
+# Command to run the application
+CMD ["node", "servers.js"]
