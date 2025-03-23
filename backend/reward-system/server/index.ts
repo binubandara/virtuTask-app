@@ -4,18 +4,17 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 
 import rewardRoutes from './routes/rewardRoutes';
-import { authMiddleware } from './middleware/authMiddleware'; // Import the authMiddleware
-
+import { authMiddleware } from './middleware/authMiddleware'; 
 // Load environment variables
 dotenv.config();
 
 // Initialize express app
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5006;
 
 // Middleware
-app.use(cors()); // Enable Cross-Origin Resource Sharing
-app.use(express.json()); // Parse incoming JSON requests
+app.use(cors()); 
+app.use(express.json());
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI as string)
