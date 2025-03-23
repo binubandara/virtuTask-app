@@ -13,7 +13,7 @@ RUN npm install
 # Copy entire project
 COPY . .
 
-# Expose port 8080 (Cloud Run default)
+# Expose port 5001
 EXPOSE 5001
 
 # Modify your server.js to listen on the port from environment
