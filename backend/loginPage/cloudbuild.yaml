@@ -2,9 +2,11 @@ steps:
   # Build the Docker image
   - name: 'docker'
     args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/my-repo/auth-service:$SHORT_SHA', '-f', 'Dockerfile', '.']
+  
   # Push the Docker image to Artifact Registry
   - name: 'docker'
     args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/my-repo/auth-service:$SHORT_SHA']
+  
   # Deploy to Cloud Run
   - name: 'gcloud'
     args:
@@ -20,6 +22,11 @@ steps:
       - '--set-env-vars=MONGO_URI=${_MONGO_URI},PORT=5001'
       - '--memory=1Gi'
       - '--cpu=1'
+      - '--allow-unauthenticated'
+
 substitutions:
   _MONGO_URI: 'mongodb+srv://binu20230681:virtutask123@virtutask.nmivs.mongodb.net/VirtuTask?retryWrites=true&w=majority&appName=VirtuTask'
-  _JWT_SECRET: '123VirtuTask'  
+  _JWT_SECRET: '123VirtuTask'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
