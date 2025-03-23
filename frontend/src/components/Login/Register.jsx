@@ -3,20 +3,20 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './Register.module.css';
 
-
+/* CHANGED THE ORDER AND REMOVED SOME FIELDS */ 
 function Register() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     firstname: '',
     lastname: '',
-    username: '',
     email: '',
-    dob: '',
+    username: '',
     contact: '',
     address: '',
     pcode: '',
     about: '',
-    gender: ''
+    gender: '',
+    dob: ''  
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -29,19 +29,20 @@ function Register() {
     });
   };
 
+  /* CHANGED THE ORDER AND REMOVED SOME FIELDS */ 
   const handleReset = () => {
     if (window.confirm("Are you sure you want to reset the form?")) {
       setFormData({
         firstname: '',
         lastname: '',
-        username: '',
         email: '',
-        dob: '',
+        username: '',
         contact: '',
         address: '',
         pcode: '',
         about: '',
-        gender: ''
+        gender: '',
+        dob: ''  
       });
       setError('');
     }

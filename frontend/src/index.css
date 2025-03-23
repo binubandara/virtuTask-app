@@ -1,0 +1,416 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins&family=Monoton:wght@200;300;400;500;600;700;800&display=swap');
+
+h1 {
+  border: none !important;
+}
+
+.container-slide {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2em;
+  height: 85vh;
+}
+
+.sidebar{
+  color: #fff;
+  align-items: normal;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  font-size: 1rem;
+  position: relative;
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 2px 0px 10px rgba(0, 0, 0, 0.1); 
+  width: 450px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  padding: 10px;
+  padding-bottom: 15px;
+  gap: 10px;
+}
+
+.logo-img {
+  width: 50px; 
+  height: 48px;
+}
+
+.logo-text {
+  font-size: 1.4rem;
+  font-weight: bold;
+  color: #44446e;
+}
+
+.profile {
+  display: flex;
+  align-items: center;
+  position: absolute;
+  bottom: 0px;
+  width: 100%;
+  height:10%;
+  background-color: #f5f5f5; /* Extremely light ash */
+  border-radius: 6px; 
+  padding: 10px;
+}
+
+.profile-img {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  margin-right: 10px;
+  object-fit: cover;
+  cursor: pointer;
+  margin-left: 23px;  
+}
+
+.profile-name {
+  font-size: 15px;
+  font-weight: 500;
+  color: #333;
+  cursor: pointer;
+  margin-left: 0px;
+}
+
+.container-focus {
+  color: #c9ccea;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8)), url('./assets/focus.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  padding: 20px;
+  width: 100%; /* Full width by default */
+  margin-right: 0; /* No margin by default */
+}
+
+/* Only apply the margin when the pomodoro timer is active */
+.container-focus.with-task-list {
+  margin-right: 20%; /* This accounts for the task list width */
+  width: 76.6%; /* Adjust based on your layout */
+}
+
+.labels {
+  list-style: none;
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: -inherit;
+  margin-top: 3em;
+  text-transform: uppercase;
+  font-size: 12.8px;
+  padding: 4.8px;
+  background-color: #159075;
+  border-radius: 24px;
+}
+
+.active-label {
+  color: #0C0E1B;
+  background-color: #FE6F6B;
+}
+
+.settings-button,
+.button-wrapper {
+  margin: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.timer-container {
+  display: flex;
+  flex: 2;
+  align-items: center;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.time-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 240px;
+  width: 240px;
+  border-radius: 50%;
+  color: #efefef;
+  background: #151932;
+  font-size: 5em;
+  box-shadow: 16px 24px 32px rgba(0, 0, 0, 0.6);
+}
+
+button, .timer-button {
+  color: #efefef;
+  font-size: 12.8px;
+  padding: 10px 19.2px;
+  border: none;
+  border-radius: 48px;
+  margin: 3.2px;
+  background: #076969;
+  min-width: 80px;
+  cursor: pointer;
+}
+
+button.active, .timer-button.active {
+  color: #0C0E1B;
+  background-color: #93cdd4;
+  border: 1px solid #116071;
+}
+
+.form-container {
+  text-align: center;
+  width: 100%; /* Make it full width */
+  margin: 0 auto; /* Center it horizontally */
+}
+
+.focus-title{
+  color: #0C0E1B;
+  font-size: 3em;
+}
+
+.focus-desc{
+  color: #0C0E1B;
+  font-size: medium;
+}
+
+.input-wrapper {
+  margin: 24px;
+  margin-top: 40px;
+}
+
+.input-wrapper input {
+  height: 120px;
+  width: 120px;
+  padding: 10px;
+  background-color: #63b776;
+  color: #ffffff;
+  border: none;
+  border-radius: 50%;
+  margin-right: 10px;
+  text-align: center;
+  font-size: 50px;
+  /* Add these properties to ensure text is visible */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.settings-button{
+  margin-top: -0.5em;
+  margin-bottom: 2em;
+}
+
+.button-swapper{
+  margin-top: 1em;
+}
+
+/* Task List Styles */
+.task-list-container {
+  position: fixed;
+  right: 0;
+  top: 0;
+  width: 20%;
+  height: 100vh;
+  background: #cfe8e0;
+  padding: 20px;
+  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.2);
+  overflow-y: auto;
+  transition: width 0.3s ease;
+  color: white;
+}
+
+.task-list-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 15px;
+  color: #0C0E1B;
+  border-bottom: 1px solid #444;
+  padding-bottom: 8px;
+}
+
+.task-list {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-top: 10px;
+  padding: 0;
+  list-style-type: none;
+}
+
+.task-item-focus {
+  width: 100%;
+  background: #151932;
+  margin-bottom: 8px;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  border-left: 3px solid #159075;
+}
+
+.task-item-focus:hover {
+  background: #1a1e38;
+  transform: translateX(-2px);
+}
+
+.task-content {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 10px;
+}
+
+.task-checkbox {
+  flex: 0 0 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.task-checkbox input[type="checkbox"] {
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: #076969;
+}
+
+.task-details {
+  flex: 1;
+  margin: 0 10px;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+}
+
+.task-actions {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.remove-btn {
+  background: none;
+  border: none;
+  color: #c9ccea;
+  cursor: pointer;
+  padding: 5px;
+  transition: color 0.2s ease;
+  min-width: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+}
+
+.remove-btn:hover {
+  color: #FE6F6B;
+}
+
+.completed-task .task-details {
+  text-decoration: line-through;
+  color: #6a6d8f;
+}
+
+.completed-task {
+  border-left-color: #6a6d8f;
+  opacity: 0.7;
+}
+
+/* Floating Action Button and Modal Styles */
+.fab {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background-color: #159075;
+  color: white;
+  border: none;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.fab:hover {
+  background-color: #0e6250;
+  transform: scale(1.05);
+}
+
+.modal-overlay-focus {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-focus {
+  background: #0e6250;
+  color: #c9ccea;
+  padding: 25px;
+  border-radius: 12px;
+  width: 320px;
+  text-align: center;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.418);
+  z-index: 1001;
+}
+
+.modal-focus h2 {
+  margin-bottom: 15px;
+  color: #ffffff;
+}
+
+.modal-focus input {
+  width: 90%;
+  padding: 10px;
+  margin: 8px 0;
+  border: 1px solid #333;
+  border-radius: 6px;
+  background-color: #c2dcd7;
+  color: #020202;
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 15px;
+}
+
+.task-add-btn-focus {
+  background-color: #020202;
+  border-radius: 50px;
+  transition: background-color 0.3s ease;
+}
+
+.task-add-btn-focus:hover {
+  background-color: #424559;
+}
+
+.cancel-btnfocus {
+  background-color: #020202;
+  border-radius: 50px;
+  transition: background-color 0.3s ease;
+}
+
+.cancel-btnfocus:hover {
+  background-color: #424559;
+}

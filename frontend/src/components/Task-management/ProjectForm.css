@@ -151,7 +151,7 @@ input, textarea, .date-picker {
 .projectform-minus-icon {
   position: absolute;
   right: 385.5px;
-  top: 121px;
+  top: 210px;
   cursor: pointer;
   width: 24px; /* Adjust size */
   height: 24px;

@@ -208,8 +208,8 @@
 /* Teardrop Shape */
 .leftContent {
   position: absolute;
-  width: 380px;
-  height: 380px;
+  width: 30em;
+  height: 30em;
   background: rgba(0, 0, 0, 0.625);
   color: white;
   padding: 30px;
@@ -237,10 +237,13 @@
 .leftContent p {
   font-size: 1.4rem;
   font-weight: 500;
+  margin-left:1em;
 }
 .leftContent h1{
   font-size: 3.4rem;
   font-weight: 500;
+  margin-top: 1.5em;
+  margin-left: 0.5em;
 }
 
 /* Remember Me Checkbox */

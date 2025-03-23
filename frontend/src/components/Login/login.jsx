@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./Login.module.css";
-
+import axios from "../axiosConfig"; // Import the configured axios
 
 function Login() {
   const navigate = useNavigate();
