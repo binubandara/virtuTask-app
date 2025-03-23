@@ -1,0 +1,198 @@
+:root {
+  --taskform-ash: #939698;
+  --taskform-orange: #f67a15;
+  --taskform-blue: #0d85fd;
+  --taskform-green: #28a46a;
+  --taskform-red: #f3495a;
+  --taskform-yellow: #efc850;
+}
+.task-form-container {
+  background-color: white;
+  padding: 25px;
+  position: fixed;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 600px;
+  z-index: 1001;
+  box-shadow: -4px 0 15px rgba(0,0,0,0.1);
+  overflow-y: auto;
+  border-radius: 0;
+}
+
+.task-form-container h3 {
+  font-size: 1.3rem;
+  color: #333;
+  margin-bottom: 30px;
+  padding-bottom: 15px;
+  font-weight: 500;
+  border-bottom: 2px solid #eee;
+}
+
+.taskform {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.taskform-columns {
+  display: flex;
+  gap: 30px;
+  justify-content: flex-start;
+  margin-top: 10px;
+}
+
+.taskform-group {
+  width: min-content;
+  flex: 1;
+}
+
+.taskform-button-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100px;
+}
+.taskform-status-button[style], 
+.taskform-priority-button[style] {
+  background-color: var(--color);
+}
+.taskform-status-button, .taskform-priority-button {
+  
+  padding: 6px;
+  border: none;
+  border-radius: 26px;
+  color: rgb(251, 246, 246);
+  cursor: pointer;
+  transition: color white ,transform 0.2s, opacity 0.2s ;
+  text-align: center;
+  min-width: 110px;
+  margin-left: 29px;
+}
+
+.taskform-status-button.selected, .taskform-priority-button.selected {
+  transform: scale(1.02);
+  opacity: 0.9;
+  border: 1px solid #333 !important;
+  color: #333;
+}
+
+.taskform-date-inputs {
+  display: flex;
+  gap: 20px;
+  margin-top: 23px;
+
+}
+
+.taskform-date-group {
+  flex: 1;
+}
+
+.taskform-date-group input {
+  width: 225px;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 26px;
+  margin-top: 5px;
+  margin-left: 29px;
+}
+
+.taskform-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 150px;
+  
+}
+
+.taskform-submit-button {
+  background-color: #6c5ce7;
+  color: white;
+  padding: 14px 35px;
+  border: none;
+  border-radius: 26px;
+  cursor: pointer;
+  width: 200px;
+  margin-right:10px ;
+}
+
+.taskform-reset-button {
+  background-color: #ddd;
+  color: #333;
+  padding: 14px 35px;
+  border: none;
+  border-radius: 26px;
+  cursor: pointer;
+  width: 200px;
+  margin-left:16px ;
+}
+
+.task-form-container label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #444;
+}
+
+.taskform input[type="text"] {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 26px;
+  font-size: 15px;
+}
+/* Member section styling */
+.taskform-assignees-section {
+  margin-top: 55px;
+  width: 100%;
+  margin-left: -580px;
+}
+
+.taskform-icon-container {
+  text-align: center;
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: center;
+  margin-top: 45px;
+}
+
+
+
+.taskform-assignees-input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 26px;
+  margin-top: 5px;
+}
+
+/* Adjust existing button margins */
+.taskform-buttons {
+  margin-top: 30px; /* Reduced from 150px */
+}
+.taskform-assignees-icon { 
+  position: absolute; 
+  right: 36.5px; /* Adjust alignment */
+  top: 515px; /* Center vertically */
+  width: 28px;
+  height: 28px;
+  color:  #666; /* Ensure it contrasts */
+}
+.task-form-close {
+  position: absolute; 
+  background: none;
+  border: none;
+  cursor: pointer;
+  top: 26px;
+  right: 30.5px;
+}
+
+.task-form-close svg {
+  width: 24px;
+  height: 24px;
+  color: #666;
+  transition: color 0.2s;
+}
+
+.task-form-close:hover svg {
+  color: #333;
+}

@@ -1,0 +1,192 @@
+.habit-info-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+  
+  .habit-info-modal {
+    background: white;
+    border-radius: 0;
+    padding: 1.0rem;
+    height: 680px;
+    width: 1150px;
+    position: relative;
+  }
+  
+  .habit-info-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.4rem;
+    padding: 3px;
+    padding-left: 15px;
+  }
+  
+  .habit-info-header h2 {
+    margin: 0;
+    font-size: 2rem;
+    color: #2c3e50;
+    font-weight: 500;
+  }
+  
+  .habit-info-close-button {
+    background: none;
+    border: none;
+    font-size: 2rem;
+    cursor: pointer;
+    color: #7f8c8d;
+  }
+  
+  .habit-info-sub-carousel-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding: 0 2rem; /* Add padding for arrow space */
+  }
+  
+  .habit-info-sub-carousel {
+    overflow:hidden; 
+    width: 100%;
+  }
+  
+  .habit-info-sub-carousel-inner {
+    display: flex;
+    gap: 1.1rem;
+    padding: 0 1.2rem;
+    
+    
+  }
+  
+  .habit-info-sub-tile {
+    flex: 0 0 calc(50% - 0.5rem); /* Account for gap */
+    min-width: calc(50% - 0.5rem);
+    height: 570px;
+    margin-right: 0.5rem; 
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+    border: 2px solid; /* Remove hardcoded color */
+    border-color: inherit; /* Inherit from parent */
+    border-radius: 20px;
+    overflow: hidden;
+    padding: 1.2rem;
+    font-size: 0.6rem;
+    color: inherit;
+    font-weight: 500;
+    
+    /* Match border to background */
+  }
+  .habit-info-sub-tile-image {
+    height: 200px;
+    background-size: cover;
+    border-radius: 10px;
+    margin-bottom: 1rem;
+  }
+  
+  .habit-info-sub-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.9);
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    z-index: 10;
+    transition: all 0.2s ease;
+  }
+  
+  .habit-info-sub-nav:hover {
+    background: white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+  
+  .habit-info-sub-nav-prev {
+    left: 19px;
+  }
+  
+  .habit-info-sub-nav-next {
+    right: 10px;
+  }
+  
+  /* Content Section Styling */
+  .habit-info-sub-tile-content {
+    padding: 0 1rem;
+    height: calc(100% - 220px); /* 150px image + 20px margin */
+    overflow-y: auto;
+    color: inherit;
+    color: #34495e; /* Explicit color definition */
+    font-weight: 500;
+  }
+  
+  .habit-info-content-section {
+    margin: 1.0rem 0;
+    color: #2c3e50; /* Darker color for headings */
+    margin: 0 0 0.5rem 0;
+    font-size: 0.6rem;
+    font-weight: 500;
+    padding: 0 0.5rem; /* Add consistent padding */
+  }
+  
+  
+  
+  .habit-info-content-section ul {
+    margin: 0;
+    padding-left: 1.1rem;
+  }
+  
+  .habit-info-content-section li {
+    margin-bottom: 8px;
+    line-height: 1.0;
+    font-size: 0.98rem;
+    list-style-type: disc;
+    padding-left: 0.5rem;
+  }
+  
+  .habit-info-content-section h4 {
+    color: inherit;
+    font-weight: 548;
+    margin: 1rem 0 0.5rem;
+    font-size: 1.1rem;
+  }
+  
+  .habit-info-sub-tile-content h3 {
+    font-size: 1.1rem;
+    font-weight: 550;
+    color:#2c3e50;
+    margin: 0 0 1rem 0;
+    padding-bottom: 15px;
+    border-bottom: 2px solid; /* Remove hardcoded color */
+    transition: border-color 0.3s ease;
+    
+  }
+  
+  .habit-info-sub-tile-content::-webkit-scrollbar {
+    width: 5px;
+  }
+  
+  .habit-info-sub-tile-content::-webkit-scrollbar-thumb {
+    background: var(--scroll-thumb);
+    border-radius: 4px;
+  }
+  
+  .habit-info-sub-tile-content::-webkit-scrollbar-track {
+    background: var(--scroll-track);
+    border-radius: 4px;
+  }
+  
+  .habit-info-sub-tile-content::-webkit-scrollbar-thumb:hover {
+    background: var(--scroll-thumb);
+    opacity: 0.9;
+  }

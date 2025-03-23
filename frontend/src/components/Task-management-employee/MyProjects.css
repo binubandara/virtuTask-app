@@ -1,0 +1,247 @@
+
+/* Container */
+
+
+/* Title */
+.myprojects-title {
+  position: absolute;
+  top: 25px;
+  left:7.5cm;
+  font-size: 36px;
+  font-weight: bold;
+  color: #6f6c6c;
+}
+
+/* Line below the title */
+.myprojects-line {
+  position: absolute;
+  top: 146px;
+  left: 7.5cm;
+  width: calc(100% - 7.5cm); /* Makes the line extend to the right edge of the page */
+  height: 1px; /* Line thickness */
+  background-color: #bbbdbe;
+}
+
+/* Toolbar (above the line) */
+.myprojects-toolbar {
+  position: absolute;
+  top: 100px; /* Adjusted to keep it above the line */
+  left: 7.5cm;
+  width: calc(100% - 7.5cm);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Dropdown container */
+.myprojects-dropdowns {
+  display: flex;
+  gap: 15px;
+}
+
+/* Dropdown style */
+.myprojects-dropdown {
+  padding: 6px 10px;
+  border: 1px solid #ccc;
+  border-radius: 15px;
+  font-size: 14px;
+  cursor: pointer;
+  background-color: #eff4f6f5;
+}
+
+/* Button container */
+.button-group {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding-right: 20px;
+}
+
+/* Icon buttons */
+.myprojects-icon-button {
+  width: 36px;
+  height: 36px;
+  border: 1px solid #ccc;
+  border-radius: 15px;
+  background-color:#eff4f6f5;
+  cursor: pointer;
+ 
+}
+
+/* Add New Project button */
+.add-project {
+  padding: 8px 15px;
+  border: none;
+  border-radius: 15px;
+  background-color: #007BFF;
+  color: white;
+  border: 1px solid #ccc;
+  font-size: 14px;
+  cursor: pointer;
+  
+}
+.myprojects-project-details h3,.project-details h4{
+  font-weight: 549;
+}
+.blur-background {
+  filter: blur(4px);
+  pointer-events: none;
+}
+
+/* MyProjectsManager.css (continued) */
+
+.myprojects-project-tiles {
+  display: flex;
+  flex-wrap: wrap; 
+  padding: 5px; 
+  margin-top: 160px;
+  margin-left: 7.5cm; 
+  gap: 20px; /* Adjust gap as necessary */
+}
+
+
+
+
+.myprojects-project-tile {
+  position: relative;
+  background-color: #fff;
+  border-radius: 24.5px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  width: calc((100% - 2cm) / 4);
+  box-sizing: border-box; 
+  height: 260px; /* Maintain height */
+  cursor: pointer;
+  z-index: 1; /* Add this */
+  overflow: visible;
+  font-weight: 500;
+  
+  
+}
+
+.myprojects-tile-content {
+  display: flex; /* Aligns the image and text side by side */
+  align-items: flex-start; /* Aligns the items vertically */
+  margin-top: 10px;
+  font-weight: 500;
+  
+  
+}
+
+
+.myprojects-project-details {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  word-break: break-word; /* Breaks long words */
+  overflow-wrap: anywhere; /* Ensures text breaks when needed */
+  text-align: left;
+  width: 100%;
+  padding-left: 10px;
+  margin-top: 5px;
+  font-weight: 500;
+  
+}
+
+
+
+.myprojects-project-tile p {
+  margin-top: 18px;
+  word-wrap: break-word;
+  max-width: 100%;
+  padding-left: 15px; 
+  font-weight: 500;
+}
+
+.myprojects-project-icon {
+  width: 80px;
+  height: 50px;
+  min-width: 80px;
+  min-height: 50px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 10px;
+  
+}
+.myprojects-project-icon:hover .myprojects-project-svg-icon {
+  opacity: 0.8; /* Adds a hover effect */
+}
+
+/* Add this CSS code for the pencil icon and alignments */
+.myprojects-clock-icon {
+  top: 10px; /* Adjust as per your layout */
+  right: 10px; /* Adjust as per your layout */
+  cursor: pointer; /* Change pointer on hover */
+  width: 16px;
+}
+
+.myprojects-due-button {
+  position: relative;
+  border-radius: 20px;
+  padding-left: 10px;
+  padding-right: 9px;
+  padding-top: 3px;
+  padding-bottom: 3px;
+  margin-left: 13.5px;
+  margin-top: 15px;
+  
+  border: none;
+  display: flex;
+  align-items: center;
+  gap: 4.5px;
+  font-weight: 549;
+}
+.pencil-icon {
+  position: absolute;
+  top: 15px;
+  right: 17px;
+  width: 18px;  /* Increased size */
+  height: 18px;
+  cursor: pointer;
+  z-index: 1000;  /* Higher z-index */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pencil-icon:hover{
+  fill:#aac4e0 ;
+
+}
+
+.myprojects-project-options-dropdown {
+  position: absolute;
+  right: 0;
+  top: 30px;  /* Adjusted positioning */
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  width: 160px;
+  z-index: 1001; /* Higher than pencil icon */
+}
+
+.myprojects-option {
+  padding: 8px 12px;
+  font-size: 0.9rem;
+  color: #333;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.myprojects-option:hover {
+  background: #f5f5f5; /* Fixed hover color */
+}
+
+.myprojects-delete-option {
+  color: #ff4444;
+  border-top: 1px solid #eee;
+}
+
+
+tile-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}

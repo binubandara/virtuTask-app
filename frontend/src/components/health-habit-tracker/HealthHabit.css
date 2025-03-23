@@ -1,0 +1,221 @@
+.health-habit-container {
+    padding: 25px;
+    max-width: 1400px;
+  }
+  
+  .health-habit-main-title {
+    text-align: left;
+    margin-bottom: 2rem;
+    font-size: 2.5rem;
+    color: #2c3e50;
+  }
+  
+  .health-habit-carousel-wrapper {
+    position: relative;
+    width: calc(233.5px * 4 + 16px * 3); /* 4 tiles + 3 gaps (reduced gap) */
+    margin-left: 1cm;
+  }
+  
+  .health-habit-carousel {
+    position: relative;
+    width: 100%;
+    overflow:hidden;
+  }
+  
+  .health-habit-carousel-inner {
+    display: flex;
+    transition: transform 0.3s ease-in-out;
+    padding: 12px; /* Prevents clipping */
+    
+  }
+  
+  .health-habit-tile {
+    --tile-width: 230px; /* Reduced tile width */
+    flex: 0 0 var(--tile-width);
+    height: 400px;
+    border: none;
+    border-radius: 15px;
+    overflow: hidden;
+    background-color: rgba(122, 119, 119, 0.386);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease;
+    position: relative;
+    background: transparent;
+  }
+  
+  .health-habit-tile:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    cursor: pointer;
+  }
+  
+  .health-habit-tile-image {
+    height: 100%;
+    width: 100%;
+    position: relative;
+    background-size: cover;
+    background-position: center;
+    background-color: #ecf0f1;
+    background-image: linear-gradient(45deg, #dfe6e9, #ecf0f1);
+    position: relative;
+  }
+  
+  .health-habit-tile-title {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: 0;
+    padding: 1.2rem 1rem;
+    background: linear-gradient(
+      to top,
+      rgba(0, 0, 0, 0.7) 0%,
+      rgba(0, 0, 0, 0.5) 60%,
+      rgba(0, 0, 0, 0) 100%
+    );
+    color: white !important;
+    font-size: 1.2rem;
+    text-align: center;
+    font-weight: 500;
+    backdrop-filter: blur(2px);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    min-height: 30%; /* Covers lower portion of tile */
+  }
+  
+  .health-habit-nav-button {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #3498db;
+    font-size: 3rem;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    transition: all 0.2s ease;
+    z-index: 10;
+    opacity: 0.8;
+  }
+  
+  .health-habit-nav-button:hover {
+    color: #2980b9;
+    opacity: 1;
+    transform: translateY(-50%) scale(1.2);
+    cursor: pointer;
+  }
+  
+  .prev {
+    left: -5px; /* Positioned on the left border of the leftmost tile */
+  }
+  
+  .next {
+    right: -15.5px; /* Positioned on the right border of the rightmost tile */
+  }
+  
+  /* Optional: Hide buttons when disabled */
+  .health-habit-nav-button:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+  /* Checklist Styles */
+/* Checklist Styles */
+.checklist-container {
+  margin: 3em; /* Added bottom margin */
+  max-width: 720px;
+  background: rgba(245, 245, 245, 0.9);
+  border-radius: 19px;
+  padding: 1.5rem 1.5rem 2rem; /* Added bottom padding */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 8rem;
+}
+
+.checklist-header {
+  margin-bottom: 1.8rem;
+}
+
+.checklist-header h2 {
+  font-size: 1.8rem;
+  color: #2c3e50;
+  margin: 0 0 0.9rem;
+  font-weight: 500;
+}
+
+.checklist-divider {
+  height: 2px;
+  background: #dfe6e9;
+  width: 100%;
+}
+
+.checklist-input-group {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  align-items: stretch; /* Ensure equal height */
+  height: 40px; /* Fixed height */
+}
+
+.checklist-input {
+  flex: 1;
+  padding: 0 1rem;
+  border: 1px solid #dfe6e9;
+  border-radius: 6px;
+  font-size: 1rem;
+  height: 100%; /* Match button height */
+}
+
+.checklist-add-button {
+  padding: 0 1.5rem;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  height: 100%; /* Match input height */
+}
+
+.checklist-items {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  min-height: 100px; /* Maintain space when empty */
+}
+
+.checklist-item {
+  padding: 0.8rem;
+  background: white;
+  margin-bottom: 0.5rem;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.checklist-label {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
+
+.checklist-checkbox {
+  width: 1.2rem;
+  height: 1.2rem;
+  accent-color: #3498db;
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.task-text {
+  font-size: 0.95rem;
+  color: #2c3e50;
+  transition: opacity 0.2s;
+  flex: 1;
+}
+.task-text.completed {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
