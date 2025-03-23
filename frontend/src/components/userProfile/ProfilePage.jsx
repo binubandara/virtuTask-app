@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import profilePicDefault from '../../assets/profile.jpg';
 import { FaUser, FaEnvelope, FaPhone, FaCalendar, FaMapMarker, FaGlobe, FaVenusMars } from 'react-icons/fa';
