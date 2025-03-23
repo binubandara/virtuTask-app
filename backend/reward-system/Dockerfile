@@ -1,31 +1,21 @@
-# Use official Node.js 20 image
-FROM node:20.17.0-alpine
+# Stage 1: Install Dependencies
+FROM node:18-alpine AS dependencies
+WORKDIR /app
+COPY rewards/package*.json ./
+RUN npm install
 
-# Create app directory
-WORKDIR /usr/src/reward-system
+# Stage 2: Build Application
+FROM node:18-alpine AS builder
+WORKDIR /app
+COPY --from=dependencies /app/node_modules ./node_modules
+COPY rewards/. ./
+RUN npm run build # Or your build command if applicable
 
-# Accept port as build argument
-ARG PORT=5006
-
-# Set environment variables
-ENV PORT=${PORT} \
-    NODE_ENV=production
-
-# Copy package.json and package-lock.json
-COPY package*.json ./
-
-# Install dependencies
-RUN npm ci --only=production
-
-# Copy application code
-COPY . .
-
-# Expose the port
-EXPOSE ${PORT}
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s \
-  CMD wget -q -O- http://localhost:${PORT}/health || exit 1
-
-# Command to run the application
-CMD ["npm", "start"]
+# Stage 3: Production Image
+FROM node:18-alpine
+WORKDIR /app
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/dist ./dist
+COPY rewards/.env ./
+EXPOSE 5006
+CMD ["node", "dist/server.js"] # Or your server entry point
