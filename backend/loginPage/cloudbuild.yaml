@@ -1,14 +1,14 @@
 steps:
   # Build the Docker image
-  - name: 'docker'
-    args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/my-repo/auth-service:$SHORT_SHA', '-f', 'Dockerfile', '.']
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/my-repo/auth-service:$SHORT_SHA', '-f', 'Dockerfile', 'backend/authentication-service']
   
   # Push the Docker image to Artifact Registry
-  - name: 'docker'
+  - name: 'gcr.io/cloud-builders/docker'
     args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/my-repo/auth-service:$SHORT_SHA']
   
   # Deploy to Cloud Run
-  - name: 'gcloud'
+  - name: 'gcr.io/cloud-builders/gcloud'
     args:
       - 'run'
       - 'deploy'
