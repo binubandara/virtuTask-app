@@ -2,7 +2,7 @@
 FROM node:20.17.0-alpine
 
 # Create app directory
-WORKDIR /usr/src/focus-mode-service
+WORKDIR /usr/src/focus-mode
 
 # Accept port as build argument
 ARG PORT=5005

@@ -2,7 +2,7 @@
 FROM node:20.17.0-alpine
 
 # Create app directory
-WORKDIR /usr/src/rewards-system
+WORKDIR /usr/src/reward-system
 
 # Accept port as build argument
 ARG PORT=5006
