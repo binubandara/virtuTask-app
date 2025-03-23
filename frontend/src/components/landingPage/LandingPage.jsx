@@ -114,7 +114,7 @@ const LandingPage = () => {
               <div className="md:w-1/2">
                 <h1 style={{ marginBottom: "1.5rem" }} className="text-5xl font-semibold mb-4 text-[#4D4D4D] md:w-3/4 landing-snug">
                   Revolutionizing Collaboration,<br></br>
-                  <span className="text-[#4CAF4F] leading-snug">One Click at a Time!</span>
+                  <span className="text-[#4CAF4F] leading-snug">Smooth and in line!</span>
                 </h1>
                 <p style={{ marginBottom: "1.5rem" }} className="text-[#4D4D4D] text-base mb-8">
                   Bringing teams together, no matter the distance—because work should just flow.
