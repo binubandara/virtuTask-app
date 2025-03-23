@@ -1,0 +1,93 @@
+.mytasks-container {
+  max-width: 1200px;
+  margin: 40px auto;
+  padding: 0 20px;
+}
+
+.mytasks-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.mytasks-header-left {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.mytasks-back-arrow {
+  font-size: 24px;
+  cursor: pointer;
+  padding: 5px 10px;
+  transition: all 0.2s ease;
+}
+
+.mytasks-back-arrow:hover {
+  background-color: #f5f5f5;
+  border-radius: 4px;
+}
+
+.mytasks-project-title {
+  font-family: 'Arial', sans-serif;
+  font-size: 24px;
+  font-weight: 600;
+  color: #2d2d2d;
+  margin: 0;
+}
+
+.mytasks-members-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mytasks-members-label {
+  font-family: 'Arial', sans-serif;
+  font-size: 14px;
+  color: #5a5a5a;
+}
+
+.mytasks-member-icon {
+  width: 32px;
+  height: 32px;
+  background-color: #e0e0e0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.mytasks-tasks-content {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.mytasks-tasks-header {
+  margin-bottom: 20px;
+}
+
+.mytasks-tasks-title {
+  font-family: 'Arial', sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+  color: #2d2d2d;
+  margin: 0 0 10px 0;
+}
+
+.mytasks-title-divider {
+  height: 1px;
+  background-color: #e0e0e0;
+  margin-bottom: 20px;
+}
+
+.mytasks-no-tasks-message {
+  font-family: 'Arial', sans-serif;
+  font-size: 14px;
+  color: #a0a0a0;
+  text-align: center;
+  padding: 30px 0;
+}

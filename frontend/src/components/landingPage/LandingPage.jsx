@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Carousel } from "flowbite-react";
-import { Footer } from "flowbite-react";
+import { Carousel } from "react-bootstrap";
 import { MdEmail } from "react-icons/md";
 import logo from "../../assets/logo.png";
 import pic1 from "../../assets/pic1.png";
@@ -43,112 +42,98 @@ const LandingPage = () => {
   return (
     <div>
       {/* Navbar */}
-      <header className="w-full bg-white md:bg-[transparent] fixed top-0 left-0 right-0">
-        <nav
-          className={`py-4 lg:px-18 px-10 ${isSticky ? "sticky top-0 left-0 right-0 border-b bg-white duration-300" : ""}`}
-          style={{ paddingLeft: "40px", paddingTop: "20px", paddingRight: "40px" }}
-        >
-          <div className="flex justify-between items-center text-base gap-8">
-            <a href="/" className="text-2xl font-semibold flex items-center space-x-3">
-              <img src={logo} alt="VirtuTask Logo" className="w-10 inline-block items-center" />
-              <span className="text-[#263238]">VirtuTask</span>
+      <header className={`w-full bg-white fixed-top ${isSticky ? "sticky-top shadow-sm" : ""}`}>
+        <nav className="navbar navbar-expand-lg navbar-light py-3">
+          <div className="container">
+            <a href="/" className="navbar-brand d-flex align-items-center">
+              <img src={logo} alt="VirtuTask Logo" className="me-2" style={{ width: "40px" }} />
+              <span className="text-dark fs-4 fw-semibold">VirtuTask</span>
             </a>
-
-            <ul className="md:flex justify-start gap-x-12">
-              {navItems.map(({ link, path }) => (
-                <li key={link}>
-                  <a href={path} className="text-base md:text-lg text-[#717171] hover:text-[#4CAF4F]">
-                    {link}
-                  </a>
-                </li>
-              ))}
-            </ul>
-
-            {/* Buttons for large devices */}
-            <div className="justify-start gap-x-4 hidden lg:flex items-center">
-              <button
-                className="bg-[#4CAF4F] text-[white] w-20 h-8 transition-all duration-300 rounded hover:bg-[#4D4D4D]"
-                onClick={() => navigate("/pane")}
-              >
-                Login
-              </button>
-
-              <button className="bg-[#4CAF4F] text-[white] w-20 h-8 transition-all duration-300 rounded hover:bg-[#4D4D4D]">
-                Register
-              </button>
+            <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+              <span className="navbar-toggler-icon"></span>
+            </button>
+            <div className="collapse navbar-collapse" id="navbarNav">
+              <ul className="navbar-nav ms-auto mb-2 mb-lg-0">
+                {navItems.map(({ link, path }) => (
+                  <li key={link} className="nav-item">
+                    <a href={path} className="nav-link text-secondary">
+                      {link}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+              <div className="d-flex ms-3">
+                <button className="btn btn-success me-2" onClick={() => navigate("/login")}>
+                  Login
+                </button>
+                <button className="btn btn-success" onClick={() => navigate("/register")}>
+                  Register
+                </button>
+              </div>
             </div>
           </div>
         </nav>
       </header>
 
       {/* Home Section */}
-      <div id="home" className="bg-[#F5F7FA]">
-        <div style={{ paddingLeft: "2.5rem", paddingRight: "2.5rem" }} className="max-w-screen mx-auto min-h-screen h-screen">
-          <Carousel className="w-full mx-auto">
-            <div className="my-28 md:my-8 py-12 flex flex-col md:flex-row-reverse items-center justify-between gap-12">
-              <div>
-                <img src={pic1} alt="" className="w-30 md:w-20 lg:w-130" />
-              </div>
-
-              {/* Hero text */}
-              <div className="md:w-1/2">
-                <h1 style={{ marginBottom: "1.5rem" }} className="text-5xl font-semibold mb-4 text-[#4D4D4D] md:w-3/4 landing-snug">
-                  Redefining Work,<br></br>
-                  <span className="text-[#4CAF4F] leading-snug">One Click at a Time!</span>
-                </h1>
-                <p style={{ marginBottom: "1.5rem" }} className="text-[#4D4D4D] text-base mb-8">
-                  Streamline your tasks, connect effortlessly, and thrive—wherever you are.
-                </p>
-                <button className="btn-primary h-10 w-60 bg-[#4CAF4F] text-white rounded hover:bg-[#4D4D4D] transition-all duration-300 hover:-translate-y-4">
-                  Sign in with your work email
-                </button>
+      <div id="home" className="bg-light">
+        <Carousel>
+          <Carousel.Item>
+            <div className="container py-5">
+              <div className="row align-items-center">
+                <div className="col-md-6 order-md-2">
+                  <img src={pic1} alt="" className="img-fluid" />
+                </div>
+                <div className="col-md-6 order-md-1">
+                  <h1 className="display-4 fw-semibold text-dark">
+                    Redefining Work,<br />
+                    <span className="text-success">One Click at a Time!</span>
+                  </h1>
+                  <p className="lead text-secondary">
+                    Streamline your tasks, connect effortlessly, and thrive—wherever you are.
+                  </p>
+                  <button className="btn btn-success btn-lg">Sign in with your work email</button>
+                </div>
               </div>
             </div>
-
-            <div className="my-28 md:my-8 py-12 flex flex-col md:flex-row-reverse items-center justify-between gap-12">
-              <div>
-                <img src={img2} alt="" className="w-30 md:w-30 lg:w-180" />
-              </div>
-
-              {/* Hero text */}
-              <div className="md:w-1/2">
-                <h1 style={{ marginBottom: "1.5rem" }} className="text-5xl font-semibold mb-4 text-[#4D4D4D] md:w-3/4 landing-snug">
-                  Revolutionizing Collaboration,<br></br>
-                  <span className="text-[#4CAF4F] leading-snug">Smooth and in line!</span>
-                </h1>
-                <p style={{ marginBottom: "1.5rem" }} className="text-[#4D4D4D] text-base mb-8">
-                  Bringing teams together, no matter the distance—because work should just flow.
-                </p>
-                <button className="btn-primary h-10 w-60 bg-[#4CAF4F] text-white rounded hover:bg-[#4D4D4D] transition-all duration-300 hover:-translate-y-4">
-                  Sign in with your work email
-                </button>
+          </Carousel.Item>
+          <Carousel.Item>
+            <div className="container-slide py-5">
+              <div className="row align-items-center">
+                <div className="col-md-6 order-md-2">
+                  <img src={img2} alt="" className="img-fluid" />
+                </div>
+                <div className="col-md-6 order-md-1">
+                  <h1 className="display-4 fw-semibold text-dark">
+                    Revolutionizing Collaboration,<br />
+                    <span className="text-success">One Click at a Time!</span>
+                  </h1>
+                  <p className="lead text-secondary">
+                    Bringing teams together, no matter the distance—because work should just flow.
+                  </p>
+                  <button className="btn btn-success btn-lg">Sign in with your work email</button>
+                </div>
               </div>
             </div>
-          </Carousel>
-        </div>
+          </Carousel.Item>
+        </Carousel>
       </div>
 
       {/* Services Section */}
-      <div id="services" className="md:px-14 px-4 py-1 max-w-screen-2xl mx-auto">
-        <div className="text-center my-8">
-          <h2 style={{ marginTop: "6rem", marginBottom: "0.5rem" }} className="text-4xl text-[#4D4D4D] font-semibold mb-2">
-            Unlock the Future of Remote Work!
-          </h2>
-          <p className="text-[#717171]">Who is VirtuTask suitable for?</p>
+      <div id="services" className="container py-5">
+        <div className="text-center my-5">
+          <h2 className="display-5 fw-semibold text-dark">Unlock the Future of Remote Work!</h2>
+          <p className="text-secondary">Who is VirtuTask suitable for?</p>
         </div>
-
-        {/* Services cards */}
-        <div style={{ marginTop: "3rem", marginBottom: "4rem" }} className="mt-14 grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 md:w-11/12 mx-auto gap-12">
+        <div className="row g-4">
           {services.map((service) => (
-            <div key={service.id} style={{ marginBottom: "3rem", marginLeft: "3rem" }} className="px-4 py-8 text-center md:w-[300px] mx-auto md:h-80 rounded-md shadow cursor-pointer hover:-translate-y-5 hover:border-b-4 hover:border-indigo-700 transition-all duration-300 flex items-center justify-center h-full">
-              <div>
-                <div style={{ marginLeft: "7rem", marginBottom: "2rem" }} className="bg-[#E8F5E9] mb-4 w-14 h-14 mx-auto rounded-br-3xl">
-                  <img src={service.image} style={{ marginTop: "3rem" }} alt="" />
+            <div key={service.id} className="col-md-4">
+              <div className="card h-100 shadow-sm border-0 text-center p-4">
+                <div className="bg-light rounded-circle p-3 mx-auto mb-3">
+                  <img src={service.image} alt="" className="img-fluid" />
                 </div>
-                <h4 style={{ marginBottom: "1.5rem" }} className="text-2xl font-bold text-[#4D4D4D] mb-2 px-2">
-                  {service.title}
-                </h4>
-                <p className="text-sm text-[#4D4D4D]">{service.description}</p>
+                <h4 className="fw-bold text-dark">{service.title}</h4>
+                <p className="text-secondary">{service.description}</p>
               </div>
             </div>
           ))}
@@ -156,63 +141,73 @@ const LandingPage = () => {
       </div>
 
       {/* Footer */}
-      <Footer container>
-        <div id="contact" className="w-full text-white">
-          <div className="grid w-full justify-between sm:flex sm:justify-between md:flex md:grid-cols-1">
-            <div className="space-y-4 mb-8">
-              <a href="/" className="text-2xl font-semibold flex items-center space-x-3">
-                <img src={logo} alt="VirtuTask Logo" className="w-15 inline-[block]" />
-                <span className="text-white">VirtuTask</span>
+      <footer className="bg-dark text-white py-5">
+        <div className="container">
+          <div className="row">
+            <div className="col-md-4 mb-4">
+              <a href="/" className="d-flex align-items-center text-white text-decoration-none">
+                <img src={logo} alt="VirtuTask Logo" className="me-2" style={{ width: "40px" }} />
+                <span className="fs-4 fw-semibold">VirtuTask</span>
               </a>
-              <div>
-                <p className="mb-1">copyright © 2025 VirtuTask ltd.</p>
-                <p>All rights reserved</p>
-              </div>
+              <p className="mt-3">copyright © 2025 VirtuTask ltd.</p>
+              <p>All rights reserved</p>
             </div>
-            <div className="grid grid-cols-2 gap-8 sm:mt-4 sm:grid-cols-3 sm:gap-6">
-              <div>
-                <Footer.Title title="about" />
-                <Footer.LinkGroup col>
-                  <a href="#home" className="text-white hover:underline">
+            <div className="col-md-2 mb-4">
+              <h5 className="fw-bold">About</h5>
+              <ul className="list-unstyled">
+                <li>
+                  <a href="#home" className="text-white text-decoration-none">
                     Home
                   </a>
-                  <a href="#services" className="text-white hover:underline">
+                </li>
+                <li>
+                  <a href="#services" className="text-white text-decoration-none">
                     Services
                   </a>
-                </Footer.LinkGroup>
-              </div>
-              <div>
-                <Footer.Title title="Follow us" />
-                <Footer.LinkGroup col>
-                  <Footer.Link href="https://github.com" target="_blank" rel="noopener noreferrer">
+                </li>
+              </ul>
+            </div>
+            <div className="col-md-2 mb-4">
+              <h5 className="fw-bold">Follow us</h5>
+              <ul className="list-unstyled">
+                <li>
+                  <a href="https://github.com" className="text-white text-decoration-none">
                     Github
-                  </Footer.Link>
-                  <Footer.Link href="https://www.instagram.com/virtutask_?igsh=enRldjVma2NhZGg0" target="_blank" rel="noopener noreferrer">
+                  </a>
+                </li>
+                <li>
+                  <a href="https://www.instagram.com/virtutask_?igsh=enRldjVma2NhZGg0" className="text-white text-decoration-none">
                     Instagram
-                  </Footer.Link>
-                </Footer.LinkGroup>
-              </div>
-              <div>
-                <Footer.Title title="Legal" />
-                <Footer.LinkGroup col>
-                  <Footer.Link href="#">Privacy Policy</Footer.Link>
-                  <Footer.Link href="#">Terms &amp; Conditions</Footer.Link>
-                </Footer.LinkGroup>
-              </div>
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <div className="col-md-2 mb-4">
+              <h5 className="fw-bold">Legal</h5>
+              <ul className="list-unstyled">
+                <li>
+                  <a href="#" className="text-white text-decoration-none">
+                    Privacy Policy
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="text-white text-decoration-none">
+                    Terms &amp; Conditions
+                  </a>
+                </li>
+              </ul>
             </div>
           </div>
-          <Footer.Divider />
-          <div className="w-full sm:flex sm:items-center sm:justify-between">
-            <Footer.Copyright href="#" by="Flowbite™" year={2025} />
-            <div className="mt-4 flex items-center space-x-2 sm:mt-0">
-              <MdEmail className="text-xl" />
-              <a href="mailto:contact@virtutask.com" className="text-white hover:underline">
-                contact@virtutask.com
-              </a>
-            </div>
+          <hr className="bg-light" />
+          <div className="d-flex justify-content-between align-items-center">
+            <p className="mb-0">© 2025 Flowbite™</p>
+            <a href="mailto:contact@virtutask.com" className="text-white text-decoration-none d-flex align-items-center">
+              <MdEmail className="me-2" />
+              contact@virtutask.com
+            </a>
           </div>
         </div>
-      </Footer>
+      </footer>
     </div>
   );
 };

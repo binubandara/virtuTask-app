@@ -1,10 +1,14 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import profilePicDefault from '../../assets/profile.jpg';
-import { FaUser, FaEnvelope, FaPhone, FaCalendar, FaMapMarker, FaGlobe, FaVenusMars } from 'react-icons/fa'; 
-import './ProfilePage.css'; 
+import { FaUser, FaEnvelope, FaPhone, FaCalendar, FaMapMarker, FaGlobe, FaVenusMars } from 'react-icons/fa';
+import apiClient from '../utils/apiClient';
+import './ProfilePage.css';
 
 const ProfilePage = () => {
   const [profilePic, setProfilePic] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -14,43 +18,154 @@ const ProfilePage = () => {
     address: '',
     country: '',
     city: '',
-    gender: ''
+    gender: '',
   });
+  
+  // Format date from DD/MM/YYYY to YYYY-MM-DD
+  const formatDateForInput = (dateString) => {
+    if (!dateString) return '';
+    
+    // Check if already in YYYY-MM-DD format
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+      return dateString;
+    }
+    
+    // Handle DD/MM/YYYY format
+    const parts = dateString.split('/');
+    if (parts.length === 3) {
+      return `${parts[2]}-${parts[1]}-${parts[0]}`;
+    }
+    
+    return dateString;
+  };
+  
+  // Format date from YYYY-MM-DD to DD/MM/YYYY for submission
+  const formatDateForSubmission = (dateString) => {
+    if (!dateString) return '';
+    
+    // Always ensure we're using YYYY-MM-DD format for the API
+    const date = new Date(dateString);
+    if (!isNaN(date.getTime())) {
+      return date.toISOString().split('T')[0]; // Returns YYYY-MM-DD
+    }
+    
+    return dateString;
+  };
+  
+  // Fetch profile data when component mounts 
+  useEffect(() => {
+    const fetchProfileData = async () => {
+      try {
+        setLoading(true);
+        const response = await apiClient.get('/api/users/profile');
+        const { profile, user } = response.data;
+        
+        setFormData({
+          firstName: profile.firstname || '',
+          lastName: profile.lastname || '',
+          dateOfBirth: formatDateForInput(profile.dob) || '',
+          mobile: profile.contact || '',
+          email: user.email || '',
+          address: profile.address || '',
+          country: profile.pcode || '', // Backend uses pcode for country
+          city: profile.city || '',
+          gender: profile.gender || '',
+        });
+        
+        if (profile.profileImage) {
+          setProfilePic(profile.profileImage);
+        }
+        
+        setLoading(false);
+      } catch (err) {
+        console.error('Error fetching profile:', err);
+        setError('Failed to load profile data');
+        setLoading(false);
+      }
+    };
+    
+    fetchProfileData();
+  }, []);
 
   const handleFileChange = (e) => {
-    setProfilePic(URL.createObjectURL(e.target.files[0]));
+    if (e.target.files && e.target.files[0]) {
+      setProfilePic(URL.createObjectURL(e.target.files[0]));
+    }
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({
       ...formData,
-      [name]: value
+      [name]: value,
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Create a FormData object
+    const formDataObj = new FormData();
+    formDataObj.append('firstname', formData.firstName);
+    formDataObj.append('lastname', formData.lastName);
+    formDataObj.append('dob', formatDateForSubmission(formData.dateOfBirth));
+    formDataObj.append('contact', formData.mobile);
+    formDataObj.append('address', formData.address);
+    formDataObj.append('pcode', formData.country); // Backend expects pcode
+    formDataObj.append('city', formData.city);
+    formDataObj.append('gender', formData.gender);
+
+    // Append the profile picture if it exists and is a new file (starts with blob:)
+    if (profilePic && profilePic.startsWith('blob:')) {
+      try {
+        const file = await fetch(profilePic).then((res) => res.blob());
+        formDataObj.append('profileImage', file, 'profile.jpg');
+      } catch (error) {
+        console.error('Error preparing image upload:', error);
+      }
+    }
+
+    try {
+      console.log('Saving profile with data:', Object.fromEntries(formDataObj));
+      const response = await apiClient.post('/api/users/profile', formDataObj, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      if (!response.data) {
+        throw new Error('Failed to save profile');
+      }
+
+      console.log('Profile saved:', response.data);
+      alert('Profile saved successfully!');
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      alert(`Error saving profile: ${error.message || 'Unknown error'}`);
+    }
   };
 
   const filledFields = Object.values(formData).filter((value) => value !== '').length;
   const totalFields = Object.keys(formData).length;
   const completionPercentage = ((filledFields / totalFields) * 100).toFixed(0);
 
+  if (loading) {
+    return <div className="loading-spinner">Loading profile data...</div>;
+  }
+
+  if (error) {
+    return <div className="error-message">{error}</div>;
+  }
+
   return (
     <div className="profile-container">
-      <h1 className="profile-heading">
-        Edit Profile
-      </h1>
+      <h1 className="profile-heading">Edit Profile</h1>
 
       <div className="profile-section">
         <div className="profile-picture-section">
           <div className="profile-picture-container">
             <div className="profile-picture">
-              <img
-                src={profilePic || profilePicDefault}
-                alt="Profile"
-              />
+              <img src={profilePic || profilePicDefault} alt="Profile" />
               <div className="profile-picture-overlay">
                 <span>Change Photo</span>
               </div>
@@ -60,11 +175,9 @@ const ProfilePage = () => {
               onChange={handleFileChange}
               className="hidden"
               id="profile-pic-upload"
+              accept="image/*"
             />
-            <label
-              htmlFor="profile-pic-upload"
-              className="profile-picture-upload"
-            >
+            <label htmlFor="profile-pic-upload" className="profile-picture-upload">
               Upload Photo
             </label>
           </div>
@@ -154,6 +267,7 @@ const ProfilePage = () => {
                     value={formData.email}
                     onChange={handleChange}
                     className="profile-form-input"
+                    readOnly
                   />
                 </div>
               </div>
@@ -168,9 +282,9 @@ const ProfilePage = () => {
                     className="profile-form-input"
                   >
                     <option value="">Select</option>
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                    <option value="other">Other</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
                   </select>
                 </div>
               </div>
@@ -219,10 +333,7 @@ const ProfilePage = () => {
               </div>
             </div>
 
-            <button
-              type="submit"
-              className="profile-form-button"
-            >
+            <button type="submit" className="profile-form-button">
               Save
             </button>
           </form>

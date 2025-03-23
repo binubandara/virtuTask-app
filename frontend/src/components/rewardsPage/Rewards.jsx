@@ -14,13 +14,13 @@ const Rewards = () => {
   useEffect(() => {
     const fetchRewards = async () => {
       try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('userToken');
         if (!token) {
-          navigate('/pane/rewards');
+          navigate('/rewards');
           return;
         }
 
-        const gameResponse = await fetch('http://localhost:5004/api/game-time', {
+        const gameResponse = await fetch('http://localhost:5006/api/game-time', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
 
@@ -35,7 +35,7 @@ const Rewards = () => {
           setGameTimeReward(gameData);
         }
 
-        const monthlyResponse = await fetch('http://localhost:5004/api/monthly', {
+        const monthlyResponse = await fetch('http://localhost:5006/api/monthly', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
 
@@ -56,8 +56,8 @@ const Rewards = () => {
 
   const handleClaimGameTime = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5004/api/createGame', {
+      const token = localStorage.getItem('userToken');
+      const response = await fetch('http://localhost:5006/api/createGame', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });

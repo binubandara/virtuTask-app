@@ -1,0 +1,25 @@
+steps:
+  # Build the Docker image
+  - name: 'docker'
+    args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/my-repo/engagement-hub:$SHORT_SHA', '-f', 'Dockerfile', '.']
+  # Push the Docker image to Artifact Registry
+  - name: 'docker'
+    args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/my-repo/engagement-hub:$SHORT_SHA']
+  # Deploy to Cloud Run
+  - name: 'gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'engagement-hub'
+      - '--image'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/my-repo/engagement-hub:$SHORT_SHA'
+      - '--region'
+      - 'us-central1'
+      - '--platform'
+      - 'managed'
+      - '--set-env-vars=MONGO_URI=${_MONGO_URI},ENGAGEMENT_HUB_PORT=5002,NODE_ENV=production,FRONTEND_ORIGIN=${_FRONTEND_ORIGIN}'
+      - '--memory=1Gi'
+      - '--cpu=1'
+substitutions:
+  _MONGO_URI: 'mongodb+srv://binu20230681:virtutask123@virtutask.nmivs.mongodb.net/?retryWrites=true&w=majority&appName=VirtuTask' 
+  _FRONTEND_ORIGIN: 'http://localhost:5173' 

@@ -6,9 +6,8 @@ import img2 from "../../assets/img2.png"
 const Home = () => {
     return (
         <div id="home" className="bg-[#F5F7FA]">
-            <div style={{ paddingLeft: "2.5rem", paddingRight: "2.5rem"}} className=" max-w-screen mx-auto min-h-screen h-screen"> 
-                
-                                
+            <div style={{ paddingLeft: "2.5rem", paddingRight: "2.5rem"}} className=" max-w-screen mx-auto min-h-screen h-screen">
+
             <Carousel className="w-full  mx-auto">
                     <div className="my-28 md:my-8 py-12 flex flex-col md:flex-row-reverse items-center justify-between gap-12">
                         <div>

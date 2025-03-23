@@ -1,0 +1,486 @@
+.task-info-container {
+  position: fixed;
+  right: 0;
+  top: 0;
+  height: 100%;
+  width: 633px;
+  background-color: #ffffff;
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  overflow-y: auto;
+  z-index: 1000;
+}
+
+
+.task-info-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.task-info-title {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #333;
+  font-weight: 549.9;
+}
+
+.task-info-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+}
+
+.task-info-close svg {
+  width: 24px;
+  height: 24px;
+  color: #666;
+}
+
+.task-info-divider {
+  border-bottom: 2px solid #eee;
+  margin-bottom: 10px;
+}
+
+.task-info-meta-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+  position: relative; /* Add this */
+  padding-left: 55px; /* Make space for icons */
+  
+}
+
+.task-info-meta-label {
+  font-weight: 530;
+  margin-right: 10px;
+  min-width: 80px;
+  padding-right: 10px;
+  margin-left: 16px;
+  
+}
+/* In TaskInformation.css */
+.taskinfo-status-svg,
+.taskinfo-priority-svg,
+.taskinfo-duedate-svg,
+.taskinfo-assignee-svg {
+position: absolute;
+left: 40px;
+top: calc(10% + 1px); /* Changed from 50% to 55% */
+}
+
+.task-info-status-capsule,
+.task-info-priority-capsule {
+  padding: 1px 12px;
+  border-radius: 15px;
+  color: white;
+  font-size: 0.8rem;
+  text-transform: capitalize;
+  text-align: center;
+
+}
+.task-info-status-capsule{
+  width: 100px;
+}
+.task-info-priority-capsule{
+  width: 100px;
+}
+
+.task-info-due-date {
+  color: #666;
+  font-size: 0.95rem;
+}
+
+.task-info-assignee-button {
+  background: none;
+  border: 1px solid #ddd;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #333;
+}
+.task-info-meta-section{
+  margin-top: 35px;
+  
+}
+
+.task-info-description-section,
+.task-info-attachments-section,
+.task-info-comments-section {
+  
+  margin-top: 43px;
+  margin-left: 20px;
+ 
+
+}
+.task-info-attachments-section,
+.task-info-comments-section {
+  margin-top: 23px;
+  
+}
+.task-info-comments-section { margin-top: 23px;margin-bottom: 70px;}
+
+.task-info-section-title {
+  font-size: 1.17rem;
+  color: #333;
+  margin-bottom: 10px;
+  background: none;
+  border: none;
+  font-weight: 50;
+}
+
+.task-info-description-textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 14px;
+  resize: vertical;
+  white-space: pre-wrap; /* Match textarea wrapping */
+  word-break: break-word;
+  line-height: 1.5;
+}
+
+.task-info-attachments-header input{
+  width: 500px;
+  margin-top: 3px;
+}
+.task-info-attachments-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+.task-info-comments-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center; 
+}
+.attachment-upload-btn {
+  cursor: pointer;
+  width: 30px;
+  height: 30px;
+  border: 2px solid #ddd;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  background: white;
+}
+
+.attachments-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.attachment-item {
+  width: calc(33.33% - 10px);
+  padding: 12px;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  position: relative;
+  box-sizing: border-box;
+  break-inside: avoid;
+}
+
+.attachment-content {
+  display: flex;
+  align-items: flex-start;
+  text-decoration: none;
+  color: #333;
+}
+
+.file-icon {
+  font-size: 24px;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.file-details {
+  flex-grow: 1;
+  min-width: 0;
+}
+
+.file-name {
+  word-break: break-word;
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.file-size {
+  font-size: 0.75rem;
+  color: #666;
+  margin-top: 4px;
+  display: block;
+}
+.comment-input-area {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.comment-buttons {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  display: flex;
+  gap: 8px;
+  z-index: 1;
+}
+
+
+.delete-attachment-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2rem;
+  color: #999;
+  padding: 4px;
+  line-height: 1;
+}
+
+.delete-attachment-btn:hover {
+  color: #ff4444;
+}
+
+.task-info-comment-textarea {
+  width: 100%;
+  min-height: 100px;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  resize: vertical;
+}
+
+/* Add these styles to TaskInformation.css */
+.assignee-icons-container {
+position: relative;
+display: flex;
+gap: 8px;
+}
+
+.assignee-dropdown {
+position: absolute;
+top: 100%;
+left: 0;
+background: white;
+box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+z-index: 100;
+padding: 8px;
+}
+
+.assignee-item {
+display: flex;
+align-items: center;
+gap: 8px;
+padding: 4px;
+}
+
+.task-info-description-view {
+  border: 1px solid #ddd;
+  border-radius: 14px;
+  padding: 10px;
+  white-space: pre-wrap; /* Preserve line breaks */
+  word-break: break-word; /* Prevent horizontal overflow */
+  min-height: 80px;
+  overflow: visible; /* Remove scrollbar */
+  resize: none; /* Remove resize handle */
+  line-height: 1.5;
+  background: transparent;
+  width: 100%;
+}
+
+.comment-item {
+margin-bottom: 10px;
+padding: 8px;
+border-bottom: 1px solid #eee;
+}
+
+.comment-actions button {
+margin-left: 8px;
+font-size: 0.7rem;
+}
+/* Comment Actions Styling */
+.comment-actions {
+display: flex;
+gap: 8px;
+}
+
+.edit-btn, .delete-btn, .confirm-btn, .add-comment-btn,.cancel-btn {
+padding: 4px 12px;
+border-radius: 15px;
+border: none;
+cursor: pointer;
+font-size: 0.8rem;
+transition: opacity 0.2s;
+}
+/* Comments Section */
+.comment-input-container {
+background: #f5f5f5;
+border-radius: 8px;
+padding: 15px;
+margin-bottom: 20px;
+}
+
+.comment-input-wrapper {
+display: flex;
+gap: 10px;
+position: relative;
+}
+.add-comment-btn {
+background-color: #9370DB;
+color: white;
+padding: 6px 15px;
+border-radius: 15px;
+border: none;
+}
+
+
+.emoji-btn {
+background: none;
+border: none;
+cursor: pointer;
+font-size: 1.2rem;
+padding: 0 5px;
+margin-top: 2px;
+margin-bottom: 23px;
+
+}
+
+.comment-item {
+margin-bottom: 20px;
+padding: 15px;
+background: white;
+border-radius: 8px;
+box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.comment-header {
+display: flex;
+justify-content: space-between;
+align-items: center;
+margin-bottom: 8px;
+}
+
+.comment-user-info {
+display: flex;
+align-items: center;
+gap: 8px;
+}
+
+.comment-text {
+margin-left: 40px;
+color: #333;
+white-space: pre-wrap;
+}
+.edit-btn {
+background-color: #ffd700;
+color: #000;
+}
+
+.delete-btn {
+background-color: #ff4444;
+color: white;
+}
+
+.confirm-btn {
+background-color: #4CAF50;
+color: white;
+}
+
+.add-comment-btn {
+background-color: #9370DB;
+color: white;
+padding: 3px 20px;
+border-radius: 20px;
+margin-top: 2px;
+margin-bottom: 23px;
+}
+.cancel-btn {
+background-color: #ff793b !important;
+color: #f9f6f6 !important;
+}
+
+.comment-edit-textarea {
+width: 100%;
+min-height: 60px;
+padding: 8px;
+border: 1px solid #ddd;
+border-radius: 8px;
+resize: vertical;
+}
+
+/* Attachment Styling */
+.attachment-item {
+padding: 8px;
+border: 1px solid #eee;
+border-radius: 8px;
+margin-bottom: 8px;
+display: flex;
+align-items: center;
+}
+
+.attachment-item a {
+color: #0073ff;
+text-decoration: none;
+}
+
+.attachment-item a:hover {
+text-decoration: underline;
+}
+/* Add these updates to TaskInformation.css */
+.comment-user-actions {
+display: flex;
+justify-content: space-between;
+align-items: center;
+width: 100%;
+}
+
+.comment-text {
+white-space: pre-wrap;
+word-break: break-word;
+margin-left: 20px;
+padding: 8px;
+background: #f5f5f5;
+border-radius: 8px;
+margin-top: 8px;
+}
+
+.task-info-description-view {
+border: 1px solid #ddd;
+border-radius: 14px;
+padding: 10px;
+min-height: 80px;
+}
+
+.confirm-btn {
+background-color: #4CAF50 !important;
+color: white !important;
+}
+
+.attachment-item a {
+cursor: pointer;
+padding: 6px 12px;
+border: 1px solid #0073ff;
+border-radius: 4px;
+display: inline-block;
+font-size: 0.59rem;
+}
+.emoji-picker-container {
+position: absolute;
+bottom: calc(100% - 55px);
+right: 0;
+z-index: 1000;
+box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}

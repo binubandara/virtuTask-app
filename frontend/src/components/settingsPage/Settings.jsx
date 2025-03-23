@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { FaPalette, FaCalendarAlt, FaBell, FaLock, FaPowerOff, FaGlobe } from "react-icons/fa";
+import { FaPalette, FaCalendarAlt, FaBell, FaLock, FaPowerOff, FaGlobe, FaShieldAlt } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 import "./Settings.css";
 
 const Settings = () => {
   const [darkMode, setDarkMode] = useState(false);
+  const navigate = useNavigate();
 
   const [notifications, setNotifications] = useState({
     email: true,
@@ -28,6 +30,20 @@ const Settings = () => {
     }));
   };
 
+  const handleNavigateToPrivacy = () => {
+    navigate("/settings/privacy");
+  };
+
+  // Handle logout
+  const handleLogout = () => {
+    
+    localStorage.removeItem("authToken"); 
+
+    // Redirect to the login page
+    navigate("/login");
+  };
+
+  // Effect to toggle dark mode on the body
   useEffect(() => {
     if (darkMode) {
       document.body.classList.add("dark-mode");
@@ -38,11 +54,14 @@ const Settings = () => {
 
   return (
     <div className={`settings-container ${darkMode ? "dark-mode" : ""}`}>
+      {/* My Settings Heading */}
       <h1 className={`settings-heading ${darkMode ? "dark-mode" : ""}`}>
         My Settings
       </h1>
 
+      {/* Grid Layout for Setting Boxes */}
       <div className="settings-grid">
+        {/* Theme Settings */}
         <div className={`settings-box ${darkMode ? "dark-mode" : ""}`}>
           <h2 className="settings-box-heading">
             <FaPalette /> Theme Settings
@@ -56,6 +75,7 @@ const Settings = () => {
           </div>
         </div>
 
+        {/* Notifications */}
         <div className={`settings-box ${darkMode ? "dark-mode" : ""}`}>
           <h2 className="settings-box-heading">
             <FaBell /> Notifications Settings
@@ -81,7 +101,9 @@ const Settings = () => {
         </div>
       </div>
 
+      {/* Second Grid Row */}
       <div className="settings-grid">
+        {/* Time Zone Select */}
         <div className={`settings-box ${darkMode ? "dark-mode" : ""}`}>
           <h2 className="settings-box-heading">
             <FaGlobe /> Global Time Zone
@@ -493,6 +515,7 @@ const Settings = () => {
           </div>
         </div>
 
+        {/* Date and Time */}
         <div className={`settings-box ${darkMode ? "dark-mode" : ""}`}>
           <h2 className="settings-box-heading">
             <FaCalendarAlt /> Date & Time Format
@@ -522,6 +545,25 @@ const Settings = () => {
         </div>
       </div>
 
+      {/* Privacy Settings Box */}
+      <div className="settings-grid">
+        <div className={`settings-box ${darkMode ? "dark-mode" : ""}`}>
+          <h2 className="settings-box-heading">
+            <FaShieldAlt /> Privacy & Data
+          </h2>
+          <p className="privacy-description">
+            Manage your privacy settings, data collection preferences, and consent options.
+          </p>
+          <button 
+            className="privacy-settings-button"
+            onClick={handleNavigateToPrivacy}
+          >
+            Privacy Settings
+          </button>
+        </div>
+      </div>
+
+      {/* Account Settings */}
       <div className="account-settings">
         <div className={`settings-box ${darkMode ? "dark-mode" : ""}`}>
           <h2 className="settings-box-heading">
@@ -531,7 +573,8 @@ const Settings = () => {
             <button className="change-password-button">
               Change Password
             </button>
-            <button className="logout-button">
+            <button className="logout-button" onClick={handleLogout}>
+
               <FaPowerOff /> Log Out
             </button>
           </div>
