@@ -50,7 +50,7 @@ function MyProjectsManager() {
         const response = await axios.get(`${API_URL}/my-projects`, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        
+        console.log(response);
         // Transform API data to match component structure
         const formattedProjects = response.data.map(project => ({
           id: project.project_id,
@@ -304,54 +304,6 @@ function MyProjectsManager() {
 
   const handleTileClick = (projectId) => {
     navigate(`/task-manager/${projectId}`);
-  };
-
-  const addMember = (member) => {
-    // Check if the member is already added
-    const isMemberAdded = formData.members.some(m => 
-      typeof m === 'object' ? m.id === member.id : m === member.id
-    );
-  
-    if (!isMemberAdded) {
-      setFormData(prev => ({
-        ...prev,
-        members: [...prev.members, member]
-      }));
-    }
-  
-    setMemberSearch('');
-    setShowDropdown(false);
-  };
-
-  const handleMemberSearch = async (e) => {
-    const searchValue = e.target.value;
-    setMemberSearch(searchValue);
-  
-    if (searchValue.length < 1) {
-      setSearchResults([]);
-      setShowDropdown(false);
-      return;
-    }
-  
-    setIsSearching(true);
-    setShowDropdown(true);
-  
-    try {
-      const token = localStorage.getItem('userToken');
-      const response = await axios.get(
-        `http://localhost:5001/api/auth/search?name=${searchValue}`,
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
-      );
-  
-      console.log('Search Results:', response.data); // Debugging
-      setSearchResults(response.data);
-    } catch (error) {
-      console.error("Error searching for members:", error);
-    } finally {
-      setIsSearching(false);
-    }
   };
 
   if (loading) {

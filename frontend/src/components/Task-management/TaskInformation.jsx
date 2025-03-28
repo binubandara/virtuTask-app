@@ -171,10 +171,13 @@ const TaskInformation = ({ task, projectId: propProjectId, onClose, isFromMyProj
               key={status.value}
               className={`mytask-status-button ${myTaskStatus === status.value ? 'active' : ''}`}
               style={{ 
-                backgroundColor: `${STATUS_COLORS[status.value]}33`,
+                backgroundColor: `${STATUS_COLORS[status.value]}`,
                 border: `2px solid ${STATUS_COLORS[status.value]}`
               }}
-              onClick={() => handleStatusUpdate(status.value)}
+              onClick={() => {
+                setMyTaskStatus(status.value);
+                handleStatusUpdate(status.value);
+              }}
             >
               {status.label}
             </button>

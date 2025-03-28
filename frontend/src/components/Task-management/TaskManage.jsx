@@ -70,7 +70,9 @@ const TaskManage = () => {
       const response = await axios.get(`${API_URL}/projects/${projectId}/tasks`, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      console.log("task id",response);
       return response.data;
+      
     } catch (error) {
       console.error('Error fetching project tasks:', error);
       return [];
@@ -111,20 +113,21 @@ const TaskManage = () => {
     }
   };
 
-  // Update task in API
-  const updateTaskInApi = async (taskData) => {
-    try {
-      const token = getToken();
-      await axios.patch(`${API_URL}/projects/${projectId}/tasks/${taskData.task_id}`, taskData, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      return true;
-    } catch (error) {
-      console.error('API error updating task:', error);
-      alert('Error updating task. Please try again.');
-      return false;
-    }
-  };
+  // // Update task in API
+  // const updateTaskInApi = async (taskData) => {
+  //   console.log("task id",taskData);
+  //   try {
+  //     const token = getToken();
+  //     await axios.patch(`${API_URL}/projects/${projectId}/tasks/${task_id}`, taskData, {
+  //       headers: { Authorization: `Bearer ${token}` }
+  //     });
+  //     return true;
+  //   } catch (error) {
+  //     console.error('API error updating task:', error);
+  //     alert('Error updating task. Please try again.');
+  //     return false;
+  //   }
+  // };
 
   // Delete task from API
   const deleteTaskFromApi = async (taskId) => {
@@ -453,14 +456,12 @@ const TaskManage = () => {
       {selectedTask && (
         <TaskInformation 
           task={selectedTask}
+          projectId={projectId} // Make sure this is explicitly passed
           onClose={() => setSelectedTask(null)}
           isFromMyProjects={isFromMyProjects}
           currentUser="EMP7876"
           onUpdateTask={(updatedTask) => {
-            const newTasks = tasks.map(t => 
-              t.id === updatedTask.id ? updatedTask : t
-            );
-            updateTasks(newTasks);
+            // Your existing update logic
           }}
         />
       )}
@@ -479,6 +480,7 @@ const TaskManage = () => {
             projectMembers={currentProject.members || []}
             initialData={editingTask}
             mode={editingTask ? 'edit' : 'create'}
+            projectId={projectId} // Add this prop
           />
         </div>
       )}

@@ -43,8 +43,60 @@ const MyTasks = () => {
     fetchDropdownTasks();
   }, []);
 
-  const addTask = () => {
-    if (newTask.trim()) {
+  const addTask = async () => {
+    if (!newTask.trim()) return;
+    
+    // Check if a parent task is selected (for subtasks)
+    if (selectedTask && selectedProjectId) {
+      try {
+        const token = localStorage.getItem('userToken');
+        
+        // First update local state for immediate UI feedback
+        const newSubtask = {
+          id: Date.now(), // Temporary local ID
+          text: newTask,
+          checked: false,
+          status: 'To Do',
+          isSubtask: true,
+          parentTaskId: selectedTask.id
+        };
+        
+        setTasks([...tasks, newSubtask]);
+        setNewTask('');
+        
+        // Then create the subtask in the API
+        const response = await axios.post(
+          `http://localhost:5004/api/projects/${selectedProjectId}/tasks/${selectedTask.id}/subtasks`,
+          {
+            subtask: newTask
+          },
+          {
+            headers: { Authorization: `Bearer ${token}` }
+          }
+        );
+        
+        console.log('Subtask created:', response.data);
+        
+        // Optionally update the local task with the actual ID from the API
+        if (response.data && response.data.subtask_id) {
+          setTasks(prevTasks => 
+            prevTasks.map(task => 
+              task.id === newSubtask.id 
+                ? { ...task, id: response.data.subtask_id } 
+                : task
+            )
+          );
+        }
+        
+      } catch (error) {
+        console.error('Error creating subtask:', error);
+        alert('Failed to create subtask. Please try again.');
+        
+        // Remove the optimistically added task if API call fails
+        setTasks(prevTasks => prevTasks.filter(task => task.text !== newTask));
+      }
+    } else {
+      // Regular task creation (no API call, just local state)
       setTasks([
         ...tasks,
         {

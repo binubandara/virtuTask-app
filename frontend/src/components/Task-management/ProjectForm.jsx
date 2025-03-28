@@ -16,6 +16,8 @@ function ProjectForm({ closeForm, addProject, editProject, initialData, mode }) 
     priority: 'medium',
     members: []
   });
+  console.log("form")
+  console.log(initialData);
   
   const [memberSearch, setMemberSearch] = useState('');
   const [searchResults, setSearchResults] = useState([]);
@@ -92,11 +94,11 @@ function ProjectForm({ closeForm, addProject, editProject, initialData, mode }) 
     setShowDropdown(false);
   };
   
-  const removeMember = (memberId) => {
+  const removeMember = (username) => {
     setFormData(prev => ({
       ...prev,
       members: prev.members.filter(m => 
-        typeof m === 'object' ? m.id !== memberId : m !== memberId
+        typeof m === 'object' ? m.username !== username : m !== username
       )
     }));
   };
@@ -108,11 +110,11 @@ function ProjectForm({ closeForm, addProject, editProject, initialData, mode }) 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Process members into array of IDs if they're objects
+    // Process members into array of usernames if they're objects
     const processedData = {
       ...formData,
       members: formData.members.map(member => 
-        typeof member === 'object' ? member.id : member
+        typeof member === 'object' ? member.username : member
       )
     };
 
@@ -339,12 +341,12 @@ function ProjectForm({ closeForm, addProject, editProject, initialData, mode }) 
                 {formData.members.map((member, index) => (
                   <div key={index} className="projectform-member-tag">
                     {typeof member === 'object' 
-                      ? `${member.username || 'Unknown'}`
-                      : member}
+                      ? `${member.username || member.name || 'Unknown'} ${member.email ? `(${member.email})` : ''}`
+                      : `Username: ${member}`}
                     <button 
                       type="button"
                       className="projectform-member-remove"
-                      onClick={() => removeMember(typeof member === 'object' ? member.id : member)}
+                      onClick={() => removeMember(typeof member === 'object' ? member.username : member)}
                     >
                       ×
                     </button>

@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import './TaskForm.css';
+import axios from 'axios'; // Import axios
+
+// Add API_URL constant
+const API_URL = 'http://localhost:5004/api';
 
 const TaskForm = ({ 
   closeForm, 
@@ -9,7 +13,8 @@ const TaskForm = ({
   projectDueDate,
   projectMembers,
   initialData,
-  mode 
+  mode,
+  projectId // Add projectId prop
 }) => {
   // Format date as YYYY-MM-DD for input elements
   const formatDateForInput = (dateString) => {
@@ -70,6 +75,76 @@ const TaskForm = ({
     }
   }, [initialData]);
 
+  // Add getToken function
+  const getToken = () => {
+    return localStorage.getItem('userToken');
+  };
+
+  // Add updateTaskInApi function
+  const updateTaskInApi = async (taskData) => {
+    console.log("Updating task:", taskData);
+    try {
+      const token = getToken();
+      // Make sure we have the task_id from initialData
+      if (!initialData || !initialData.task_id) {
+        throw new Error("Task ID is missing");
+      }
+      
+      // Convert the comma-separated assignees string to an array of objects
+      const assigneesList = taskData.assignees
+        ? taskData.assignees.split(',')
+            .map(user => user.trim())
+            .filter(user => user !== '')
+            .map(user => ({
+              user: user,
+              status: taskData.status === 'completed' ? 'Complete' : 'In Progress'
+            }))
+        : [];
+
+      // Convert status and priority to the format expected by the API
+      const statusMap = {
+        'pending': 'Pending',
+        'in_progress': 'In Progress',
+        'completed': 'Complete'
+      };
+      
+      const priorityMap = {
+        'high': 'High',
+        'medium': 'Medium',
+        'low': 'Low'
+      };
+      
+      // Format the data for the API according to the expected JSON structure
+      const apiTaskData = {
+        name: taskData.taskName,
+        dueDate: new Date(taskData.dueDate).toISOString(),
+        priority: priorityMap[taskData.priority] || 'Medium',
+        status: statusMap[taskData.status] || 'Pending',
+        assignees: assigneesList,
+        description: taskData.description || 'No description provided'
+      };
+      
+      console.log("Sending to API:", apiTaskData);
+      
+      const response = await axios.patch(
+        `${API_URL}/projects/${projectId}/tasks/${initialData.task_id}`, 
+        apiTaskData, 
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+      console.log("API Response:", response);
+      
+      // If successful, call the parent component's editTask function
+      editTask(taskData);
+      return true;
+    } catch (error) {
+      console.error('API error updating task:', error);
+      alert('Error updating task. Please try again.');
+      return false;
+    }
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!validateDates()) return;
@@ -82,17 +157,6 @@ const TaskForm = ({
           .filter(a => a !== '')
       : [];
 
-    // Check if projectMembers is an array before filtering
-    if (Array.isArray(projectMembers) && projectMembers.length > 0) {
-      const invalidAssignees = enteredAssignees
-        .filter(a => !projectMembers.includes(a));
-
-      if (invalidAssignees.length > 0) {
-        alert(`The following members are not part of the project:\n${invalidAssignees.join('\n')}\n\nPlease add them to the project first.`);
-        return;
-      }
-    }
-
     const processedData = {
       ...taskData,
       assignees: enteredAssignees.join(', ') // Store as comma-separated string
@@ -100,7 +164,8 @@ const TaskForm = ({
 
     if (mode === 'edit') {
       if (window.confirm('Confirm task changes?')) {
-        editTask(processedData);
+        // Call the API update function instead of directly calling editTask
+        updateTaskInApi(processedData);
       }
     } else {
       addTask(processedData);

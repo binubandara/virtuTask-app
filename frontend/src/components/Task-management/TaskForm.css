@@ -196,3 +196,51 @@
 .task-form-close:hover svg {
   color: #333;
 }
+
+
+
+/* Add to your TaskForm.css file */
+.taskform-assignees-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.taskform-members-selection {
+  margin-top: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 8px;
+  background-color: #f9f9f9;
+}
+
+.taskform-members-header {
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.taskform-members-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.taskform-member-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background-color: #fff;
+  padding: 4px 8px;
+  border-radius: 16px;
+  border: 1px solid #e0e0e0;
+}
+
+.taskform-member-item input[type="checkbox"] {
+  cursor: pointer;
+}
+
+.taskform-member-item label {
+  cursor: pointer;
+  margin: 0;
+}
+
