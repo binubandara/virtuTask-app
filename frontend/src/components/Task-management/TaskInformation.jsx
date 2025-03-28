@@ -22,6 +22,7 @@ const TaskInformation = ({ task, projectId: propProjectId, onClose, isFromMyProj
   
   // Add console log to check if projectId is received
   console.log("TaskInformation received projectId:", projectId);
+  console.log("Task data:", task);
   
   const [isAssigneeHovered, setIsAssigneeHovered] = useState(false);
   const [commentText, setCommentText] = useState('');
@@ -31,15 +32,27 @@ const TaskInformation = ({ task, projectId: propProjectId, onClose, isFromMyProj
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [myTaskStatus, setMyTaskStatus] = useState(task?.myTaskStatus || 'pending');
 
-  const PRIORITY_COLORS = { high: '#ff4444', medium: '#ffa500', low: '#4CAF50' };
+  // Update status colors to handle case-insensitive comparison
+  const PRIORITY_COLORS = { 
+    high: '#ff4444', 
+    medium: '#ffa500', 
+    low: '#4CAF50' 
+  };
+  
   const STATUS_COLORS = { 
     pending: '#f67a15', 
     on_hold: '#939698', 
     in_progress: '#0d85fd', 
-    completed: '#28a46a' 
+    completed: '#28a46a',
+    // Add capitalized versions for direct API mapping
+    Pending: '#f67a15', 
+    'On Hold': '#939698', 
+    'In Progress': '#0d85fd', 
+    Completed: '#28a46a'
   };
 
   useEffect(() => {
+    // Use correct field names based on API response
     setDescription(task?.description || '');
     setComments(task?.comments || []);
     setMyTaskStatus(task?.myTaskStatus || 'pending');
@@ -94,32 +107,11 @@ const TaskInformation = ({ task, projectId: propProjectId, onClose, isFromMyProj
     setMyTaskStatus(statusValue);
     
     try {
-      // Debug the task object to see all available properties
-      console.log("Full task object:", task);
-      
-      // IMPORTANT: Use the correct property name: task_id instead of taskId
+      // The existing API call to update your personal status
       const taskId = task.task_id;
-      
-      console.log("Using UUID taskId:", taskId);
-      
-      if (!taskId) {
-        console.error("Missing taskId - Here's what the task object looks like:", task);
-        throw new Error("Could not find UUID-format task ID");
-      }
-      
-      if (!projectId) {
-        console.error("Missing projectId prop");
-        throw new Error("Missing project ID");
-      }
-      
-      // Get authentication token from localStorage
       const token = localStorage.getItem('userToken');
-      
-      // Log the exact API URL we're calling
       const apiUrl = `http://localhost:5004/api/projects/${projectId}/tasks/${taskId}/assignee-status`;
-      console.log("Calling API:", apiUrl);
       
-      // Send the PATCH request to update status on the server
       const response = await fetch(apiUrl, {
         method: 'PATCH',
         headers: {
@@ -132,12 +124,19 @@ const TaskInformation = ({ task, projectId: propProjectId, onClose, isFromMyProj
       });
       
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error("Server response:", response.status, errorData);
         throw new Error(`Failed to update task status: ${response.status}`);
       }
       
       console.log('Task status updated successfully');
+      
+      // Also update the task object to reflect the status change in the UI
+      // This assumes you're allowed to update the overall task status
+      if (onUpdateTask) {
+        onUpdateTask({
+          ...task,
+          status: statusValue.toLowerCase() // Convert to match the format of task.status
+        });
+      }
     } catch (error) {
       console.error('Error updating task status:', error);
     }
@@ -187,10 +186,22 @@ const TaskInformation = ({ task, projectId: propProjectId, onClose, isFromMyProj
 
   if (!task) return null;
 
+  // Helper function to get proper color for status
+  const getStatusColor = (status) => {
+    const normalizedStatus = status?.toLowerCase().replace(' ', '_');
+    return STATUS_COLORS[status] || STATUS_COLORS[normalizedStatus] || '#808080';
+  };
+
+  // Helper function to get proper color for priority
+  const getPriorityColor = (priority) => {
+    const normalizedPriority = priority?.toLowerCase();
+    return PRIORITY_COLORS[normalizedPriority] || '#808080';
+  };
+
   return (
     <div className="task-info-container">
       <div className="task-info-header">
-        <h3 className="task-info-title">{task?.taskName}</h3>
+        <h3 className="task-info-title">{task?.name || task?.taskName}</h3>
         <button className="task-info-close" onClick={onClose}>
           <svg 
             xmlns="http://www.w3.org/2000/svg"
@@ -230,7 +241,7 @@ const TaskInformation = ({ task, projectId: propProjectId, onClose, isFromMyProj
           <span className="task-info-meta-label">Status:</span>
           <span 
             className="task-info-status-capsule"
-            style={{ backgroundColor: STATUS_COLORS[task.status] }}
+            style={{ backgroundColor: getStatusColor(task.status) }}
           >
             {task.status.replace(/_/g, ' ')}
           </span>
@@ -247,7 +258,7 @@ const TaskInformation = ({ task, projectId: propProjectId, onClose, isFromMyProj
           <span className="task-info-meta-label">Priority:</span>
           <span 
             className="task-info-priority-capsule"
-            style={{ backgroundColor: PRIORITY_COLORS[task.priority] }}
+            style={{ backgroundColor: getPriorityColor(task.priority) }}
           >
             {task.priority}
           </span>

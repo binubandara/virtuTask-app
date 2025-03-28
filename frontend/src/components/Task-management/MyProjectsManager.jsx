@@ -306,6 +306,54 @@ function MyProjectsManager() {
     navigate(`/task-manager/${projectId}`);
   };
 
+  const addMember = (member) => {
+    // Check if the member is already added
+    const isMemberAdded = formData.members.some(m => 
+      typeof m === 'object' ? m.id === member.id : m === member.id
+    );
+  
+    if (!isMemberAdded) {
+      setFormData(prev => ({
+        ...prev,
+        members: [...prev.members, member]
+      }));
+    }
+  
+    setMemberSearch('');
+    setShowDropdown(false);
+  };
+
+  const handleMemberSearch = async (e) => {
+    const searchValue = e.target.value;
+    setMemberSearch(searchValue);
+  
+    if (searchValue.length < 1) {
+      setSearchResults([]);
+      setShowDropdown(false);
+      return;
+    }
+  
+    setIsSearching(true);
+    setShowDropdown(true);
+  
+    try {
+      const token = localStorage.getItem('userToken');
+      const response = await axios.get(
+        `http://localhost:5001/api/auth/search?name=${searchValue}`,
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+  
+      console.log('Search Results:', response.data); // Debugging
+      setSearchResults(response.data);
+    } catch (error) {
+      console.error("Error searching for members:", error);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
   if (loading) {
     return <div className="loading-container">Loading projects...</div>;
   }
