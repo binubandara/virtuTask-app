@@ -12,16 +12,13 @@ const clockSVG = (
 const MyProjects = () => {
   const navigate = useNavigate();
   const [projects, setProjects] = useState([]);
-    const [sortBy, setSortBy] = useState('default'); // Add this line
-  
-    
-  
+  const [sortBy, setSortBy] = useState('default'); // Add this line
 
   const sortProjects = (projects) => {
     switch(sortBy) {
       case 'a-z':
         return [...projects].sort((a, b) => 
-          a.projectname.localeCompare(b.projectname));
+          a.name.localeCompare(b.name));
       case 'month':
         return [...projects].sort((a, b) => 
           new Date(a.dueDate) - new Date(b.dueDate));
@@ -33,15 +30,47 @@ const MyProjects = () => {
     }
   };
 
-
-  // Load from same localStorage key
+  // Replace the localStorage loading with API fetch
   useEffect(() => {
-    const interval = setInterval(() => {
-      const saved = localStorage.getItem('projects');
-      if (saved) setProjects(JSON.parse(saved));
-    }, 500);
+    const fetchProjects = async () => {
+      try {
+        // Get the auth token from localStorage
+        const userDataString = localStorage.getItem('userData');
+        if (!userDataString) {
+          console.error('No user data found');
+          return;
+        }
+        
+        const userData = JSON.parse(userDataString);
+        const { token } = userData;
+        
+        // Updated API endpoint
+        const response = await fetch('http://localhost:5004/api/my-projects', {
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error(`API error: ${response.status}`);
+        }
+        
+        const projectsData = await response.json();
+        setProjects(projectsData);
+      } catch (error) {
+        console.error('Error fetching projects:', error);
+      }
+    };
+  
+    fetchProjects();
+    
+    // Optional: Set up polling if you need real-time updates
+    const interval = setInterval(fetchProjects, 30000); // Poll every 30 seconds
+    
     return () => clearInterval(interval);
   }, []);
+  
   const getDueDateDisplay = (dueDate) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -101,21 +130,31 @@ const MyProjects = () => {
   const truncateText = (text, maxLength = 50) => 
     text.length > maxLength ? `${text.substring(0, maxLength)}...` : text;
 
-  const userProjects = projects
-  .filter(project => project.members?.includes('Tharindy123'))
-  .map(project => ({
-    ...project,
-    tasks: (project.tasks || []).filter(task =>
-      task.assignee?.split(',')
-        .map(a => a.trim())
-        .includes('Tharindy123')
-    )
-  }));
+// Get current username from localStorage and filter projects
+const getUserProjects = () => {
+  try {
+    const userDataString = localStorage.getItem('userData');
+    if (!userDataString) {
+      console.error('No user data found');
+      return projects;
+    }
+    
+    const userData = JSON.parse(userDataString);
+    const { username } = userData;
+    
+    // Filter projects where current user is a member
+    return projects.filter(project => 
+      project.members && project.members.includes(username)
+    );
+  } catch (error) {
+    console.error('Error filtering projects:', error);
+    return projects;
+  }
+};
 
-  console.log('Filtered tasks:', userProjects[0]?.tasks);
+const userProjects = getUserProjects();
 
-  
-  
+console.log('Filtered projects for current user:', userProjects);
 
   return (
     <div className="project-manager-container">
@@ -137,16 +176,15 @@ const MyProjects = () => {
         </div>
       </div>
 
-
       {/* Use EXACTLY the same project-tiles structure */}
       <div className="project-tiles">
-      {sortProjects(projects).map((project) => {
+      {sortProjects(userProjects).map((project) => {
           const dueDisplay = getDueDateDisplay(project.dueDate);
           return (
             <div 
               className="project-tile" 
-              key={project.id}
-              onClick={() => navigate(`/task-manager/${project.id}`, { 
+              key={project.id || project._id || project.project_id}
+              onClick={() => navigate(`/task-manager/${project.project_id}`, { 
                 state: { fromMyProjects: true } 
               })}
             >
@@ -170,7 +208,7 @@ const MyProjects = () => {
                 </div>
 
                 <div className="project-details">
-                  <h3>{truncateText(project.projectname, 20)}</h3>
+                  <h3>{truncateText(project.name || project.projectname, 20)}</h3>
                   <h4>{truncateText(project.department, 20)}</h4>
                 </div>
               </div>

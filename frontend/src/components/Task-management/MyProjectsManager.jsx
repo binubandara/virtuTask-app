@@ -3,6 +3,10 @@ import './MyProjectsManager.css';
 import ProjectForm from './ProjectForm';
 import ReactDOM from 'react-dom';
 import { useNavigate } from 'react-router-dom';
+import { useSocket } from "../../context/SocketContext";
+import axios from 'axios';
+
+const API_URL = 'http://localhost:5004/api';
 
 const clockSVG = (
   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" className="icon icon-tabler icons-tabler-filled icon-tabler-clock">
@@ -12,78 +16,124 @@ const clockSVG = (
 );
 
 const pencilSVG = (
-  <svg xmlns="http://www.w3.org/2000/svg"  viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 9h16.5m-16.5 6.75h16.5" />
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-6">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 9h16.5m-16.5 6.75h16.5" />
   </svg>
 );
 
-
 function MyProjectsManager() {
   const navigate = useNavigate();
+  const { socket, connected } = useSocket();
   const [showForm, setShowForm] = useState(false);
   const [editingProject, setEditingProject] = useState(null);
   const [selectedProjectId, setSelectedProjectId] = useState(null);
-  const [sortBy, setSortBy] = useState('default'); // Add this line
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const colorPalette = ["#ffc8dd", "#bde0fe", "#a2d2ff", "#94d2bd","#e0b1cb","#adb5bd","#98f5e1","#f79d65","#858ae3","#c2dfe3","#ffccd5","#e8e8e4","#fdffb6","#f1e8b8","#d8e2dc","#fff0f3","#ccff66"];
 
-  // Fix projects initialization
-  const [projects, setProjects] = useState(() => {
-    try {
-      const saved = localStorage.getItem('projects');
-      return saved ? JSON.parse(saved) : [];
-    } catch (error) {
-      console.error('Error loading projects:', error);
-      return [];
-    }
-  });
+  // State for projects from API
+  const [projects, setProjects] = useState([]);
 
-  const sortProjects = (projects) => {
-    switch(sortBy) {
-      case 'a-z':
-        return [...projects].sort((a, b) => 
-          a.projectname.localeCompare(b.projectname));
-      case 'month':
-        return [...projects].sort((a, b) => 
-          new Date(a.dueDate) - new Date(b.dueDate));
-      case 'year':
-        return [...projects].sort((a, b) => 
-          new Date(a.dueDate).getFullYear() - new Date(b.dueDate).getFullYear());
-      default:
-        return projects;
-    }
-  };
-
-  // Save to localStorage whenever projects change
+  // Fetch projects from API
   useEffect(() => {
-    localStorage.setItem('projects', JSON.stringify(projects));
-  }, [projects]);
+    const fetchProjects = async () => {
+      try {
+        setLoading(true);
+        const token = localStorage.getItem('userToken');
+        
+        
+        if (!token) {
+          navigate('/login'); // Redirect to login if no token
+          return;
+        }
+        
+        const response = await axios.get(`${API_URL}/my-projects`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        // Transform API data to match component structure
+        const formattedProjects = response.data.map(project => ({
+          id: project.project_id,
+          projectname: project.name,
+          description: project.description,
+          startDate: new Date(project.startDate).toISOString().split('T')[0],
+          dueDate: new Date(project.dueDate).toISOString().split('T')[0],
+          department: project.department,
+          priority: project.priority.toLowerCase(),
+          members: project.members,
+          status: project.status,
+          color: getRandomColor()
+        }));
+        
+        setProjects(formattedProjects);
+        setLoading(false);
+      } catch (err) {
+        console.error("Error fetching projects:", err);
+        setError("Failed to load projects. Please try again.");
+        setLoading(false);
+      }
+    };
 
-  const saveProjects = (updatedProjects) => {
-    setProjects(updatedProjects);
-  };
-  
-  const addProject = (formData) => {
-    const newProject = createProject(formData);
-    saveProjects([...projects, newProject]);
-    setShowForm(false);
-  };
+    fetchProjects();
+  }, [navigate]);
 
-  const editProject = (updatedProject) => {
-    const updatedProjects = projects.map(p => 
-      p.id === updatedProject.id ? updatedProject : p
-    );
-    saveProjects(updatedProjects);
-    setShowForm(false);
-    setEditingProject(null);
-  };
+  // Listen for socket events
+  useEffect(() => {
+    if (!socket || !connected) return;
 
-  const deleteProject = (projectId) => {
-    if (window.confirm('Delete confirmation')) {
-      const updatedProjects = projects.filter(project => project.id !== projectId);
-      saveProjects(updatedProjects);
-    }
-    setSelectedProjectId(null);
-  };
+    // Handle real-time project updates
+    const handleNewProject = (project) => {
+      const formattedProject = {
+        id: project.project_id,
+        projectname: project.name,
+        description: project.description,
+        startDate: new Date(project.startDate).toISOString().split('T')[0],
+        dueDate: new Date(project.dueDate).toISOString().split('T')[0],
+        department: project.department,
+        priority: project.priority.toLowerCase(),
+        members: project.members,
+        status: project.status,
+        color: getRandomColor()
+      };
+      
+      setProjects(prev => [...prev, formattedProject]);
+    };
+
+    const handleUpdatedProject = (project) => {
+      setProjects(prev => prev.map(p => 
+        p.id === project.project_id 
+          ? {
+              id: project.project_id,
+              projectname: project.name,
+              description: project.description,
+              startDate: new Date(project.startDate).toISOString().split('T')[0],
+              dueDate: new Date(project.dueDate).toISOString().split('T')[0],
+              department: project.department,
+              priority: project.priority.toLowerCase(),
+              members: project.members,
+              status: project.status,
+              color: p.color // Preserve the existing color
+            } 
+          : p
+      ));
+    };
+
+    const handleDeletedProject = (data) => {
+      setProjects(prev => prev.filter(p => p.id !== data.project_id));
+    };
+
+    // Register socket event listeners
+    socket.on('new_project', handleNewProject);
+    socket.on('updated_project', handleUpdatedProject);
+    socket.on('deleted_project', handleDeletedProject);
+
+    // Clean up on unmount
+    return () => {
+      socket.off('new_project', handleNewProject);
+      socket.off('updated_project', handleUpdatedProject);
+      socket.off('deleted_project', handleDeletedProject);
+    };
+  }, [socket, connected]);
 
   const getRandomColor = (() => {
     let lastUsedColors = new Set();
@@ -99,16 +149,102 @@ function MyProjectsManager() {
     };
   })();
 
-  const createProject = (formData) => ({
-    id: Date.now(),
-    ...formData,
-    color: getRandomColor(),
-    priority: formData.priority,
-    members: formData.members || [] // Add members array
-  });
-  
+  const addProject = async (formData) => {
+    try {
+      const token = localStorage.getItem('userToken');
+      
+      // Transform formData to match API expectations
+      const projectData = {
+        name: formData.projectname,
+        description: formData.description,
+        startDate: formData.startDate,
+        dueDate: formData.dueDate,
+        department: formData.department,
+        priority: formData.priority.charAt(0).toUpperCase() + formData.priority.slice(1), // Capitalize
+        members: formData.members
+      };
+      
+      const response = await axios.post(`${API_URL}/projects`, projectData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      // Socket should handle adding the project, but in case it doesn't:
+      const newProject = {
+        id: response.data.project_id,
+        projectname: response.data.name,
+        description: response.data.description,
+        startDate: new Date(response.data.startDate).toISOString().split('T')[0],
+        dueDate: new Date(response.data.dueDate).toISOString().split('T')[0],
+        department: response.data.department,
+        priority: response.data.priority.toLowerCase(),
+        members: response.data.members,
+        status: response.data.status,
+        color: getRandomColor()
+      };
+      
+      setProjects(prev => [...prev, newProject]);
+      setShowForm(false);
+    } catch (err) {
+      console.error("Error creating project:", err);
+      alert("Failed to create project. Please try again.");
+    }
+  };
+
+  const editProject = async (updatedProject) => {
+    try {
+      const token = localStorage.getItem('userToken');
+      console.log("autherized")
+      // Transform project data for API
+      const projectData = {
+        name: updatedProject.projectname,
+        description: updatedProject.description,
+        startDate: updatedProject.startDate,
+        dueDate: updatedProject.dueDate,
+        department: updatedProject.department,
+        priority: updatedProject.priority.charAt(0).toUpperCase() + updatedProject.priority.slice(1), // Capitalize
+        members: updatedProject.members
+      };
+      
+      const res=await axios.patch(`${API_URL}/projects/${updatedProject.id}`, projectData, {
+        headers: { Authorization: `Bearer ${token}` }
+      
+      });
+      console.log(res)
+      
+      // Socket should handle updating the project, but in case it doesn't:
+      setProjects(prev => prev.map(p => 
+        p.id === updatedProject.id ? updatedProject : p
+      ));
+      
+      setShowForm(false);
+      setEditingProject(null);
+    } catch (err) {
+      console.error("Error updating project:", err);
+      alert("Failed to update project. Please try again.");
+    }
+  };
+
+  const deleteProject = async (projectId) => {
+    if (window.confirm('Delete confirmation')) {
+      try {
+        const token = localStorage.getItem('userToken');
+        
+        await axios.delete(`${API_URL}/projects/${projectId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        // Socket should handle removing the project, but in case it doesn't:
+        setProjects(prev => prev.filter(p => p.id !== projectId));
+        setSelectedProjectId(null);
+      } catch (err) {
+        console.error("Error deleting project:", err);
+        alert("Failed to delete project. Please try again.");
+      }
+    }
+  };
+
   const truncateText = (text, maxLength = 50) => 
-    text.length > maxLength ? `${text.substring(0, maxLength)}...` : text;
+    text?.length > maxLength ? `${text.substring(0, maxLength)}...` : text;
 
   const getDueDateDisplay = (dueDate) => {
     const today = new Date();
@@ -170,6 +306,14 @@ function MyProjectsManager() {
     navigate(`/task-manager/${projectId}`);
   };
 
+  if (loading) {
+    return <div className="loading-container">Loading projects...</div>;
+  }
+
+  if (error) {
+    return <div className="error-container">{error}</div>;
+  }
+
   return (
     <>
       <div className={`project-manager-container ${showForm ? 'blur-background' : ''}`}>
@@ -178,16 +322,14 @@ function MyProjectsManager() {
 
         <div className="toolbar">
           <div className="dropdowns">
-            <select 
-              className="dropdown"
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-            >
-              <option value="default">Sort</option>
-              <option value="a-z">A - Z</option>
-              <option value="month">Month</option>
-              <option value="year">Year</option>
+            <select className="dropdown">
+              <option>Sort</option>
+              <option>A - Z</option>
+              <option>Month</option>
+              <option>Year</option>
             </select>
+
+            
           </div>
 
           <div className="button-group">
@@ -199,90 +341,92 @@ function MyProjectsManager() {
         </div>
 
         <div className="project-tiles">
-          
-        {sortProjects(projects).map((project) =>  {
-            const dueDisplay = getDueDateDisplay(project.dueDate);
-            return (
-              <div 
-                className="project-tile" 
-                key={project.id}
-                onClick={() => handleTileClick(project.id)}
-              >
-                <div className="tile-content">
-                  <div 
-                    className="pencil-icon" 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedProjectId(project.id === selectedProjectId ? null : project.id);
-                    }}
-                  >
-                    {pencilSVG}
-                    {selectedProjectId === project.id && (
-                      <div className="project-options-dropdown">
-                        <div 
-                          className="option" 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setEditingProject(project);
-                            setShowForm(true);
-                            setSelectedProjectId(null);
-                          }}
-                        >
-                          Edit Project
-                        </div>
-                        <div 
-                          className="option delete-option" 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            deleteProject(project.id);
-                          }}
-                        >
-                          Delete Project
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  <div className="project-icon">
-                    <svg 
-                      xmlns="http://www.w3.org/2000/svg" 
-                      fill={project.color}
-                      viewBox="0 0 24 24" 
-                      stroke="black" 
-                      strokeWidth="0.2"
-                      className="project-svg-icon"
+          {projects.length === 0 ? (
+            <div className="no-projects-message">
+              No projects found. Create a new project to get started!
+            </div>
+          ) : (
+            projects.map((project) => {
+              const dueDisplay = getDueDateDisplay(project.dueDate);
+              return (
+                <div 
+                  className="project-tile" 
+                  key={project.id}
+                  onClick={() => handleTileClick(project.id)}
+                >
+                  <div className="tile-content">
+                    <div 
+                      className="pencil-icon" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedProjectId(project.id === selectedProjectId ? null : project.id);
+                      }}
                     >
-                      <path 
-                        strokeLinecap="round" 
-                        strokeLinejoin="round" 
-                        d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" 
-                      />
-                    </svg>
-                  </div>
+                      {pencilSVG}
+                      {selectedProjectId === project.id && (
+                        <div className="project-options-dropdown">
+                          <div 
+                            className="option" 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingProject(project);
+                              setShowForm(true);
+                              setSelectedProjectId(null);
+                            }}
+                          >
+                            Edit Project
+                          </div>
+                          <div 
+                            className="option delete-option" 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteProject(project.id);
+                            }}
+                          >
+                            Delete Project
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    <div className="project-icon">
+                      <svg 
+                        xmlns="http://www.w3.org/2000/svg" 
+                        fill={project.color}
+                        viewBox="0 0 24 24" 
+                        stroke="black" 
+                        strokeWidth="0.2"
+                        className="project-svg-icon"
+                      >
+                        <path 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round" 
+                          d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" 
+                        />
+                      </svg>
+                    </div>
 
-                  <div className="project-details">
-                    <h3>{truncateText(project.projectname, 20)}</h3>
-                    <h4>{truncateText(project.department, 20)}</h4>
+                    <div className="project-details">
+                      <h3>{truncateText(project.projectname, 20)}</h3>
+                      <h4>{truncateText(project.department, 20)}</h4>
+                    </div>
                   </div>
-                </div>
-                <div className="project-description">
                   <p>{truncateText(project.description)}</p>
+                  
+                  {dueDisplay.text && (
+                    <button 
+                      className="due-button" 
+                      style={{ 
+                        backgroundColor: dueDisplay.backgroundColor,
+                        color: dueDisplay.textColor
+                      }}
+                    >
+                      {clockSVG} {dueDisplay.text}
+                    </button>
+                  )}
                 </div>
-                
-                
-                {dueDisplay.text && (
-                  <button 
-                    className="due-button" 
-                    style={{ 
-                      backgroundColor: dueDisplay.backgroundColor,
-                      color: dueDisplay.textColor
-                    }}
-                  >
-                    {clockSVG} {dueDisplay.text}
-                  </button>
-                )}
-              </div>
-            );
-          })}
+              );
+            })
+          )}
         </div>
       </div>
 

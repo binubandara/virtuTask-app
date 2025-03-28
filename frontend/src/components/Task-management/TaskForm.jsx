@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './TaskForm.css';
 
 const TaskForm = ({ 
@@ -7,18 +7,68 @@ const TaskForm = ({
   editTask,
   projectStartDate, 
   projectDueDate,
-  projectMembers, // Added missing prop
+  projectMembers,
   initialData,
   mode 
 }) => {
-  const [taskData, setTaskData] = useState(initialData || {
-    taskName: '',
-    status: 'pending',
-    priority: 'medium',
-    startDate: '',
-    dueDate: '',
+  // Format date as YYYY-MM-DD for input elements
+  const formatDateForInput = (dateString) => {
+    if (!dateString) return '';
+    
+    // If already in YYYY-MM-DD format, return as is
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return dateString;
+    
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return ''; // Invalid date
+      
+      return date.toISOString().split('T')[0];
+    } catch (error) {
+      console.error("Date formatting error:", error);
+      return '';
+    }
+  };
+  
+  // Set default dates based on project dates
+  const getDefaultStartDate = () => {
+    if (initialData?.startDate) return formatDateForInput(initialData.startDate);
+    if (projectStartDate) return formatDateForInput(projectStartDate);
+    return formatDateForInput(new Date().toISOString());
+  };
+  
+  const getDefaultDueDate = () => {
+    if (initialData?.dueDate) return formatDateForInput(initialData.dueDate);
+    if (projectDueDate) return formatDateForInput(projectDueDate);
+    
+    // Default to 7 days from now if no project due date
+    const sevenDaysLater = new Date();
+    sevenDaysLater.setDate(sevenDaysLater.getDate() + 7);
+    return formatDateForInput(sevenDaysLater.toISOString());
+  };
+
+  // Properly initialize state with formatted dates
+  const [taskData, setTaskData] = useState({
+    taskName: initialData?.taskName || '',
+    status: initialData?.status || 'pending',
+    priority: initialData?.priority || 'medium',
+    startDate: getDefaultStartDate(),
+    dueDate: getDefaultDueDate(),
     assignees: initialData?.assignees || '',
   });
+  
+  // Update form data when initialData changes
+  useEffect(() => {
+    if (initialData) {
+      setTaskData({
+        taskName: initialData.taskName || '',
+        status: initialData.status || 'pending',
+        priority: initialData.priority || 'medium',
+        startDate: formatDateForInput(initialData.startDate) || getDefaultStartDate(),
+        dueDate: formatDateForInput(initialData.dueDate) || getDefaultDueDate(),
+        assignees: initialData.assignees || '',
+      });
+    }
+  }, [initialData]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -26,17 +76,21 @@ const TaskForm = ({
 
     // Trim and filter empty values
     const enteredAssignees = taskData.assignees
-      .split(',')
-      .map(a => a.trim())
-      .filter(a => a !== '');
+      ? taskData.assignees
+          .split(',')
+          .map(a => a.trim())
+          .filter(a => a !== '')
+      : [];
 
-    // Validate against project members
-    const invalidAssignees = enteredAssignees
-      .filter(a => !projectMembers.includes(a));
+    // Check if projectMembers is an array before filtering
+    if (Array.isArray(projectMembers) && projectMembers.length > 0) {
+      const invalidAssignees = enteredAssignees
+        .filter(a => !projectMembers.includes(a));
 
-    if (invalidAssignees.length > 0) {
-      alert(`The following members are not part of the project:\n${invalidAssignees.join('\n')}\n\nPlease add them to the project first.`);
-      return;
+      if (invalidAssignees.length > 0) {
+        alert(`The following members are not part of the project:\n${invalidAssignees.join('\n')}\n\nPlease add them to the project first.`);
+        return;
+      }
     }
 
     const processedData = {
@@ -46,32 +100,46 @@ const TaskForm = ({
 
     if (mode === 'edit') {
       if (window.confirm('Confirm task changes?')) {
-        editTask(processedData); // Fixed prop reference
+        editTask(processedData);
       }
     } else {
-      addTask(processedData); // Fixed prop reference
+      addTask(processedData);
     }
   };
 
-  // Rest of the component remains the same...
   const handleReset = () => {
     const message = mode === 'edit' 
       ? 'Reset to original values?' 
       : 'Are you sure you want to reset?';
     
     if (window.confirm(message)) {
-      setTaskData(initialData || {
-        taskName: '',
-        status: 'pending',
-        priority: 'medium',
-        startDate: '',
-        dueDate: '',
-      });
+      if (mode === 'edit' && initialData) {
+        // Reset to initial values when editing
+        setTaskData({
+          taskName: initialData.taskName || '',
+          status: initialData.status || 'pending',
+          priority: initialData.priority || 'medium',
+          startDate: initialData.startDate || '',
+          dueDate: initialData.dueDate || '',
+          assignees: initialData.assignees || '',
+        });
+      } else {
+        // Reset to empty values when creating
+        setTaskData({
+          taskName: '',
+          status: 'pending',
+          priority: 'medium',
+          startDate: '',
+          dueDate: '',
+          assignees: '',
+        });
+      }
     }
   };
 
-  const handleChange  = (e) => {
-    setTaskData({ ...taskData, [e.target.name]: e.target.value });
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setTaskData(prev => ({ ...prev, [name]: value }));
   };
 
   const statusOptions = [
@@ -87,27 +155,67 @@ const TaskForm = ({
   ];
 
   const validateDates = () => {
-    const taskStart = new Date(taskData.startDate);
-    const taskDue = new Date(taskData.dueDate);
-    const projStart = new Date(projectStartDate);
-    const projDue = new Date(projectDueDate);
-
-    if (taskStart < projStart || taskStart > projDue) {
-      alert('Task start date must be within project dates');
+    if (!taskData.startDate || !taskData.dueDate) {
+      alert('Please select both start and due dates');
       return false;
     }
 
-    if (taskDue < taskStart) {
-      alert('Task due date cannot be before start date');
+    try {
+      const taskStart = new Date(taskData.startDate);
+      const taskDue = new Date(taskData.dueDate);
+      
+      // Set times to midnight to compare dates only
+      taskStart.setHours(0, 0, 0, 0);
+      taskDue.setHours(0, 0, 0, 0);
+      
+      // Check if dates are valid
+      if (isNaN(taskStart.getTime()) || isNaN(taskDue.getTime())) {
+        alert('Please enter valid dates');
+        return false;
+      }
+
+      // If project dates are provided, validate against them
+      if (projectStartDate && projectDueDate) {
+        const projStart = new Date(projectStartDate);
+        const projDue = new Date(projectDueDate);
+        
+        // Set times to midnight for fair comparison
+        projStart.setHours(0, 0, 0, 0);
+        projDue.setHours(0, 0, 0, 0);
+
+        if (taskStart < projStart) {
+          alert(`Task start date (${taskData.startDate}) cannot be before project start date (${formatDateForInput(projectStartDate)})`);
+          return false;
+        }
+
+        if (taskStart > projDue) {
+          alert(`Task start date (${taskData.startDate}) cannot be after project end date (${formatDateForInput(projectDueDate)})`);
+          return false;
+        }
+
+        if (taskDue < taskStart) {
+          alert(`Task due date (${taskData.dueDate}) cannot be before task start date (${taskData.startDate})`);
+          return false;
+        }
+
+        if (taskDue > projDue) {
+          alert(`Task due date (${taskData.dueDate}) cannot be after project end date (${formatDateForInput(projectDueDate)})`);
+          return false;
+        }
+      } else {
+        // If project dates aren't provided, just check task date order
+        if (taskDue < taskStart) {
+          alert(`Task due date (${taskData.dueDate}) cannot be before task start date (${taskData.startDate})`);
+          return false;
+        }
+      }
+
+      return true;
+    } catch (error) {
+      console.error("Date validation error:", error);
+      alert('Error validating dates. Please check the date format.');
       return false;
     }
-
-    if (taskDue < projStart || taskDue > projDue) {
-      alert('Task due date must be within project dates');
-      return false;
-    }
-
-    return true;
   };
 
   const handleClose = () => {
@@ -115,6 +223,10 @@ const TaskForm = ({
       closeForm();
     }
   };
+
+  // For debugging
+  console.log("Current taskData:", taskData);
+  console.log("Initial data provided:", initialData);
 
   return (
     <div className="task-form-container">
@@ -158,7 +270,7 @@ const TaskForm = ({
                   type="button"
                   className={`taskform-status-button ${taskData.status === option.value ? 'selected' : ''}`}
                   style={{ backgroundColor: option.color }}
-                  onClick={() => setTaskData({ ...taskData, status: option.value })}
+                  onClick={() => setTaskData(prev => ({ ...prev, status: option.value }))}
                 >
                   {option.label}
                 </button>
@@ -175,7 +287,7 @@ const TaskForm = ({
                   type="button"
                   className={`taskform-priority-button ${taskData.priority === option.value ? 'selected' : ''}`}
                   style={{ backgroundColor: option.color }}
-                  onClick={() => setTaskData({ ...taskData, priority: option.value })}
+                  onClick={() => setTaskData(prev => ({ ...prev, priority: option.value }))}
                 >
                   {option.label}
                 </button>
@@ -191,6 +303,8 @@ const TaskForm = ({
               type="date"
               name="startDate"
               value={taskData.startDate}
+              min={projectStartDate ? formatDateForInput(projectStartDate) : ''}
+              max={projectDueDate ? formatDateForInput(projectDueDate) : ''}
               onChange={handleChange}
               required
             />
@@ -201,6 +315,8 @@ const TaskForm = ({
               type="date"
               name="dueDate"
               value={taskData.dueDate}
+              min={taskData.startDate || (projectStartDate ? formatDateForInput(projectStartDate) : '')}
+              max={projectDueDate ? formatDateForInput(projectDueDate) : ''}
               onChange={handleChange}
               required
             />
@@ -228,7 +344,7 @@ const TaskForm = ({
               name="assignees"
               className="taskform-assignees-input" 
               placeholder="Comma-separated user IDs"
-              value={taskData.assignees || ''}
+              value={taskData.assignees}
               onChange={handleChange}
             />
           </div>

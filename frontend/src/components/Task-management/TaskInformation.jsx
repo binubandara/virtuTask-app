@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './TaskInformation.css';
 import EmojiPicker from 'emoji-picker-react';
+import { useParams } from 'react-router-dom';
 
 const MemberIcon = ({ member }) => {
   const firstLetter = member.charAt(0).toUpperCase();
@@ -14,20 +15,34 @@ const MemberIcon = ({ member }) => {
   );
 };
 
-const TaskInformation = ({ task, onClose, isFromMyProjects, currentUser, onUpdateTask }) => {
+const TaskInformation = ({ task, projectId: propProjectId, onClose, isFromMyProjects, currentUser, onUpdateTask }) => {
+  // Get projectId from URL params as fallback if prop is not provided
+  const { projectId: urlProjectId } = useParams();
+  const projectId = propProjectId || urlProjectId;
+  
+  // Add console log to check if projectId is received
+  console.log("TaskInformation received projectId:", projectId);
+  
   const [isAssigneeHovered, setIsAssigneeHovered] = useState(false);
   const [commentText, setCommentText] = useState('');
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [description, setDescription] = useState('');
   const [comments, setComments] = useState([]);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [myTaskStatus, setMyTaskStatus] = useState(task?.myTaskStatus || 'pending');
 
   const PRIORITY_COLORS = { high: '#ff4444', medium: '#ffa500', low: '#4CAF50' };
-  const STATUS_COLORS = { pending: '#f67a15', on_hold: '#939698', in_progress: '#0d85fd', completed: '#28a46a' };
+  const STATUS_COLORS = { 
+    pending: '#f67a15', 
+    on_hold: '#939698', 
+    in_progress: '#0d85fd', 
+    completed: '#28a46a' 
+  };
 
   useEffect(() => {
     setDescription(task?.description || '');
     setComments(task?.comments || []);
+    setMyTaskStatus(task?.myTaskStatus || 'pending');
   }, [task]);
 
   useEffect(() => {
@@ -35,10 +50,11 @@ const TaskInformation = ({ task, onClose, isFromMyProjects, currentUser, onUpdat
       onUpdateTask({
         ...task,
         description,
-        comments
+        comments,
+        myTaskStatus
       });
     }
-  }, [description, comments]);
+  }, [description, comments, myTaskStatus]);
 
   const handleEmojiClick = (emojiObject) => {
     setCommentText(prev => prev + emojiObject.emoji);
@@ -73,29 +89,125 @@ const TaskInformation = ({ task, onClose, isFromMyProjects, currentUser, onUpdat
     }
   };
 
+  const handleStatusUpdate = async (statusValue) => {
+    // Update local state first for immediate feedback
+    setMyTaskStatus(statusValue);
+    
+    try {
+      // Debug the task object to see all available properties
+      console.log("Full task object:", task);
+      
+      // IMPORTANT: Use the correct property name: task_id instead of taskId
+      const taskId = task.task_id;
+      
+      console.log("Using UUID taskId:", taskId);
+      
+      if (!taskId) {
+        console.error("Missing taskId - Here's what the task object looks like:", task);
+        throw new Error("Could not find UUID-format task ID");
+      }
+      
+      if (!projectId) {
+        console.error("Missing projectId prop");
+        throw new Error("Missing project ID");
+      }
+      
+      // Get authentication token from localStorage
+      const token = localStorage.getItem('userToken');
+      
+      // Log the exact API URL we're calling
+      const apiUrl = `http://localhost:5004/api/projects/${projectId}/tasks/${taskId}/assignee-status`;
+      console.log("Calling API:", apiUrl);
+      
+      // Send the PATCH request to update status on the server
+      const response = await fetch(apiUrl, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token ? `Bearer ${token}` : '',
+        },
+        body: JSON.stringify({
+          status: statusValue
+        })
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error("Server response:", response.status, errorData);
+        throw new Error(`Failed to update task status: ${response.status}`);
+      }
+      
+      console.log('Task status updated successfully');
+    } catch (error) {
+      console.error('Error updating task status:', error);
+    }
+  };
+
+  const renderMyTaskStatus = () => {
+    if (!isFromMyProjects) return null;
+
+    const statusOptions = [
+      { value: 'Pending', label: 'Pending' },
+      { value: 'In Progress', label: 'In Progress' },
+      { value: 'Completed', label: 'Completed' }
+    ];
+
+    return (
+      <div className="task-info-meta-item">
+        <div className='taskinfo-mytaskstatus-svg'>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/>
+          </svg>
+        </div>
+        <span className="task-info-meta-label">My Task Status:</span>
+        <div className="mytask-status-buttons">
+          {statusOptions.map((status) => (
+            <button
+              key={status.value}
+              className={`mytask-status-button ${myTaskStatus === status.value ? 'active' : ''}`}
+              style={{ 
+                backgroundColor: `${STATUS_COLORS[status.value]}33`,
+                border: `2px solid ${STATUS_COLORS[status.value]}`
+              }}
+              onClick={() => handleStatusUpdate(status.value)}
+            >
+              {status.label}
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   if (!task) return null;
 
   return (
     <div className="task-info-container">
       <div className="task-info-header">
-      <h3 className="task-info-title">{task?.taskName}</h3>
+        <h3 className="task-info-title">{task?.taskName}</h3>
         <button className="task-info-close" onClick={onClose}>
-        <svg 
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24" 
-              strokeWidth="1.5"
-              stroke="currentColor" 
-              className="size-6"
-              width="24" 
-              height="24"
-            >
-              <path 
-                strokeLinecap="round"
-                strokeLinejoin="round" 
-                d="M5 12h14" 
-              />
-            </svg>
+          <svg 
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24" 
+            strokeWidth="1.5"
+            stroke="currentColor" 
+            className="size-6"
+            width="24" 
+            height="24"
+          >
+            <path 
+              strokeLinecap="round"
+              strokeLinejoin="round" 
+              d="M5 12h14" 
+            />
+          </svg>
         </button>
       </div>
       <div className="task-info-divider"></div>
@@ -109,8 +221,8 @@ const TaskInformation = ({ task, onClose, isFromMyProjects, currentUser, onUpdat
               height="16"  
               viewBox="0 0 24 24"  
               fill="currentColor"  
-              class="icon icon-tabler icons-tabler-filled icon-tabler-circle-dot"
-              >
+              className="icon icon-tabler icons-tabler-filled icon-tabler-circle-dot"
+            >
               <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
               <path d="M17 3.34a10 10 0 1 1 -14.995 8.984l-.005 -.324l.005 -.324a10 10 0 0 1 14.995 -8.336zm-5 6.66a2 2 0 0 0 -1.977 1.697l-.018 .154l-.005 .149l.005 .15a2 2 0 1 0 1.995 -2.15z" />
             </svg>
@@ -123,13 +235,14 @@ const TaskInformation = ({ task, onClose, isFromMyProjects, currentUser, onUpdat
             {task.status.replace(/_/g, ' ')}
           </span>
         </div>
-        
+
+        {renderMyTaskStatus()}
+
         <div className="task-info-meta-item">
           <div className='taskinfo-priority-svg'>
-            <svg xmlns="http://www.w3.org/2000/svg"  width="16"  height="16" viewBox="0 0 24 24" fill="currentColor" class="size-6">
-              <path fill-rule="evenodd" d="M3 2.25a.75.75 0 0 1 .75.75v.54l1.838-.46a9.75 9.75 0 0 1 6.725.738l.108.054A8.25 8.25 0 0 0 18 4.524l3.11-.732a.75.75 0 0 1 .917.81 47.784 47.784 0 0 0 .005 10.337.75.75 0 0 1-.574.812l-3.114.733a9.75 9.75 0 0 1-6.594-.77l-.108-.054a8.25 8.25 0 0 0-5.69-.625l-2.202.55V21a.75.75 0 0 1-1.5 0V3A.75.75 0 0 1 3 2.25Z" clip-rule="evenodd" />
+            <svg xmlns="http://www.w3.org/2000/svg"  width="16"  height="16" viewBox="0 0 24 24" fill="currentColor" className="size-6">
+              <path fillRule="evenodd" d="M3 2.25a.75.75 0 0 1 .75.75v.54l1.838-.46a9.75 9.75 0 0 1 6.725.738l.108.054A8.25 8.25 0 0 0 18 4.524l3.11-.732a.75.75 0 0 1 .917.81 47.784 47.784 0 0 0 .005 10.337a.75.75 0 0 1-.574.812l-3.114.733a9.75 9.75 0 0 1-6.594-.77l-.108-.054a8.25 8.25 0 0 0-5.69-.625l-2.202.55V21a.75.75 0 0 1-1.5 0V3A.75.75 0 0 1 3 2.25Z" clipRule="evenodd" />
             </svg>
-
           </div>
           <span className="task-info-meta-label">Priority:</span>
           <span 
@@ -142,45 +255,45 @@ const TaskInformation = ({ task, onClose, isFromMyProjects, currentUser, onUpdat
 
         <div className="task-info-meta-item">
           <div className='taskinfo-duedate-svg'>
-          <svg xmlns="http://www.w3.org/2000/svg" width="16"  height="16" viewBox="0 0 24 24" fill="currentColor" class="size-6">
-            <path d="M12.75 12.75a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM7.5 15.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5ZM8.25 17.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM9.75 15.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5ZM10.5 17.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM12 15.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5ZM12.75 17.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM14.25 15.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5ZM15 17.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM16.5 15.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5ZM15 12.75a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM16.5 13.5a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" />
-            <path fill-rule="evenodd" d="M6.75 2.25A.75.75 0 0 1 7.5 3v1.5h9V3A.75.75 0 0 1 18 3v1.5h.75a3 3 0 0 1 3 3v11.25a3 3 0 0 1-3 3H5.25a3 3 0 0 1-3-3V7.5a3 3 0 0 1 3-3H6V3a.75.75 0 0 1 .75-.75Zm13.5 9a1.5 1.5 0 0 0-1.5-1.5H5.25a1.5 1.5 0 0 0-1.5 1.5v7.5a1.5 1.5 0 0 0 1.5 1.5h13.5a1.5 1.5 0 0 0 1.5-1.5v-7.5Z" clip-rule="evenodd" />
-          </svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16"  height="16" viewBox="0 0 24 24" fill="currentColor" className="size-6">
+              <path d="M12.75 12.75a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM7.5 15.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5ZM8.25 17.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM9.75 15.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5ZM10.5 17.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM12 15.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5ZM12.75 17.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM14.25 15.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5ZM15 17.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM16.5 15.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5ZM15 12.75a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM16.5 13.5a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" />
+              <path fillRule="evenodd" d="M6.75 2.25A.75.75 0 0 1 7.5 3v1.5h9V3A.75.75 0 0 1 18 3v1.5h.75a3 3 0 0 1 3 3v11.25a3 3 0 0 1-3 3H5.25a3 3 0 0 1-3-3V7.5a3 3 0 0 1 3-3H6V3a.75.75 0 0 1 .75-.75Zm13.5 9a1.5 1.5 0 0 0-1.5-1.5H5.25a1.5 1.5 0 0 0-1.5 1.5v7.5a1.5 1.5 0 0 0 1.5 1.5h13.5a1.5 1.5 0 0 0 1.5-1.5v-7.5Z" clipRule="evenodd" />
+            </svg>
           </div>
           <span className="task-info-meta-label">Due Date:</span>
           <span className="task-info-due-date">{task.dueDate}</span>
         </div>
 
         <div className="task-info-meta-item">
-        <div className='taskinfo-assignee-svg'>
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M4.5 6.375a4.125 4.125 0 1 1 8.25 0 4.125 4.125 0 0 1-8.25 0ZM14.25 8.625a3.375 3.375 0 1 1 6.75 0 3.375 3.375 0 0 1-6.75 0ZM1.5 19.125a7.125 7.125 0 0 1 14.25 0v.003l-.001.119a.75.75 0 0 1-.363.63 13.067 13.067 0 0 1-6.761 1.873c-2.472 0-4.786-.684-6.76-1.873a.75.75 0 0 1-.364-.63l-.001-.122ZM17.25 19.128l-.001.144a2.25 2.25 0 0 1-.233.96 10.088 10.088 0 0 0 5.06-1.01.75.75 0 0 0 .42-.643 4.875 4.875 0 0 0-6.957-4.611 8.586 8.586 0 0 1 1.71 5.157v.003Z" />
-          </svg>
+          <div className='taskinfo-assignee-svg'>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M4.5 6.375a4.125 4.125 0 1 1 8.25 0 4.125 4.125 0 0 1-8.25 0ZM14.25 8.625a3.375 3.375 0 1 1 6.75 0 3.375 3.375 0 0 1-6.75 0ZM1.5 19.125a7.125 7.125 0 0 1 14.25 0v.003l-.001.119a.75.75 0 0 1-.363.63 13.067 13.067 0 0 1-6.761 1.873c-2.472 0-4.786-.684-6.76-1.873a.75.75 0 0 1-.364-.63l-.001-.122ZM17.25 19.128l-.001.144a2.25 2.25 0 0 1-.233.96 10.088 10.088 0 0 0 5.06-1.01.75.75 0 0 0 .42-.643 4.875 4.875 0 0 0-6.957-4.611 8.586 8.586 0 0 1 1.71 5.157v.003Z" />
+            </svg>
+          </div>
+          <span className="task-info-meta-label">Assignee:</span>
+          <div 
+            className="assignee-icons-container"
+            onMouseEnter={() => setIsAssigneeHovered(true)}
+            onMouseLeave={() => setIsAssigneeHovered(false)}
+          >
+            {task.assignees?.split(',').slice(0,4).map((assignee, index) => (
+              <MemberIcon key={assignee.trim()} member={assignee.trim()} />
+            ))}
+            {task.assignees?.split(',').length > 4 && (
+              <div className="extra-members">+{task.assignees.split(',').length - 4}</div>
+            )}
+            {isAssigneeHovered && (
+              <div className="assignee-dropdown">
+                {task.assignees?.split(',').map(assignee => (
+                  <div key={assignee.trim()} className="assignee-item">
+                    <MemberIcon member={assignee.trim()} />
+                    <span>{assignee.trim()}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
-        <span className="task-info-meta-label">Assignee:</span>
-        <div 
-          className="assignee-icons-container"
-          onMouseEnter={() => setIsAssigneeHovered(true)}
-          onMouseLeave={() => setIsAssigneeHovered(false)}
-        >
-          {task.assignees?.split(',').slice(0,4).map((assignee, index) => (
-            <MemberIcon key={assignee.trim()} member={assignee.trim()} />
-          ))}
-          {task.assignees?.split(',').length > 4 && (
-            <div className="extra-members">+{task.assignees.split(',').length - 4}</div>
-          )}
-          {isAssigneeHovered && (
-            <div className="assignee-dropdown">
-              {task.assignees?.split(',').map(assignee => (
-                <div key={assignee.trim()} className="assignee-item">
-                  <MemberIcon member={assignee.trim()} />
-                  <span>{assignee.trim()}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
       </div>
 
       <div className="task-info-description-section">
@@ -197,7 +310,7 @@ const TaskInformation = ({ task, onClose, isFromMyProjects, currentUser, onUpdat
         )}
       </div>
 
-     <div className="task-info-comments-section">
+      <div className="task-info-comments-section">
         <div className="task-info-comments-header">
           <h4 className="task-info-section-title">Comments</h4>
         </div>
@@ -307,4 +420,5 @@ const TaskInformation = ({ task, onClose, isFromMyProjects, currentUser, onUpdat
     </div>
   );
 };
+
 export default TaskInformation;
