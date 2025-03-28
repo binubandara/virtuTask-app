@@ -380,3 +380,31 @@ border-bottom: none;
 .taskmanage-task_assignee {
   text-align: center !important;
 }
+
+/* My Task Status Styles */
+.mytask-status-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.mytask-status-button {
+  padding: 4px 12px;
+  border-radius: 15px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: capitalize;
+}
+
+.mytask-status-button.active {
+  background-color: var(--status-color) !important;
+  color: white;
+  border: 2px solid transparent !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.taskinfo-mytaskstatus-svg {
+  position: absolute;
+  left: 40px;
+  top: calc(10% + 1px);
+}
