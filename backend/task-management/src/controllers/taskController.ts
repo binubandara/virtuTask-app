@@ -175,7 +175,7 @@ export const updateTask = async (req: Request, res: Response): Promise<void> => 
     }
 
     // Validate required fields from body
-    const { name, dueDate, priority, status, assignees } = req.body;
+    const { name, dueDate, priority, status, assignees, description } = req.body;
     if (!name || !dueDate) {
       res.status(400).json({ message: 'Name and due date are required' });
       return;
@@ -219,6 +219,9 @@ export const updateTask = async (req: Request, res: Response): Promise<void> => 
     task.dueDate = new Date(dueDate);
     task.priority = priority || 'Medium';
     task.status = status || 'Pending';
+    if (description !== undefined) {
+      task.description = description;
+    }
    
 
     // Update assignees

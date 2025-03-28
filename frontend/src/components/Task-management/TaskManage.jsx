@@ -16,11 +16,17 @@ const PRIORITY_COLORS = {
   low: '#4CAF50'
 };
 
+// Add this right after the PRIORITY_COLORS definition, around line 13-14
 const STATUS_COLORS = {
   pending: '#f67a15',
   on_hold: '#939698',
   in_progress: '#0d85fd',
-  completed: '#28a46a'
+  completed: '#28a46a',
+  // Add capitalized and spaced versions for API mapping
+  Pending: '#f67a15',
+  
+  In_Progress: '#0d85fd',
+  Completed: '#28a46a'
 };
 const colorPalette = ["#ffc8dd", "#bde0fe", "#a2d2ff", "#94d2bd","#e0b1cb","#adb5bd","#98f5e1","#f79d65","#858ae3","#c2dfe3","#ffccd5","#e8e8e4","#fdffb6","#f1e8b8","#d8e2dc","#fff0f3","#ccff66"];
 
@@ -441,10 +447,16 @@ const TaskManage = () => {
                       </span>
                     </td>
                     <td className='task-levels'>
-                      <span className="status-badge" 
-                        style={{ backgroundColor: STATUS_COLORS[task.status || 'pending'] }}>
-                        {(task.status || 'pending').replace(/_/g, ' ')}
-                      </span>
+                    <span className="status-badge" 
+                  style={{ 
+                    backgroundColor: 
+                    task.status === 'completed' ? '#4CAF50' :
+                    task.status === 'In Progress' ? '#0d85fd' :
+                    task.status === 'pending' ? '#FFA726' :
+                    task.status === 'blocked' ? '#F44336' : '#0d85fd'
+                  }}>
+                  {task.status}
+                  </span>
                     </td>
                   </tr>
                 ))}
@@ -457,7 +469,43 @@ const TaskManage = () => {
         <TaskInformation 
           task={selectedTask}
           projectId={projectId} // Make sure this is explicitly passed
-          onClose={() => setSelectedTask(null)}
+          onClose={() => {
+            setSelectedTask(null);
+            // Refresh task data
+            const refreshTasks = async () => {
+              const tasksData = await loadProjectTasks();
+              if (tasksData) {
+                // Process tasks data
+                let processedTasks = tasksData.map(task => ({
+                  id: task._id,
+                  task_id: task.task_id,
+                  taskName: task.name,
+                  dueDate: new Date(task.dueDate).toLocaleDateString(),
+                  priority: task.priority?.toLowerCase(),
+                  status: task.status?.toLowerCase(),
+                  assignees: task.assignees.map(a => a.user).join(', '),
+                  description: task.description,
+                  attachments: task.attachments || [],
+                  comments: task.comments || []
+                }));
+                
+                // Filter tasks for My Projects view if needed
+                if (isFromMyProjects) {
+                  const userDataString = localStorage.getItem('userData');
+                  if (userDataString) {
+                    const userData = JSON.parse(userDataString);
+                    const { username } = userData;
+                    processedTasks = processedTasks.filter(task => 
+                      task.assignees.includes(username)
+                    );
+                  }
+                }
+                
+                setTasks(processedTasks);
+              }
+            };
+            refreshTasks();
+          }}
           isFromMyProjects={isFromMyProjects}
           currentUser="EMP7876"
           onUpdateTask={(updatedTask) => {
@@ -480,7 +528,6 @@ const TaskManage = () => {
             projectMembers={currentProject.members || []}
             initialData={editingTask}
             mode={editingTask ? 'edit' : 'create'}
-            projectId={projectId} // Add this prop
           />
         </div>
       )}

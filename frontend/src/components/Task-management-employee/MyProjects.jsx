@@ -2,6 +2,9 @@ import React, { useEffect, useState } from 'react';
 import '../Task-management/MyProjectsManager.css';
 import { useNavigate } from 'react-router-dom';
 
+// Add the color palette first
+const colorPalette = ["#ffc8dd", "#bde0fe", "#a2d2ff", "#94d2bd", "#e0b1cb", "#adb5bd", "#98f5e1", "#f79d65", "#858ae3", "#c2dfe3", "#ffccd5", "#e8e8e4", "#fdffb6", "#f1e8b8", "#d8e2dc", "#fff0f3", "#ccff66"];
+
 const clockSVG = (
   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" className="icon icon-tabler icons-tabler-filled icon-tabler-clock">
     <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
@@ -28,6 +31,11 @@ const MyProjects = () => {
       default:
         return projects;
     }
+  };
+
+  // Add the getRandomColor function
+  const getRandomColor = () => {
+    return colorPalette[Math.floor(Math.random() * colorPalette.length)];
   };
 
   // Replace the localStorage loading with API fetch
@@ -57,7 +65,12 @@ const MyProjects = () => {
         }
         
         const projectsData = await response.json();
-        setProjects(projectsData);
+        // Add colors to projects
+        const projectsWithColors = projectsData.map(project => ({
+          ...project,
+          color: project.color || getRandomColor() // Use existing color or assign random
+        }));
+        setProjects(projectsWithColors);
       } catch (error) {
         console.error('Error fetching projects:', error);
       }

@@ -16,23 +16,18 @@ const MemberIcon = ({ member }) => {
 };
 
 const TaskInformation = ({ task, projectId: propProjectId, onClose, isFromMyProjects, currentUser, onUpdateTask }) => {
-  // Get projectId from URL params as fallback if prop is not provided
   const { projectId: urlProjectId } = useParams();
   const projectId = propProjectId || urlProjectId;
-  
-  // Add console log to check if projectId is received
-  console.log("TaskInformation received projectId:", projectId);
-  console.log("Task data:", task);
   
   const [isAssigneeHovered, setIsAssigneeHovered] = useState(false);
   const [commentText, setCommentText] = useState('');
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [description, setDescription] = useState('');
+  const [isSavingDescription, setIsSavingDescription] = useState(false);
   const [comments, setComments] = useState([]);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [myTaskStatus, setMyTaskStatus] = useState(task?.myTaskStatus || 'pending');
 
-  // Update status colors to handle case-insensitive comparison
   const PRIORITY_COLORS = { 
     high: '#ff4444', 
     medium: '#ffa500', 
@@ -41,37 +36,43 @@ const TaskInformation = ({ task, projectId: propProjectId, onClose, isFromMyProj
   
   const STATUS_COLORS = { 
     pending: '#f67a15', 
-    on_hold: '#939698', 
     in_progress: '#0d85fd', 
     completed: '#28a46a',
-    // Add capitalized versions for direct API mapping
     Pending: '#f67a15', 
-    'On Hold': '#939698', 
     'In Progress': '#0d85fd', 
     Completed: '#28a46a'
   };
 
   useEffect(() => {
-    // Use correct field names based on API response
-    setDescription(task?.description || '');
-    setComments(task?.comments || []);
-    setMyTaskStatus(task?.myTaskStatus || 'pending');
-  }, [task]);
+    if (task) {
+      const taskId = task.task_id;
+      const storageKey = `comments_${projectId}_${taskId}`;
+      const savedComments = JSON.parse(localStorage.getItem(storageKey)) || [];
+      setComments(savedComments);
+      setDescription(task?.description || '');
+      setMyTaskStatus(task?.myTaskStatus || 'pending');
+    }
+  }, [task, projectId]);
 
   useEffect(() => {
     if(task) {
       onUpdateTask({
         ...task,
         description,
-        comments,
         myTaskStatus
       });
     }
-  }, [description, comments, myTaskStatus]);
+  }, [description, myTaskStatus, task]);
 
   const handleEmojiClick = (emojiObject) => {
     setCommentText(prev => prev + emojiObject.emoji);
     setShowEmojiPicker(false);
+  };
+
+  const saveCommentsToStorage = (updatedComments) => {
+    const taskId = task.task_id;
+    const storageKey = `comments_${projectId}_${taskId}`;
+    localStorage.setItem(storageKey, JSON.stringify(updatedComments));
   };
 
   const handleAddComment = () => {
@@ -82,32 +83,36 @@ const TaskInformation = ({ task, projectId: propProjectId, onClose, isFromMyProj
         text: commentText,
         timestamp: new Date().toISOString()
       };
-      setComments([...comments, newComment]);
+      const updatedComments = [...comments, newComment];
+      setComments(updatedComments);
+      saveCommentsToStorage(updatedComments);
       setCommentText('');
       setShowEmojiPicker(false);
     }
   };
 
   const handleEditComment = (id) => {
-    setComments(comments.map(c => 
+    const updatedComments = comments.map(c => 
       c.id === id ? {...c, text: commentText} : c
-    ));
+    );
+    setComments(updatedComments);
+    saveCommentsToStorage(updatedComments);
     setEditingCommentId(null);
     setCommentText('');
   };
 
   const handleDeleteComment = (id) => {
     if (window.confirm('Are you sure you want to delete this comment?')) {
-      setComments(comments.filter(c => c.id !== id));
+      const updatedComments = comments.filter(c => c.id !== id);
+      setComments(updatedComments);
+      saveCommentsToStorage(updatedComments);
     }
   };
 
   const handleStatusUpdate = async (statusValue) => {
-    // Update local state first for immediate feedback
     setMyTaskStatus(statusValue);
     
     try {
-      // The existing API call to update your personal status
       const taskId = task.task_id;
       const token = localStorage.getItem('userToken');
       const apiUrl = `http://localhost:5004/api/projects/${projectId}/tasks/${taskId}/assignee-status`;
@@ -118,29 +123,88 @@ const TaskInformation = ({ task, projectId: propProjectId, onClose, isFromMyProj
           'Content-Type': 'application/json',
           'Authorization': token ? `Bearer ${token}` : '',
         },
-        body: JSON.stringify({
-          status: statusValue
-        })
+        body: JSON.stringify({ status: statusValue })
       });
       
-      if (!response.ok) {
-        throw new Error(`Failed to update task status: ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`Failed to update task status: ${response.status}`);
       
-      console.log('Task status updated successfully');
-      
-      // Also update the task object to reflect the status change in the UI
-      // This assumes you're allowed to update the overall task status
       if (onUpdateTask) {
         onUpdateTask({
           ...task,
-          status: statusValue.toLowerCase() // Convert to match the format of task.status
+          status: statusValue.toLowerCase()
         });
       }
     } catch (error) {
       console.error('Error updating task status:', error);
     }
   };
+
+  const updateDescriptionOnServer = async (newDescription) => {
+    if (!task) return;
+    
+    try {
+      setIsSavingDescription(true);
+      const taskId = task.task_id;
+      const token = localStorage.getItem('userToken');
+      const apiUrl = `http://localhost:5004/api/projects/${projectId}/tasks/${taskId}`;
+      
+      // Create the complete task object as expected by the backend
+      const updatedTask = {
+        name: task.name || task.taskName,
+        dueDate: task.dueDate,
+        priority: task.priority,
+        status: task.status,
+        assignees: Array.isArray(task.assignees) 
+          ? task.assignees 
+          : task.assignees?.split(',').map(user => ({ 
+              user: user.trim(), 
+              status: "In Progress" 
+            })),
+        description: newDescription
+      };
+      
+      const response = await fetch(apiUrl, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token ? `Bearer ${token}` : '',
+        },
+        body: JSON.stringify(updatedTask)
+      });
+      
+      if (!response.ok) throw new Error(`Failed to update description: ${response.status}`);
+      
+      console.log('Description updated successfully');
+    } catch (error) {
+      console.error('Error updating description:', error);
+    } finally {
+      setIsSavingDescription(false);
+    }
+  };
+
+  const handleDescriptionChange = (e) => {
+    const newDescription = e.target.value;
+    setDescription(newDescription);
+    
+    // Update task locally immediately for UI responsiveness
+    if(task) {
+      onUpdateTask({
+        ...task,
+        description: newDescription,
+        myTaskStatus
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (task?.description !== description && !isFromMyProjects) {
+      const timer = setTimeout(() => {
+        updateDescriptionOnServer(description);
+      }, 1000); // 1 second debounce
+      
+      return () => clearTimeout(timer);
+    }
+  }, [description, task?.description, isFromMyProjects, projectId]);
 
   const renderMyTaskStatus = () => {
     if (!isFromMyProjects) return null;
@@ -172,7 +236,9 @@ const TaskInformation = ({ task, projectId: propProjectId, onClose, isFromMyProj
               className={`mytask-status-button ${myTaskStatus === status.value ? 'active' : ''}`}
               style={{ 
                 backgroundColor: `${STATUS_COLORS[status.value]}`,
-                border: `2px solid ${STATUS_COLORS[status.value]}`
+                border: `2px solid ${STATUS_COLORS[status.value]}`,
+                color: myTaskStatus === status.value ? '#ff0000' : '#000000',
+                fontWeight: myTaskStatus === status.value ? 'bold' : 'normal'
               }}
               onClick={() => {
                 setMyTaskStatus(status.value);
@@ -189,13 +255,11 @@ const TaskInformation = ({ task, projectId: propProjectId, onClose, isFromMyProj
 
   if (!task) return null;
 
-  // Helper function to get proper color for status
   const getStatusColor = (status) => {
     const normalizedStatus = status?.toLowerCase().replace(' ', '_');
     return STATUS_COLORS[status] || STATUS_COLORS[normalizedStatus] || '#808080';
   };
 
-  // Helper function to get proper color for priority
   const getPriorityColor = (priority) => {
     const normalizedPriority = priority?.toLowerCase();
     return PRIORITY_COLORS[normalizedPriority] || '#808080';
@@ -238,7 +302,7 @@ const TaskInformation = ({ task, projectId: propProjectId, onClose, isFromMyProj
               className="icon icon-tabler icons-tabler-filled icon-tabler-circle-dot"
             >
               <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-              <path d="M17 3.34a10 10 0 1 1 -14.995 8.984l-.005 -.324l.005 -.324a10 10 0 0 1 14.995 -8.336zm-5 6.66a2 2 0 0 0 -1.977 1.697l-.018 .154l-.005 .149l.005 .15a2 2 0 1 0 1.995 -2.15z" />
+              <path d="M17 3.34a10 10 0 1 1 -14.995 8.984l-.005 -.324l.005 -.324a10 10 0 0 1 14.995 -8.336zm-5 2.66a2 2 0 0 0 -1.977 1.697l-.018 .154l-.005 .149l.005 .15a2 2 0 1 0 1.995 -2.15z" />
             </svg>
           </div>
           <span className="task-info-meta-label">Status:</span>
@@ -318,7 +382,7 @@ const TaskInformation = ({ task, projectId: propProjectId, onClose, isFromMyProj
           <textarea
             className="task-info-description-textarea"
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            onChange={handleDescriptionChange}
             placeholder="No description available"
           />
         )}
