@@ -219,7 +219,10 @@ export const updateTask = async (req: Request, res: Response): Promise<void> => 
     task.dueDate = new Date(dueDate);
     task.priority = priority || 'Medium';
     task.status = status || 'Pending';
-    task.description = description || '';
+    if (description !== undefined) {
+      task.description = description;
+    }
+   
 
     // Update assignees
     const updatedAssignees = assignees.map(assignee => ({
@@ -358,9 +361,6 @@ const determineOverallTaskStatus = (assigneeStatuses: string[]): string => {
   return 'Pending';
 };
 
-
-
-
 export const updateAssigneeStatus = async (req: Request, res: Response): Promise<void> => {
   try {
     const { project_id, task_id } = req.params;
@@ -390,14 +390,53 @@ export const updateAssigneeStatus = async (req: Request, res: Response): Promise
       return;
     }
 
-    // Find assignee in task
+    // Add debug logs
+    console.log('Employee ID:', employee_id);
+    console.log('Task creator:', task.createdBy);
+    console.log('Task assignees:', JSON.stringify(task.assignees));
+
+    // Check if employee is the creator OR an assignee
+    const isCreator = task.createdBy === employee_id;
     const assignee = task.assignees.find(a => a.user === employee_id);
+    
+    // If creator but not assignee, allow updating the first assignee's status
+    if (isCreator && !assignee) {
+      if (task.assignees.length === 0) {
+        res.status(400).json({ message: 'No assignees found for this task' });
+        return;
+      }
+      
+      // Update the first assignee's status
+      const firstAssignee = task.assignees[0];
+      firstAssignee.status = status;
+      
+      // Update overall task status
+      const assigneeStatuses = task.assignees.map(a => a.status);
+      task.status = determineOverallTaskStatus(assigneeStatuses);
+      
+      // Save changes
+      const updatedTask = await task.save();
+      
+      // Real-time update
+      if (req.io) {
+        req.io.to(project_id).emit('task_status_updated', updatedTask);
+      }
+      
+      res.status(200).json(updatedTask);
+      return;
+    }
+    
+    // If not creator and not assignee, reject the request
     if (!assignee) {
-      res.status(403).json({ message: 'You are not assigned to this task' });
+      res.status(403).json({ 
+        message: 'You are not assigned to this task',
+        employeeId: employee_id,
+        assignees: task.assignees.map(a => a.user)
+      });
       return;
     }
 
-    // Update status
+    // Update status - assignees can only update their own status
     assignee.status = status;
     
     // Update overall task status
@@ -418,7 +457,6 @@ export const updateAssigneeStatus = async (req: Request, res: Response): Promise
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
-
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
